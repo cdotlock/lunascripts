@@ -12,9 +12,9 @@ description: >
 
 # Writing MoonShort Scripts
 
-You are generating scripts for a mobile interactive visual novel player. The genre is **TRPG mechanics + Galgame presentation**: players read through dialogue-driven scenes with character sprites and backgrounds (Galgame), and at key beats make choices that resolve via D20 attribute checks against a difficulty class, sometimes mediated by a short H5 mini-game (TRPG). Each `.md` script file is one episode — a self-contained narrative unit with dialogue, visual staging, game mechanics, and routing to the next episode.
+You are generating scripts for a mobile interactive visual novel player. The genre is **TRPG mechanics + Galgame presentation**: players read through dialogue-driven scenes with character sprites and backgrounds (Galgame), and at key beats make choices that resolve via D20 attribute checks against a difficulty class (TRPG). Body-interaction beats (`@trick`) and optional embedded games (`@minigame`) punctuate the reading. Each `.md` script file is one episode — a self-contained narrative unit with dialogue, visual staging, game mechanics, and routing to the next episode.
 
-The player experiences this as: tap to read dialogue → see characters enter/leave at left/right/center → occasionally make choices that may roll dice → sometimes play a mini-game → episode ends and routes to the next one.
+The player experiences this as: tap to read dialogue → see characters enter/leave at left/right/center → occasionally complete a forced body action (tap / hold / swipe / shake / swing / hold-still / nod / turn-away / close-eyes) → occasionally skip-or-play a downstream-generated mini-game → at key beats make a choice that may roll dice → episode ends and routes to the next one.
 
 Your scripts will be parsed by a Go interpreter that outputs JSON for the frontend. The interpreter is strict — syntax errors break the build. This guide teaches you to write scripts the interpreter accepts and the player renders well.
 
@@ -105,7 +105,7 @@ Read this before writing. LLMs reliably fall into specific traps that pass the p
 6. **Don't write essay-length option text.** Choice option text is the player's UI button label — keep it under **~12 words**. Long narrative belongs *inside* the option block, not in the option text. Bad: `@option A brave "Stand your ground and tell him exactly how you feel about everything that happened last summer when he lied" { ... }`. Good: `@option A brave "Stand your ground." { ... }`.
 7. **Don't compress when you should breathe.** LLMs default to terse summarization; Galgame pacing is the opposite. Let scenes land — `@pause for 1` after scene setup, an internal `YOU:` line between two pieces of dialogue, an extra silent beat after a confession. Token pressure pushes you toward "compress"; resist it. Players paid to live the moments, not skim a plot summary.
 8. **Don't write side branches with no entry, or gate routes with no destination.** Every side episode (`main/route/...`, `main/bad/...`) you imagine needs a `@gate` somewhere upstream that routes into it via `@next`. Conversely, every `@next <branch_key>` in a `@gate` must point at an episode file you actually wrote. A beautiful unreachable bad-end is dead content; a `@next main/route/001:01` with no file is a broken link.
-9. **Respect the concurrency rules.** `&` follows `@` and runs *together* with the previous step — it's for scene-setup bundles (bg + music + character entrances). `&` cannot lead a sequence, cannot be used on block structures (`choice`, `cg`, `minigame`, `phone`, `if`, `gate`), and cannot be used on dialogue (`CHARACTER:` lines are always their own sequential step). When in doubt, use `@`.
+9. **Respect the concurrency rules.** `&` follows `@` and runs *together* with the previous step — it's for scene-setup bundles (bg + music + character entrances). `&` cannot lead a sequence, cannot be used on block structures (`choice`, `cg`, `phone`, `if`, `gate`), and cannot be used on dialogue (`CHARACTER:` lines are always their own sequential step). `@trick` and `@minigame` are leaf directives, so `&` is technically permitted on them, but you almost never want one of those bundled into a scene-setup group — keep them on `@` for narrative clarity. When in doubt, use `@`.
 10. **Run the fixer before compiling.** The interpreter ships `mss fix <file>` that auto-repairs the most common LLM mistakes (missing `@if` parens, `&` on blocks, `@on` migration, character-name casing in `@affection`, BOM/CRLF, unclosed blocks). **If the script was LLM-generated, run `mss fix` first, then `mss validate`, then `mss compile`.** This is the single highest-ROI habit when iterating with LLMs.
 
 The directive table (`references/directive-table.md`) is the authoritative quick reference — when unsure of syntax, check it instead of inventing.
@@ -182,7 +182,8 @@ A `@cg show` block without both fields is a parse error. Validator checks a dura
 
 ### Rules
 
-- `&` CANNOT be used on block structures: `choice`, `cg`, `minigame`, `phone`, `if`, `gate`, `episode`. These always use `@`.
+- `&` CANNOT be used on block structures: `choice`, `cg`, `phone`, `if`, `gate`, `episode`. These always use `@`.
+- `&` is technically permitted on `@trick` and `@minigame` (they are leaf directives, not blocks), but bundling them into a scene-setup group is almost never what you want — keep them on `@` so the player notices the beat.
 - A `&` line must follow an `@` line or another `&` line — it cannot appear at the start of a sequence with no preceding `@`.
 
 ### When to use `&`
@@ -241,26 +242,55 @@ The phone overlay sits on top of everything. Keep messages short — they render
 
 ## Game Mechanics
 
-### Mini-games
+### Tricks (forced body-interaction beats)
 
-Mini-games interrupt the reading flow. The player plays an H5 game, gets a rating (typically S / A / B / C / D), and the rating modifies their next D20 check. You can also branch bonus narrative per rating.
+`@trick <type> "<prompt>"` is a one-liner that forces the player to complete a small body action before the story advances. It's the embodied upgrade of `@pause for N`: the player must tap / hold / swipe / shake / swing / stay still / nod / turn away / close their eyes, with a one-line on-screen prompt you author. There is no rating, no reward, no branching — the value is *presence*, not winning.
 
 ```
-@minigame qte_challenge ATK "a quick hallway partner-assignment check where Malia matches Mauricio's beat or drops the rhythm" {
-  @if (rating.S) {
-    NARRATOR: Your reflexes are razor-sharp today.
-  } @else @if (rating.A || rating.B) {
-    NARRATOR: Not bad. You kept up.
-  } @else {
-    NARRATOR: Sloppy. You're distracted.
-  }
-}
+@trick hold "Hold your breath until he walks past."
+@trick tap  "Tap fast to catch your breath before the next class."
+@trick swipe "Wipe the steam off the mirror."
 ```
 
-- The third positional argument (a quoted English string) is a **required** short description tying the minigame to the scene. Mini-games are picked from a pre-built library (not generated), so the description is just for narrative glue — one sentence is plenty, don't over-write.
-- Rating branching uses a standard `@if (rating.<grade>) { }` tree. `rating.S`, `rating.A`, etc. are pseudo-identifiers valid only inside a `@minigame` body. Use `||` to group grades (`@if (rating.A || rating.B)`).
-- Bonus narrative under a rating branch doesn't change the story route. The rating's mechanical effect (check modifier) is handled by the game engine, not the script.
-- Minigame body is optional — an empty `{ }` is valid if you don't need per-rating narrative.
+**The locked 9 trick types.** Pick one — the language does not allow inventing new types.
+
+| `<type>` | Modality | Permission | What it can dramatise |
+|---|---|---|---|
+| `tap` | touch | none | running, struggling, knocking, applauding, heartbeat |
+| `hold` | touch | none | holding breath, staying still, pressing on a wound |
+| `swipe` | touch | none | wiping fog, brushing tears, pushing away — direction only |
+| `shake` | motion | none at runtime | shaking awake, shaking a bottle, trembling, an earthquake |
+| `swing` | motion | none at runtime | swinging a bat, casting a line, throwing a punch, knocking |
+| `hold-still` | motion | none at runtime | steadying a hand, holding breath, freezing so you aren't seen |
+| `nod` | camera | **camera permission** | acknowledging, agreeing, greeting silently |
+| `turn-away` | camera | **camera permission** | can't watch, recoiling, embarrassment |
+| `close-eyes` | camera | **camera permission** | shutting out, praying, falling asleep |
+
+**Authoring rules:**
+
+- `@trick` is a leaf — no `{ }` body. Adding one is a parse error.
+- Pick a type that fits the *embodied verb* of the moment. "Holding your breath" is `hold`, not `hold-still`; "don't move so he doesn't notice you" is `hold-still`. `swipe` is direction-only, not path-tracing.
+- The prompt is the player-facing imperative. Keep it under one short sentence; write it in second person ("Hold your breath...", "Tap fast..."). It doubles as narrative glue.
+- Use sparingly — typically 1–3 per episode at moments that *feel* embodied. Every trick is a forced gate; if the player can't perform the action they can't continue. Don't gate on a trick at a beat the player must reach.
+- Camera tricks (`nod` / `turn-away` / `close-eyes`) trigger the only runtime permission prompt. Use them where the embodied verb is unmistakable, not for atmosphere.
+
+### Mini-games (optional, downstream-generated)
+
+`@minigame <name> "<description>"` is a one-liner that embeds an optional mini-game. The player can play or skip; the engine scales the reward by the H5 result if they play. The game itself is **generated by a downstream vibe-coding agent** from your `description` — you are not picking from a pre-built library, and the language no longer carries per-rating narrative branches.
+
+```
+@minigame casino_showdown "Mauricio drags Malia into a backroom blackjack game — green felt, a low brass lamp, cigarette smoke, his friends watching — betting on who covers tonight's tab. The player taps to draw cards and taps Stand to hold, beating the dealer's hand without going over 21; three quick rounds. Win and Malia keeps her dignity; lose and she owes him a favor."
+```
+
+**Authoring rules:**
+
+- `@minigame` is a leaf — no body, no attribute positional, no rating branching. `@minigame <id> <ATTR> "..." { @if (rating.S) { ... } }` is the legacy form and will error.
+- The description is a single connected prose paragraph that does two jobs at once:
+  1. **Set the scene.** Why is this game happening, what's at stake, who's there, what's the vibe?
+  2. **Define the simple gameplay.** What does the player tap / drag / time, what's the core mechanic, what counts as winning? "Simple" is the key — give the agent direction, not a design doc.
+- **Do not declare rewards or stakes in numbers.** Rewards are entirely engine-side (anti-cheat); the script never names coins, XP, SAN, etc. for the minigame.
+- If you need a story branch off the minigame outcome (won / lost), promote it to a `@choice` — minigames don't drive narrative routing on their own.
+- **Complexity ceiling for the vibe-coding agent**: think one-touch / one-drag mechanics, 30–90 seconds of play, a clear win condition you can describe in one sentence. Multi-screen puzzles, persistent inventory, networked play — all out of scope; rewrite as a `@choice` or a `@trick`.
 
 ### Choices (D20 Checks)
 
@@ -486,7 +516,7 @@ Use `@if` to show different content based on game state. **Parentheses `()` are 
 }
 ```
 
-**Condition types (7 kinds, all compiled to structured AST — the backend receives typed condition objects, not expression strings):**
+**Condition types (6 kinds, all compiled to structured AST — the backend receives typed condition objects, not expression strings):**
 
 | Type | Syntax | Example |
 |------|--------|---------|
@@ -496,7 +526,6 @@ Use `@if` to show different content based on game state. **Parentheses `()` are 
 | choice | `OPTION.result` | `@if (A.fail) { }` — result: `success` / `fail` / `any`. Use from outside the option |
 | influence | `influence "desc"` or `"desc"` | `@if (influence "player showed empathy") { }` or `@if ("player showed empathy") { }` — both forms accepted |
 | check | `check.success` / `check.fail` | `@if (check.success) { }` — context-local, only valid inside a brave option body |
-| rating | `rating.<grade>` | `@if (rating.S) { }` / `@if (rating.A \|\| rating.B) { }` — context-local, only valid inside a minigame body |
 
 **Comparison operand** on the left of `>=` / `<=` / etc. must be either `affection.<char>` (character-specific affection) or a bare `<name>` (engine-managed value like `san`, `CHA`). The right side **must be an integer literal** — expressions like `a >= b` or `affection.easton >= (5 + 3)` are rejected.
 
@@ -600,14 +629,14 @@ Example bad-path terminal:
 9. **Forgetting `@butterfly` in choice outcomes** — Every choice outcome should record what happened for the influence system.
 10. **Writing asset paths instead of semantic names** — Scripts use names like `classroom_morning`, not URLs or file paths. The interpreter handles mapping.
 11. **Nested `@choice` blocks** — Only one `@choice` per episode. Multiple choices in one episode is not supported.
-12. **Using `&` on block structures** — `&choice`, `&cg show`, `&minigame`, `&phone show`, `&if`, `&gate` are all errors. Block structures always use `@`.
+12. **Using `&` on block structures** — `&choice`, `&cg show`, `&phone show`, `&if`, `&gate` are all errors. Block structures always use `@`. (`@trick` / `@minigame` are leaves and technically permit `&`, but bundling them into a scene-setup group obscures the beat — keep on `@`.)
 13. **Forgetting to use `&` for scene setup** — When a scene starts with bg + music + character entrances, the first directive uses `@` and the rest should use `&` so they execute together. Writing all of them with `@` makes them sequential, which looks choppy.
 14. **Trying to set engine values from scripts** — `@xp`, `@san` are not valid directives. The engine manages these values internally. Scripts can only check them in `@if` conditions (e.g., `@if (san <= 20) { }`), not modify them.
 15. **`@if` without parentheses** — `@if condition { }` is a syntax error. Must be `@if (condition) { }`. Parentheses are mandatory for both body `@if` and gate `@if`.
 16. **Using `choice.A.fail` in gate conditions** — The `choice.` prefix is dropped. Use `A.fail`, not `choice.A.fail`. Use dot notation: `A.fail`, not `A fail`.
 17. **Invalid `@ending` type** — Only `complete`, `to_be_continued`, `bad_ending` are accepted. Any other identifier is a parse error.
 18. **`@signal` without a kind** — `@signal <kind> <event>` requires a kind token. Currently only `mark` is implemented. `@signal achievement ...` is no longer valid — use the dedicated `@achievement <id>` trigger instead.
-19. **`@minigame` without a description** — `@minigame <id> <ATTR> "<description>" { }`. The quoted description is mandatory; an empty body is fine, but the description is not.
+19. **`@minigame` written in the legacy form** — `@minigame <id> <ATTR> "<desc>" { ... }` is no longer valid. The new form is the one-liner `@minigame <name> "<description>"` — no ATTR positional, no body, no rating branches. Rewards are engine-owned. If you need per-rating narrative, you can't have it; route on a `@choice` instead.
 20. **`@cg show` without `duration:` / `content:` fields** — Both are required at the top of the block, before any body nodes. `duration` must be `low` / `medium` / `high`; `content` is a quoted English narrative for the video-generation pipeline.
 21. **Orphan marks** — `@signal mark X` with no reader. If no `@if (X)` and no `@if (X && ...) { @achievement ... }` references `X`, delete the mark. Marks that no one reads are noise: they dilute the flag store and mislead downstream tools. Never emit marks for "episode completed", "chose option A", "affection raised", or anything else the engine already tracks.
 22. **Using non-English names** — All `event` identifiers, `@achievement` ids, achievement `name`, and `description` strings must be English. Mixed-language ids cause grep/search failures and ambiguous meaning across the pipeline.
@@ -615,12 +644,12 @@ Example bad-path terminal:
 24. **Writing a `when:` field on `@achievement`** — `when` is not part of the grammar. Achievements carry only `name` / `rarity` / `description`; trigger logic lives in the outer `@if (...)` that wraps the `@achievement` directive.
 25. **Duplicate `@achievement` ids in one episode** — validator error. If the same achievement spans multiple episodes, declare it once in whichever one most naturally owns it.
 26. **Triggering an achievement that was never declared** — `@achievement <id>` inline without a matching `@achievement <id> { ... }` declaration is a runtime dead letter. The runtime registry must have seen the declaration first. (Cross-episode is fine; the engine loads all declarations.)
-27. **Using `check.success` outside a brave option body, or `rating.S` outside a minigame body** — both are context-local pseudo-identifiers. Outside their scope the runtime always returns false — that's a narrative bug, not a syntax error.
+27. **Using `check.success` outside a brave option body** — a context-local pseudo-identifier. Outside its scope the runtime always returns false — that's a narrative bug, not a syntax error. (`rating.<grade>` is no longer a condition type; the parser will reject it with a migration hint pointing at this section.)
 28. **Inventing character positions** — only `left`, `right`, `center` are valid. `at front` / `at corner` / `at top` / `at back` etc. fail the asset pipeline or render incorrectly.
 29. **Orphan branches and dead `@next` targets** — every `@next <branch_key>` in a `@gate` must point at an episode file that exists in the repo, and every side episode (`main/route/...`, `main/bad/...`) you write needs an upstream `@gate` that routes into it. In single-file `mss compile` cross-file references aren't checked; in batch `mss compile <dir>` the validator does verify branch_key resolution.
 30. **Essay-length option text** — `@option <ID> <mode> "<text>"` text is the player's UI button label. Keep under ~12 words. Long narrative goes inside the option block as body nodes.
 
-**Auto-repair:** The interpreter includes a fixer (`mss fix <file>`) that auto-repairs many of these mistakes: missing `@if` parentheses, `&` on block structures, `@check` → `check`, uppercase character names in `@affection`, trailing whitespace, unclosed blocks, and BOM/CRLF encoding issues. The fixer also flags `@on` usage with a migration hint pointing at `@if (check.success)` / `@if (rating.X)`. Always run the fixer before compiling if the script was generated by an LLM.
+**Auto-repair:** The interpreter includes a fixer (`mss fix <file>`) that auto-repairs many of these mistakes: missing `@if` parentheses, `&` on block structures, `@check` → `check`, uppercase character names in `@affection`, trailing whitespace, unclosed blocks, and BOM/CRLF encoding issues. The fixer also flags `@on` usage with a hint pointing at `@if (check.success)`, and flags the legacy `@minigame <id> <ATTR> "..." { ... }` form pointing at the new one-liner. Always run the fixer before compiling if the script was generated by an LLM.
 
 ## Remix Scripts
 

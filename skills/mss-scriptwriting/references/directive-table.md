@@ -21,7 +21,7 @@
 | `@` | Sequential (new group) | `@bg set classroom fade` |
 | `&` | Concurrent (join group) | `&music play calm_morning` |
 
-`&` cannot be used on: `choice`, `cg show`, `minigame`, `phone show`, `if`, `gate`, `episode`
+`&` cannot be used on: `choice`, `cg show`, `phone show`, `if`, `gate`, `episode` (these are block structures). `@trick` and `@minigame` are leaves and technically permit `&`, but bundling them into a scene-setup group hides the beat — keep them on `@`.
 
 ## Visual (object-action)
 
@@ -80,19 +80,22 @@ Bubbles: `anger` `sweat` `heart` `question` `exclaim` `idea` `music` `doom` `ell
 | `@music fadeout` | Stop with fade |
 | `@sfx play <name>` | `@sfx play door_slam` |
 
-## Game Mechanics
+## Interaction Primitives
 
 | Directive | Example |
 |-----------|---------|
-| `@minigame <id> <ATTR> "<description>" { }` | `@minigame qte_challenge ATK "a quick reflex duel" { ... }` — description required |
+| `@trick <type> "<prompt>"` | `@trick hold "Hold your breath until he walks past."` — mandatory body-interaction beat; leaf; `<type>` ∈ `tap` / `hold` / `swipe` / `shake` / `swing` / `hold-still` / `nod` / `turn-away` / `close-eyes` |
+| `@minigame <name> "<description>"` | `@minigame casino_showdown "Mauricio drags Malia into..."` — optional embedded mini-game; leaf; `description` is one prose paragraph that scenes the moment AND defines the simple gameplay; downstream vibe-coding agent generates the H5 |
 | `@choice { }` | Contains @option blocks |
 | `@option <ID> brave <text> { }` | Body must contain `check { }`; outcome branching via `@if (check.success) { } @else { }` |
 | `@option <ID> safe <text> { }` | `@option B safe "Run" { ... }` |
 | `check { attr: X  dc: N }` | Inside brave option |
 
-Rating branching inside a minigame uses `@if (rating.<grade>) { }` trees, where `<grade>` is typically `S` / `A` / `B` / `C` / `D` (the language does not enforce a specific vocabulary).
-
 Check-outcome branching inside a brave option uses `@if (check.success) { } @else { }`. The `check.success` / `check.fail` pseudo-identifier is valid only inside a brave option body.
+
+**D20 formula** (engine-internal): `D20(1-20) + attribute modifier ≥ DC → success`. As of 2026-05-19 there is no longer a "minigame modifier" term — `@minigame` no longer couples to D20 checks.
+
+**No rating branching.** `@minigame` is a leaf — no body, no `@if (rating.X)` tree. Rewards are entirely engine-owned (anti-cheat). If you need a story branch off a minigame outcome, promote it to a `@choice`.
 
 ## State Changes
 
@@ -112,7 +115,7 @@ Check-outcome branching inside a brave option uses `@if (check.success) { } @els
 | `@else @if (<cond>) { }` | `} @else @if (affection.easton >= 3) { }` — chained condition |
 | `@else { }` | `} @else { }` |
 
-Conditions (7 types, all fully parsed into structured AST — no raw expression strings in JSON output):
+Conditions (6 types, all fully parsed into structured AST — no raw expression strings in JSON output):
 
 - choice: `A.fail` / `B.success` / `C.any`
 - flag: `SIGNAL_NAME`
@@ -120,7 +123,8 @@ Conditions (7 types, all fully parsed into structured AST — no raw expression 
 - influence: `"description"` or `influence "description"`
 - compound: `<cond> && <cond>` / `<cond> || <cond>` (parens for grouping; `&&` binds tighter than `||`)
 - check: `check.success` / `check.fail` — context-local, only valid inside a brave option body
-- rating: `rating.<grade>` — context-local, only valid inside a minigame body
+
+> `rating` was removed in 2026-05-19 when `@minigame` became a leaf — the parser rejects `rating.X` with a migration hint.
 
 Operators: `>=` `<=` `>` `<` `==` `!=`
 Logic: `&&` (and), `||` (or)
