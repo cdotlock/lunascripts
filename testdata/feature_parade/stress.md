@@ -1,5 +1,5 @@
 // Feature Parade STRESS — 高强度逻辑压测
-// 覆盖: 3 层 @if 嵌套、复合条件括号、7 种 condition 混链、空块边界、作用域交错、brave 省略 else
+// 覆盖: 3 层 @if 嵌套、复合条件括号、6 种 condition 混链（rating 自重构后已删）、空块边界、作用域交错、brave 省略 else、@trick 全 9 类型
 
 @episode main/stress:01 "Stress Test" {
 
@@ -66,31 +66,29 @@
   }
 
   // ================================================================
-  // [T55] minigame 单分支（验证 validator 允许省略 else / 其他 rating）
+  // [T55] minigame 单条 leaf — 验证 @minigame 为 leaf 指令（无 body、无 rating）
   // ================================================================
-  NARRATOR: [T55] minigame power_swing (attr=ATK) with SINGLE rating branch, no @else — validator must accept.
-  @minigame power_swing ATK "a timing-based power swing — release at peak for an S" {
-    @if (rating.S) {
-      NARRATOR: [T55a] Only rating.S handled — others silently pass.
-    }
-  }
+  NARRATOR: [T55] @minigame power_swing — leaf shape. Prose seeds the vibe-coding agent; engine owns rewards; per-rating narrative removed.
+  @minigame power_swing "Mauricio drags Malia to the baseball cage at lunch. She has to hit three pitches off the machine while he calls the count. The player taps Swing at the exact moment the pitch crosses the strike zone; mistime and the ball clips foul. Three pitches, two hits to clear."
 
-  NARRATOR: [T59] Minigame roundup — remaining 3 games each with a single-branch pass. Attrs cover CHA/INT/WIL (ATK was in T16/T55).
-  @minigame slot_machine CHA "pull the slot machine lever and read the alignment" {
-    @if (rating.S) {
-      NARRATOR: [T59a] slot_machine (CHA) S branch ran.
-    }
-  }
-  @minigame stardew_fishing INT "reel in a fish with the classic bar-balance meter" {
-    @if (rating.S) {
-      NARRATOR: [T59b] stardew_fishing (INT) S branch ran.
-    }
-  }
-  @minigame survive_30_seconds WIL "dodge falling hazards for 30 seconds" {
-    @if (rating.S) {
-      NARRATOR: [T59c] survive_30_seconds (WIL) S branch ran.
-    }
-  }
+  NARRATOR: [T59] Minigame roundup — three more leaf minigames covering different scenes. Scene + simple gameplay all in the prose; vibe-coding agent generates each.
+  @minigame slot_machine "Mark drags everyone to the boardwalk arcade. Malia pulls the lever on a vintage slot machine — taps Hold on each reel to lock symbols, taps Spin to roll the rest, chasing matching trios."
+  @minigame stardew_fishing "Friday afternoon at the lake with Elias. The player drags the catch icon into a moving zone to keep it inside the bar; let it slip and the line snaps. Catch one fish, the conversation actually starts."
+  @minigame survive_30_seconds "Late-night dodgeball in the gym — lights flicker, balls fly. Player swipes left/right to dodge hazards for thirty seconds. Take three hits and Malia's out."
+
+  // ================================================================
+  // [T55t] @trick 全 9 类型 — 触摸 3 / 运动 3 / 摄像头 3
+  // ================================================================
+  NARRATOR: [T55t] @trick suite — every locked type appears once; each is a mandatory body-interaction beat.
+  @trick tap "Tap the screen to keep your hand from shaking."
+  @trick hold "Hold your breath — count to five."
+  @trick swipe "Wipe the steam off the mirror."
+  @trick shake "Shake the bottle hard."
+  @trick swing "Swing the bat through the strike zone."
+  @trick hold-still "Don't move — he's right behind you."
+  @trick nod "Nod if you understand."
+  @trick turn-away "Look away — you can't watch this."
+  @trick close-eyes "Close your eyes and listen."
 
   // ================================================================
   // [T56] brave option 省略 @else（validator 宽松）+ safe option 嵌套 @if

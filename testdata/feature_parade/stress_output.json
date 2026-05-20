@@ -366,137 +366,124 @@
     },
     {
       "id": "0032_nar",
-      "text": "[T55] minigame power_swing (attr=ATK) with SINGLE rating branch, no @else — validator must accept.",
+      "text": "[T55] @minigame power_swing — leaf shape. Prose seeds the vibe-coding agent; engine owns rewards; per-rating narrative removed.",
       "type": "narrator"
     },
     {
-      "attr": "ATK",
-      "description": "a timing-based power swing — release at peak for an S",
-      "game_id": "power_swing",
+      "description": "Mauricio drags Malia to the baseball cage at lunch. She has to hit three pitches off the machine while he calls the count. The player taps Swing at the exact moment the pitch crosses the strike zone; mistime and the ball clips foul. Three pitches, two hits to clear.",
       "game_url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/minigames/power-swing/index.html",
       "id": "0033_mg",
-      "steps": [
-        {
-          "condition": {
-            "grade": "S",
-            "type": "rating"
-          },
-          "id": "0034_ctrl",
-          "then": [
-            {
-              "id": "0035_nar",
-              "text": "[T55a] Only rating.S handled — others silently pass.",
-              "type": "narrator"
-            }
-          ],
-          "type": "if"
-        }
-      ],
+      "name": "power_swing",
       "type": "minigame"
     },
     {
-      "id": "0036_nar",
-      "text": "[T59] Minigame roundup — remaining 3 games each with a single-branch pass. Attrs cover CHA/INT/WIL (ATK was in T16/T55).",
+      "id": "0034_nar",
+      "text": "[T59] Minigame roundup — three more leaf minigames covering different scenes. Scene + simple gameplay all in the prose; vibe-coding agent generates each.",
       "type": "narrator"
     },
     {
-      "attr": "CHA",
-      "description": "pull the slot machine lever and read the alignment",
-      "game_id": "slot_machine",
+      "description": "Mark drags everyone to the boardwalk arcade. Malia pulls the lever on a vintage slot machine — taps Hold on each reel to lock symbols, taps Spin to roll the rest, chasing matching trios.",
       "game_url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/minigames/slot-machine/index.html",
-      "id": "0037_mg",
-      "steps": [
-        {
-          "condition": {
-            "grade": "S",
-            "type": "rating"
-          },
-          "id": "0038_ctrl",
-          "then": [
-            {
-              "id": "0039_nar",
-              "text": "[T59a] slot_machine (CHA) S branch ran.",
-              "type": "narrator"
-            }
-          ],
-          "type": "if"
-        }
-      ],
+      "id": "0035_mg",
+      "name": "slot_machine",
       "type": "minigame"
     },
     {
-      "attr": "INT",
-      "description": "reel in a fish with the classic bar-balance meter",
-      "game_id": "stardew_fishing",
+      "description": "Friday afternoon at the lake with Elias. The player drags the catch icon into a moving zone to keep it inside the bar; let it slip and the line snaps. Catch one fish, the conversation actually starts.",
       "game_url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/minigames/stardew-fishing/index.html",
-      "id": "0040_mg",
-      "steps": [
-        {
-          "condition": {
-            "grade": "S",
-            "type": "rating"
-          },
-          "id": "0041_ctrl",
-          "then": [
-            {
-              "id": "0042_nar",
-              "text": "[T59b] stardew_fishing (INT) S branch ran.",
-              "type": "narrator"
-            }
-          ],
-          "type": "if"
-        }
-      ],
+      "id": "0036_mg",
+      "name": "stardew_fishing",
       "type": "minigame"
     },
     {
-      "attr": "WIL",
-      "description": "dodge falling hazards for 30 seconds",
-      "game_id": "survive_30_seconds",
+      "description": "Late-night dodgeball in the gym — lights flicker, balls fly. Player swipes left/right to dodge hazards for thirty seconds. Take three hits and Malia's out.",
       "game_url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/minigames/survive-30-seconds/index.html",
-      "id": "0043_mg",
-      "steps": [
-        {
-          "condition": {
-            "grade": "S",
-            "type": "rating"
-          },
-          "id": "0044_ctrl",
-          "then": [
-            {
-              "id": "0045_nar",
-              "text": "[T59c] survive_30_seconds (WIL) S branch ran.",
-              "type": "narrator"
-            }
-          ],
-          "type": "if"
-        }
-      ],
+      "id": "0037_mg",
+      "name": "survive_30_seconds",
       "type": "minigame"
+    },
+    {
+      "id": "0038_nar",
+      "text": "[T55t] @trick suite — every locked type appears once; each is a mandatory body-interaction beat.",
+      "type": "narrator"
+    },
+    {
+      "id": "0039_trk",
+      "prompt": "Tap the screen to keep your hand from shaking.",
+      "trick_type": "tap",
+      "type": "trick"
+    },
+    {
+      "id": "0040_trk",
+      "prompt": "Hold your breath — count to five.",
+      "trick_type": "hold",
+      "type": "trick"
+    },
+    {
+      "id": "0041_trk",
+      "prompt": "Wipe the steam off the mirror.",
+      "trick_type": "swipe",
+      "type": "trick"
+    },
+    {
+      "id": "0042_trk",
+      "prompt": "Shake the bottle hard.",
+      "trick_type": "shake",
+      "type": "trick"
+    },
+    {
+      "id": "0043_trk",
+      "prompt": "Swing the bat through the strike zone.",
+      "trick_type": "swing",
+      "type": "trick"
+    },
+    {
+      "id": "0044_trk",
+      "prompt": "Don't move — he's right behind you.",
+      "trick_type": "hold-still",
+      "type": "trick"
+    },
+    {
+      "id": "0045_trk",
+      "prompt": "Nod if you understand.",
+      "trick_type": "nod",
+      "type": "trick"
+    },
+    {
+      "id": "0046_trk",
+      "prompt": "Look away — you can't watch this.",
+      "trick_type": "turn-away",
+      "type": "trick"
+    },
+    {
+      "id": "0047_trk",
+      "prompt": "Close your eyes and listen.",
+      "trick_type": "close-eyes",
+      "type": "trick"
     },
     [
       {
-        "id": "0046_bg",
+        "id": "0048_bg",
         "name": "hallway",
         "transition": "fade",
         "type": "bg",
         "url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/bg/hallway.png"
       },
       {
-        "id": "0047_mus",
+        "id": "0049_mus",
         "name": "upbeat",
         "type": "music_crossfade",
         "url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/music/upbeat.mp3"
       },
       {
-        "id": "0048_sfx",
+        "id": "0050_sfx",
         "name": "bell",
         "type": "sfx_play",
         "url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/sfx/bell.mp3"
       },
       {
         "character": "malia",
-        "id": "0049_char",
+        "id": "0051_char",
         "look": "flat",
         "position": "center",
         "type": "char_show",
@@ -504,12 +491,12 @@
       }
     ],
     {
-      "id": "0050_nar",
+      "id": "0052_nar",
       "text": "[T56] Choice stress: brave omits @else; safe nests an @if.",
       "type": "narrator"
     },
     {
-      "id": "0051_ch",
+      "id": "0053_ch",
       "options": [
         {
           "check": {
@@ -524,17 +511,17 @@
                 "result": "success",
                 "type": "check"
               },
-              "id": "0052_ctrl",
+              "id": "0054_ctrl",
               "then": [
                 {
-                  "id": "0053_nar",
+                  "id": "0055_nar",
                   "text": "[T56a] brave check.success — no paired @else (allowed).",
                   "type": "narrator"
                 },
                 {
                   "character": "easton",
                   "delta": 1,
-                  "id": "0054_aff",
+                  "id": "0056_aff",
                   "type": "affection"
                 }
               ],
@@ -559,21 +546,21 @@
               },
               "else": [
                 {
-                  "id": "0058_you",
+                  "id": "0060_you",
                   "text": "[T56c] safe body nested @else.",
                   "type": "you"
                 }
               ],
-              "id": "0055_ctrl",
+              "id": "0057_ctrl",
               "then": [
                 {
-                  "id": "0056_you",
+                  "id": "0058_you",
                   "text": "[T56b] safe body nested @if true.",
                   "type": "you"
                 },
                 {
                   "description": "Walked away but hesitated",
-                  "id": "0057_btf",
+                  "id": "0059_btf",
                   "type": "butterfly"
                 }
               ],
@@ -586,21 +573,21 @@
       "type": "choice"
     },
     {
-      "id": "0059_nar",
+      "id": "0061_nar",
       "text": "[T57] @phone show with ZERO messages — empty block edge case.",
       "type": "narrator"
     },
     {
-      "id": "0060_phn",
+      "id": "0062_phn",
       "type": "phone_show"
     },
     {
-      "id": "0061_phn",
+      "id": "0063_phn",
       "type": "phone_hide"
     },
     [
       {
-        "id": "0062_bg",
+        "id": "0064_bg",
         "name": "gym",
         "transition": "cut",
         "type": "bg",
@@ -608,13 +595,13 @@
       },
       {
         "character": "malia",
-        "id": "0063_char",
+        "id": "0065_char",
         "position": "right",
         "type": "char_move"
       },
       {
         "character": "josie",
-        "id": "0064_char",
+        "id": "0066_char",
         "look": "excited",
         "position": "left",
         "type": "char_show",
@@ -622,33 +609,33 @@
       }
     ],
     {
-      "id": "0065_nar",
+      "id": "0067_nar",
       "text": "[T58] Concurrent-group boundary test: dialogue breaks the group above; new @ below starts a fresh group.",
       "type": "narrator"
     },
     {
       "clicks": 1,
-      "id": "0066_pau",
+      "id": "0068_pau",
       "type": "pause"
     },
     {
-      "id": "0067_nar",
+      "id": "0069_nar",
       "text": "[T58a] @pause for 1 — single click to advance.",
       "type": "narrator"
     },
     {
       "event": "STRESS_DONE",
-      "id": "0068_sig",
+      "id": "0070_sig",
       "kind": "mark",
       "type": "signal"
     },
     {
-      "id": "0069_nar",
+      "id": "0071_nar",
       "text": "[T58b] @signal int — three write forms plus a comparison read.",
       "type": "narrator"
     },
     {
-      "id": "0070_sig",
+      "id": "0072_sig",
       "kind": "int",
       "name": "stress_count",
       "op": "=",
@@ -656,7 +643,7 @@
       "value": 0
     },
     {
-      "id": "0071_sig",
+      "id": "0073_sig",
       "kind": "int",
       "name": "stress_count",
       "op": "+",
@@ -664,7 +651,7 @@
       "value": 2
     },
     {
-      "id": "0072_sig",
+      "id": "0074_sig",
       "kind": "int",
       "name": "stress_count",
       "op": "-",
@@ -683,15 +670,15 @@
       },
       "else": [
         {
-          "id": "0075_nar",
+          "id": "0077_nar",
           "text": "[T58b-lo] stress_count below threshold.",
           "type": "narrator"
         }
       ],
-      "id": "0073_ctrl",
+      "id": "0075_ctrl",
       "then": [
         {
-          "id": "0074_nar",
+          "id": "0076_nar",
           "text": "[T58b-hi] stress_count crossed the 2 threshold.",
           "type": "narrator"
         }
@@ -699,7 +686,7 @@
       "type": "if"
     },
     {
-      "id": "0076_nar",
+      "id": "0078_nar",
       "text": "[T60 → main:02] Stress gate has only a fallback @else — will jump to ep02.md unconditionally.",
       "type": "narrator"
     }
