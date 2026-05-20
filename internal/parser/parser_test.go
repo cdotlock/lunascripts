@@ -20,6 +20,14 @@ func parseOrFail(t *testing.T, src string) *ast.Episode {
 	return ep
 }
 
+// parseSource parses src and returns (episode, err) without failing the
+// test. Used by negative tests that assert a specific parse-error hint.
+func parseSource(src string) (*ast.Episode, error) {
+	l := lexer.New(src)
+	p := New(l)
+	return p.Parse()
+}
+
 // TestParseMinimal verifies a minimal episode with bg, narrator, you, and gates.
 func TestParseMinimal(t *testing.T) {
 	src := `@episode main:01 "Test" {
@@ -358,21 +366,12 @@ func TestParseChoice(t *testing.T) {
 	}
 }
 
-// TestParseMinigame tests minigame with @if (rating.X) branches.
+// TestParseMinigame covers the new one-liner @minigame syntax — no
+// ATTR positional, no body, no rating branches. The minigame is
+// generated downstream from the description prose.
 func TestParseMinigame(t *testing.T) {
 	src := `@episode main:01 "Mini" {
-	@minigame arm_wrestle STR "an arm wrestling duel" {
-		@if (rating.S) {
-			NARRATOR: Perfect victory!
-			@affection mauricio +10
-		} @else @if (rating.A || rating.B) {
-			NARRATOR: Good job.
-			@affection mauricio +5
-		} @else {
-			NARRATOR: Could be better.
-			@affection mauricio +1
-		}
-	}
+	@minigame casino_showdown "Mauricio drags Malia into a backroom blackjack game — green felt, cigarette smoke, his friends watching — betting on who covers tonight's tab. The player taps to draw cards and taps Stand to hold."
 	@gate { @next main:02 }
 }`
 	ep := parseOrFail(t, src)
@@ -385,66 +384,135 @@ func TestParseMinigame(t *testing.T) {
 	if !ok {
 		t.Fatalf("Body[0]: expected *MinigameNode, got %T", ep.Body[0])
 	}
-	if mg.ID != "arm_wrestle" {
-		t.Errorf("MinigameNode.ID: got %q, want %q", mg.ID, "arm_wrestle")
+	if mg.Name != "casino_showdown" {
+		t.Errorf("MinigameNode.Name: got %q, want %q", mg.Name, "casino_showdown")
 	}
-	if mg.Attr != "STR" {
-		t.Errorf("MinigameNode.Attr: got %q, want %q", mg.Attr, "STR")
+	if !strings.Contains(mg.Description, "blackjack") {
+		t.Errorf("MinigameNode.Description: missing game prose, got %q", mg.Description)
 	}
-	if mg.Description != "an arm wrestling duel" {
-		t.Errorf("MinigameNode.Description: got %q", mg.Description)
-	}
+}
 
-	if len(mg.Body) != 1 {
-		t.Fatalf("Body length: got %d, want 1 (single if chain)", len(mg.Body))
+// TestParseMinigameRejectsLegacyAttr verifies the parser surfaces a
+// specific migration hint when an author still writes the old
+// `@minigame <name> <ATTR> "<desc>"` form.
+func TestParseMinigameRejectsLegacyAttr(t *testing.T) {
+	src := `@episode main:01 "Mini" {
+	@minigame arm_wrestle STR "an arm wrestling duel"
+	@gate { @next main:02 }
+}`
+	_, err := parseSource(src)
+	if err == nil {
+		t.Fatal("expected parse error for legacy <ATTR> positional, got nil")
 	}
+	if !strings.Contains(err.Error(), "legacy <ATTR>") {
+		t.Errorf("error should mention the legacy ATTR migration, got: %v", err)
+	}
+}
 
-	topIf, ok := mg.Body[0].(*ast.IfNode)
-	if !ok {
-		t.Fatalf("Body[0]: expected *IfNode, got %T", mg.Body[0])
+// TestParseMinigameRejectsLegacyBody verifies the parser surfaces a
+// migration hint when an author still writes `@minigame ... { ... }`.
+func TestParseMinigameRejectsLegacyBody(t *testing.T) {
+	src := `@episode main:01 "Mini" {
+	@minigame arm_wrestle "duel" {
+		@if (rating.S) {
+			NARRATOR: ok
+		}
 	}
-	// Top if: rating.S
-	rc, ok := topIf.Condition.(*ast.RatingCondition)
-	if !ok {
-		t.Fatalf("top if condition: expected *RatingCondition, got %T", topIf.Condition)
+	@gate { @next main:02 }
+}`
+	_, err := parseSource(src)
+	if err == nil {
+		t.Fatal("expected parse error for legacy { body }, got nil")
 	}
-	if rc.Grade != "S" {
-		t.Errorf("top rating grade: got %q, want 'S'", rc.Grade)
+	if !strings.Contains(err.Error(), "legacy `{ ... }` body") {
+		t.Errorf("error should mention the legacy body migration, got: %v", err)
 	}
-	// Then contains narrator + affection
-	if len(topIf.Then) != 2 {
-		t.Errorf("top Then length: got %d, want 2", len(topIf.Then))
-	}
-	narr, ok := topIf.Then[0].(*ast.NarratorNode)
-	if !ok {
-		t.Fatalf("top Then[0]: expected *NarratorNode, got %T", topIf.Then[0])
-	}
-	if narr.Text != "Perfect victory!" {
-		t.Errorf("top then narr: got %q", narr.Text)
-	}
+}
 
-	// Else: rating.A || rating.B (CompoundCondition)
-	if len(topIf.Else) != 1 {
-		t.Fatalf("Else length: got %d, want 1", len(topIf.Else))
+// TestParseTrick covers the new @trick <type> "<prompt>" one-liner.
+func TestParseTrick(t *testing.T) {
+	tests := []struct {
+		name       string
+		src        string
+		wantType   string
+		wantPrompt string
+	}{
+		{"tap", `@trick tap "Tap to keep up with his pace."`, "tap", "Tap to keep up with his pace."},
+		{"hold", `@trick hold "Hold your breath."`, "hold", "Hold your breath."},
+		{"swipe", `@trick swipe "Wipe the fog off the mirror."`, "swipe", "Wipe the fog off the mirror."},
+		{"shake", `@trick shake "Shake him awake."`, "shake", "Shake him awake."},
+		{"swing", `@trick swing "Cast the line."`, "swing", "Cast the line."},
+		{"hold-still", `@trick hold-still "Don't move — he's right behind you."`, "hold-still", "Don't move — he's right behind you."},
+		{"nod", `@trick nod "Nod if you understand."`, "nod", "Nod if you understand."},
+		{"turn-away", `@trick turn-away "Look away — you can't watch this."`, "turn-away", "Look away — you can't watch this."},
+		{"close-eyes", `@trick close-eyes "Close your eyes."`, "close-eyes", "Close your eyes."},
 	}
-	elseIf, ok := topIf.Else[0].(*ast.IfNode)
-	if !ok {
-		t.Fatalf("Else[0]: expected *IfNode, got %T", topIf.Else[0])
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			src := "@episode main:01 \"T\" {\n  " + tt.src + "\n  @gate { @next main:02 }\n}"
+			ep := parseOrFail(t, src)
+			if len(ep.Body) != 1 {
+				t.Fatalf("Body length: got %d, want 1", len(ep.Body))
+			}
+			trick, ok := ep.Body[0].(*ast.TrickNode)
+			if !ok {
+				t.Fatalf("Body[0]: expected *TrickNode, got %T", ep.Body[0])
+			}
+			if trick.Type != tt.wantType {
+				t.Errorf("Type: got %q, want %q", trick.Type, tt.wantType)
+			}
+			if trick.Prompt != tt.wantPrompt {
+				t.Errorf("Prompt: got %q, want %q", trick.Prompt, tt.wantPrompt)
+			}
+		})
 	}
-	cc, ok := elseIf.Condition.(*ast.CompoundCondition)
-	if !ok {
-		t.Fatalf("else-if condition: expected *CompoundCondition, got %T", elseIf.Condition)
+}
+
+// TestParseTrickRejectsUnknownType verifies the parser rejects any
+// trick type outside the 9-type whitelist.
+func TestParseTrickRejectsUnknownType(t *testing.T) {
+	src := `@episode main:01 "T" {
+	@trick blink "Blink twice."
+	@gate { @next main:02 }
+}`
+	_, err := parseSource(src)
+	if err == nil {
+		t.Fatal("expected parse error for unknown trick type, got nil")
 	}
-	if cc.Op != "||" {
-		t.Errorf("compound op: got %q, want '||'", cc.Op)
+	if !strings.Contains(err.Error(), "invalid @trick type") {
+		t.Errorf("error should mention invalid trick type, got: %v", err)
 	}
-	leftRC, ok := cc.Left.(*ast.RatingCondition)
-	if !ok || leftRC.Grade != "A" {
-		t.Errorf("compound.Left: expected *RatingCondition{A}, got %T %+v", cc.Left, cc.Left)
+}
+
+// TestParseTrickRejectsBody verifies the parser rejects a body on @trick.
+func TestParseTrickRejectsBody(t *testing.T) {
+	src := `@episode main:01 "T" {
+	@trick tap "Tap." {
+		NARRATOR: nope
 	}
-	rightRC, ok := cc.Right.(*ast.RatingCondition)
-	if !ok || rightRC.Grade != "B" {
-		t.Errorf("compound.Right: expected *RatingCondition{B}, got %T %+v", cc.Right, cc.Right)
+	@gate { @next main:02 }
+}`
+	_, err := parseSource(src)
+	if err == nil {
+		t.Fatal("expected parse error for trick with body, got nil")
+	}
+}
+
+// TestParseRatingConditionRemoved verifies that `rating.<grade>` is no
+// longer a valid condition — the parser surfaces a migration hint.
+func TestParseRatingConditionRemoved(t *testing.T) {
+	src := `@episode main:01 "T" {
+	@if (rating.S) {
+		NARRATOR: nope
+	}
+	@gate { @next main:02 }
+}`
+	_, err := parseSource(src)
+	if err == nil {
+		t.Fatal("expected parse error for rating.S condition, got nil")
+	}
+	if !strings.Contains(err.Error(), "rating") {
+		t.Errorf("error should mention the rating migration, got: %v", err)
 	}
 }
 

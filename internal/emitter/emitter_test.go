@@ -901,6 +901,7 @@ func TestStepTypeTag(t *testing.T) {
 		{"pause", "pau"},
 		{"choice", "ch"},
 		{"minigame", "mg"},
+		{"trick", "trk"},
 		{"cg_show", "cg"},
 		{"bg", "bg"},
 		{"char_show", "char"},
@@ -1197,23 +1198,20 @@ func TestStepIDPhoneShowContinuesCounter(t *testing.T) {
 	}
 }
 
-// TestStepIDMinigameContinuesCounter verifies minigame.steps continues
-// the episode-scoped counter after the minigame step.
-func TestStepIDMinigameContinuesCounter(t *testing.T) {
+// TestStepIDMinigameLeaf verifies that @minigame is a leaf step (no
+// child counter) and the next sibling step continues the parent counter
+// without descending into the minigame.
+func TestStepIDMinigameLeaf(t *testing.T) {
 	ep := &ast.Episode{
 		BranchKey: "main:01",
 		Title:     "T",
 		Body: []ast.Node{
 			&ast.NarratorNode{Text: "intro"}, // 0001_nar
 			&ast.MinigameNode{ // 0002_mg
-				ID:          "qte_challenge",
-				Attr:        "ATK",
+				Name:        "qte_challenge",
 				Description: "d",
-				Body: []ast.Node{
-					&ast.NarratorNode{Text: "mg1"},
-					&ast.DialogueNode{Character: "X", Text: "mg2"},
-				},
 			},
+			&ast.NarratorNode{Text: "after"}, // 0003_nar
 		},
 		Gate: &ast.GateBlock{Routes: []*ast.GateRoute{{Target: "main:02"}}},
 	}
@@ -1231,12 +1229,60 @@ func TestStepIDMinigameContinuesCounter(t *testing.T) {
 	if mg["id"] != "0002_mg" {
 		t.Errorf("minigame id = %v, want 0002_mg", mg["id"])
 	}
-	mgSteps := mg["steps"].([]interface{})
-	for i, want := range []string{"0003_nar", "0004_dlg"} {
-		got := mgSteps[i].(map[string]interface{})["id"]
-		if got != want {
-			t.Errorf("minigame.steps[%d].id = %v, want %q", i, got, want)
-		}
+	if _, has := mg["steps"]; has {
+		t.Error("minigame should not have a 'steps' child container in the new model")
+	}
+	after := steps[2].(map[string]interface{})
+	if after["id"] != "0003_nar" {
+		t.Errorf("step after minigame should be 0003_nar (no children consumed), got %v", after["id"])
+	}
+}
+
+// TestStepIDTrickLeaf verifies trick is a leaf step with the trk tag
+// and consumes a single seq.
+func TestStepIDTrickLeaf(t *testing.T) {
+	ep := &ast.Episode{
+		BranchKey: "main:01",
+		Title:     "T",
+		Body: []ast.Node{
+			&ast.NarratorNode{Text: "intro"}, // 0001_nar
+			&ast.TrickNode{ // 0002_trk
+				Type:   ast.TrickTap,
+				Prompt: "Tap to keep up.",
+			},
+			&ast.NarratorNode{Text: "after"}, // 0003_nar
+		},
+		Gate: &ast.GateBlock{Routes: []*ast.GateRoute{{Target: "main:02"}}},
+	}
+	em := New(newMockResolver())
+	data, err := em.Emit(ep)
+	if err != nil {
+		t.Fatalf("Emit failed: %v", err)
+	}
+	var result map[string]interface{}
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatalf("Unmarshal failed: %v", err)
+	}
+	steps := result["steps"].([]interface{})
+	trick := steps[1].(map[string]interface{})
+	if trick["type"] != "trick" {
+		t.Errorf("trick type = %v, want trick", trick["type"])
+	}
+	if trick["id"] != "0002_trk" {
+		t.Errorf("trick id = %v, want 0002_trk", trick["id"])
+	}
+	if trick["trick_type"] != "tap" {
+		t.Errorf("trick_type = %v, want tap", trick["trick_type"])
+	}
+	if trick["prompt"] != "Tap to keep up." {
+		t.Errorf("prompt = %v", trick["prompt"])
+	}
+	if _, has := trick["steps"]; has {
+		t.Error("trick must not carry a body / steps container")
+	}
+	after := steps[2].(map[string]interface{})
+	if after["id"] != "0003_nar" {
+		t.Errorf("step after trick should be 0003_nar, got %v", after["id"])
 	}
 }
 
@@ -1419,9 +1465,9 @@ func TestStepIDGloballyUnique(t *testing.T) {
 				Else:      []ast.Node{&ast.DialogueNode{Character: "X", Text: "e1"}},
 			},
 			&ast.MinigameNode{
-				ID: "mg", Attr: "ATK", Description: "d",
-				Body: []ast.Node{&ast.NarratorNode{Text: "mg1"}},
+				Name: "mg", Description: "d",
 			},
+			&ast.TrickNode{Type: ast.TrickTap, Prompt: "tap."},
 			&ast.CgShowNode{
 				Name: "x", Duration: "short", Content: "c",
 				Body: []ast.Node{&ast.YouNode{Text: "y1"}},

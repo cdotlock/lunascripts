@@ -495,6 +495,63 @@ func TestFixAmpersandDialogue(t *testing.T) {
 	}
 }
 
+// TestFixMinigameLegacyAttr verifies the fixer flags `@minigame <id>
+// <ATTR> "..."` as an error with a migration hint.
+func TestFixMinigameLegacyAttr(t *testing.T) {
+	input := `@episode "T" {
+@minigame qte_challenge ATK "a quick test"
+@gate { @next main:02 }
+}`
+	r := Fix(input)
+	found := false
+	for _, e := range r.Errors {
+		if strings.Contains(e, "legacy @minigame syntax") && strings.Contains(e, "ATK") {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("expected legacy @minigame ATTR hint, got errors: %v", r.Errors)
+	}
+}
+
+// TestFixMinigameLegacyBody verifies the fixer flags `@minigame ... { ... }`
+// with a migration hint pointing at the new one-liner form.
+func TestFixMinigameLegacyBody(t *testing.T) {
+	input := `@episode "T" {
+@minigame qte "a quick test" {
+@if (rating.S) { NARRATOR: ok }
+}
+@gate { @next main:02 }
+}`
+	r := Fix(input)
+	found := false
+	for _, e := range r.Errors {
+		if strings.Contains(e, "legacy @minigame body") {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("expected legacy @minigame body hint, got errors: %v", r.Errors)
+	}
+}
+
+// TestFixTrickKeywordPreserved verifies @trick survives the fixer's
+// character-casing pass (it's a known keyword, not a character name).
+func TestFixTrickKeywordPreserved(t *testing.T) {
+	input := `@trick tap "Tap to keep up."`
+	r := Fix(input)
+	if !strings.Contains(r.Fixed, "@trick tap") {
+		t.Errorf("expected @trick to be preserved, got: %s", r.Fixed)
+	}
+	for _, f := range r.Fixes {
+		if strings.Contains(f, "character name casing") {
+			t.Errorf("@trick should not be miscategorised as a character name: %v", r.Fixes)
+		}
+	}
+}
+
 func TestCleanFileNoChanges(t *testing.T) {
 	input := `@episode "Clean Test" {
 

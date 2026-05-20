@@ -322,6 +322,8 @@ func (d *decompiler) writeStep(w *sourceWriter, step map[string]interface{}, ind
 		w.line(indent, "%ssfx play %s", prefix, name)
 	case "minigame":
 		return d.writeMinigame(w, step, indent, prefix)
+	case "trick":
+		w.line(indent, "%strick %s %s", prefix, stringValue(step["trick_type"]), quote(stringValue(step["prompt"])))
 	case "choice":
 		return d.writeChoice(w, step, indent, prefix)
 	case "affection":
@@ -356,7 +358,7 @@ func canUseConcurrentPrefix(typ string) bool {
 	case "bg", "char_show", "char_hide", "char_look", "char_move", "bubble",
 		"phone_hide", "music_play", "music_crossfade", "music_fadeout",
 		"sfx_play", "affection", "signal", "butterfly", "achievement",
-		"label", "goto", "pause":
+		"label", "goto", "pause", "trick":
 		return true
 	default:
 		return false
@@ -391,22 +393,23 @@ func (d *decompiler) writeCg(w *sourceWriter, step map[string]interface{}, inden
 }
 
 func (d *decompiler) writeMinigame(w *sourceWriter, step map[string]interface{}, indent int, prefix string) error {
-	id := stringValue(step["game_id"])
-	d.record("minigames", "minigames", "", id, stringValue(step["game_url"]))
+	// Compiled JSON from the current emitter uses `name`; tolerate
+	// legacy `game_id` payloads so historical compiled output can still
+	// round-trip into the new source form.
+	name := stringValue(step["name"])
+	if name == "" {
+		name = stringValue(step["game_id"])
+	}
+	d.record("minigames", "minigames", "", name, stringValue(step["game_url"]))
 
-	attr := stringValue(step["attr"])
-	if attr == "" {
-		attr = "DEX"
-		d.warn("minigame %q missing attr; used %q", id, attr)
+	desc := stringValue(step["description"])
+	if desc == "" {
+		desc = fmt.Sprintf("Recovered minigame description for %s.", name)
+		d.warn("minigame %q missing description; used a placeholder", name)
 	}
 
-	w.line(indent, "%sminigame %s %s %s {", prefix, id, attr, quote(stringValue(step["description"])))
-	if steps, ok := step["steps"].([]interface{}); ok {
-		if err := d.writeSteps(w, steps, indent+1); err != nil {
-			return err
-		}
-	}
-	w.line(indent, "}")
+	// One-liner: `@minigame <name> "<description>"`. No attr, no body.
+	w.line(indent, "%sminigame %s %s", prefix, name, quote(desc))
 	return nil
 }
 
@@ -606,8 +609,6 @@ func conditionSource(raw interface{}) (string, error) {
 		return fmt.Sprintf("(%s %s %s)", left, stringValue(cond["op"]), right), nil
 	case "check":
 		return fmt.Sprintf("check.%s", stringValue(cond["result"])), nil
-	case "rating":
-		return fmt.Sprintf("rating.%s", stringValue(cond["grade"])), nil
 	default:
 		return "", fmt.Errorf("unsupported condition type %q", stringValue(cond["type"]))
 	}

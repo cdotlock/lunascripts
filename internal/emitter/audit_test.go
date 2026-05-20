@@ -703,7 +703,8 @@ func TestAuditG_AllNodeTypesHaveTypeField(t *testing.T) {
 		{"music_crossfade", &ast.MusicCrossfadeNode{Track: "t"}, "music_crossfade"},
 		{"music_fadeout", &ast.MusicFadeoutNode{}, "music_fadeout"},
 		{"sfx_play", &ast.SfxPlayNode{Sound: "s"}, "sfx_play"},
-		{"minigame", &ast.MinigameNode{ID: "g", Attr: "ATK"}, "minigame"},
+		{"minigame", &ast.MinigameNode{Name: "g", Description: "d"}, "minigame"},
+		{"trick", &ast.TrickNode{Type: ast.TrickTap, Prompt: "tap."}, "trick"},
 		{"choice", &ast.ChoiceNode{Options: []*ast.OptionNode{}}, "choice"},
 		{"affection", &ast.AffectionNode{Char: "c", Delta: "+1"}, "affection"},
 		{"signal", &ast.SignalNode{Kind: "mark", Event: "E"}, "signal"},
@@ -737,31 +738,15 @@ func TestAuditG_AllNodeTypesHaveTypeField(t *testing.T) {
 // ---------- Additional structural checks ----------
 
 func TestAuditG_MinigameStructure(t *testing.T) {
-	// Minigame body now uses standard @if (rating.X) { ... } branching.
+	// @minigame is a leaf: name + description, plus the resolver-filled
+	// game_url. No attr, no body, no rating branching.
 	ep := &ast.Episode{
 		BranchKey: "test:01",
 		Title:     "T",
 		Body: []ast.Node{
 			&ast.MinigameNode{
-				ID:          "qte_challenge",
-				Attr:        "ATK",
+				Name:        "qte_challenge",
 				Description: "minigame description placeholder",
-				Body: []ast.Node{
-					&ast.IfNode{
-						Condition: &ast.RatingCondition{Grade: "S"},
-						Then:      []ast.Node{&ast.NarratorNode{Text: "Perfect!"}},
-						Else: []ast.Node{
-							&ast.IfNode{
-								Condition: &ast.CompoundCondition{
-									Op:    "||",
-									Left:  &ast.RatingCondition{Grade: "A"},
-									Right: &ast.RatingCondition{Grade: "B"},
-								},
-								Then: []ast.Node{&ast.NarratorNode{Text: "Good."}},
-							},
-						},
-					},
-				},
 			},
 		},
 		Gate: &ast.GateBlock{Routes: []*ast.GateRoute{{Target: "test:02"}}},
@@ -779,35 +764,60 @@ func TestAuditG_MinigameStructure(t *testing.T) {
 	if mg["type"] != "minigame" {
 		t.Errorf("type = %v", mg["type"])
 	}
-	if mg["game_id"] != "qte_challenge" {
-		t.Errorf("game_id = %v", mg["game_id"])
-	}
-	if mg["attr"] != "ATK" {
-		t.Errorf("attr = %v", mg["attr"])
+	if mg["name"] != "qte_challenge" {
+		t.Errorf("name = %v", mg["name"])
 	}
 	if mg["description"] != "minigame description placeholder" {
 		t.Errorf("description = %v", mg["description"])
 	}
-
-	// on_results is gone; body is now emitted as "steps".
-	if _, has := mg["on_results"]; has {
-		t.Error("minigame should not have 'on_results' key; use 'steps' with @if (rating.X)")
+	if mg["game_url"] != "https://cdn.test/minigames/qte_challenge/index.html" {
+		t.Errorf("game_url = %v", mg["game_url"])
 	}
 
-	mgSteps, ok := mg["steps"].([]interface{})
-	if !ok {
-		t.Fatalf("minigame steps: got %T, want []interface{}", mg["steps"])
+	// Legacy fields must be absent in the new shape.
+	for _, key := range []string{"attr", "game_id", "on_results", "steps"} {
+		if _, has := mg[key]; has {
+			t.Errorf("minigame must not carry legacy %q key in the new model", key)
+		}
 	}
-	if len(mgSteps) != 1 {
-		t.Fatalf("minigame steps len: got %d, want 1 (one @if)", len(mgSteps))
+}
+
+func TestAuditG_TrickStructure(t *testing.T) {
+	// @trick is engine-native: type + prompt, no asset, no rewards.
+	ep := &ast.Episode{
+		BranchKey: "test:01",
+		Title:     "T",
+		Body: []ast.Node{
+			&ast.TrickNode{
+				Type:   ast.TrickHold,
+				Prompt: "Hold your breath.",
+			},
+		},
+		Gate: &ast.GateBlock{Routes: []*ast.GateRoute{{Target: "test:02"}}},
 	}
-	ifStep := mgSteps[0].(map[string]interface{})
-	if ifStep["type"] != "if" {
-		t.Errorf("minigame step[0] type: got %v, want 'if'", ifStep["type"])
+
+	em := New(newMockResolver())
+	data, _ := em.Emit(ep)
+
+	var result map[string]interface{}
+	json.Unmarshal(data, &result)
+
+	steps := result["steps"].([]interface{})
+	trick := steps[0].(map[string]interface{})
+
+	if trick["type"] != "trick" {
+		t.Errorf("type = %v", trick["type"])
 	}
-	cond := ifStep["condition"].(map[string]interface{})
-	if cond["type"] != "rating" || cond["grade"] != "S" {
-		t.Errorf("condition: got %+v, want rating/S", cond)
+	if trick["trick_type"] != "hold" {
+		t.Errorf("trick_type = %v, want hold", trick["trick_type"])
+	}
+	if trick["prompt"] != "Hold your breath." {
+		t.Errorf("prompt = %v", trick["prompt"])
+	}
+	for _, key := range []string{"url", "game_url", "steps", "attr"} {
+		if _, has := trick[key]; has {
+			t.Errorf("trick must not carry %q key", key)
+		}
 	}
 }
 

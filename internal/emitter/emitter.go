@@ -100,6 +100,8 @@ func stepTypeTag(stepType string) string {
 		return "ch"
 	case "minigame":
 		return "mg"
+	case "trick":
+		return "trk"
 	case "cg_show":
 		return "cg"
 	case "bg":
@@ -236,6 +238,8 @@ func (e *Emitter) emitNode(n ast.Node) map[string]interface{} {
 		return e.emitSfxPlay(v)
 	case *ast.MinigameNode:
 		return e.emitMinigame(v)
+	case *ast.TrickNode:
+		return e.emitTrick(v)
 	case *ast.ChoiceNode:
 		return e.emitChoice(v)
 	case *ast.AffectionNode:
@@ -453,19 +457,40 @@ func (e *Emitter) emitSfxPlay(n *ast.SfxPlayNode) map[string]interface{} {
 }
 
 func (e *Emitter) emitMinigame(n *ast.MinigameNode) map[string]interface{} {
+	// Field shape:
+	//   - name: semantic asset handle (mirrors `@cg show <name>`'s key).
+	//   - description: continuous prose that scene-sets AND defines the
+	//     simple gameplay; the vibe-coding agent generates the game from
+	//     this. Runtime players can ignore it; asset-prep pipelines need it.
+	//   - game_url: resolved through the asset mapping (the URL the
+	//     player loads). Empty until the generator finishes.
+	//
+	// Notably absent: attr, game_id (use name), steps/body, rating
+	// branching. Rewards are engine-owned and never declared here.
 	m := map[string]interface{}{
 		"type":        "minigame",
-		"game_id":     n.ID,
-		"attr":        n.Attr,
+		"name":        n.Name,
 		"description": n.Description,
 	}
-	url, err := e.resolver.ResolveMinigame(n.ID)
+	url, err := e.resolver.ResolveMinigame(n.Name)
 	if err != nil {
-		e.warn("minigame %q: %v", n.ID, err)
+		e.warn("minigame %q: %v", n.Name, err)
 	} else {
 		m["game_url"] = url
 	}
 	return m
+}
+
+func (e *Emitter) emitTrick(n *ast.TrickNode) map[string]interface{} {
+	// Trick is engine-native: no asset, no URL, no rewards. Just the
+	// type the engine should detect and the one-line prompt to show.
+	// Trick is a mandatory body-interaction beat — the engine MUST wait
+	// for completion before advancing.
+	return map[string]interface{}{
+		"type":       "trick",
+		"trick_type": n.Type,
+		"prompt":     n.Prompt,
+	}
 }
 
 func (e *Emitter) emitChoice(n *ast.ChoiceNode) map[string]interface{} {
@@ -547,10 +572,6 @@ func (e *Emitter) emitChildren(n ast.Node, step map[string]interface{}) {
 	case *ast.PhoneShowNode:
 		if len(v.Body) > 0 {
 			step["messages"] = e.emitNodes(v.Body)
-		}
-	case *ast.MinigameNode:
-		if len(v.Body) > 0 {
-			step["steps"] = e.emitNodes(v.Body)
 		}
 	case *ast.ChoiceNode:
 		options := step["options"].([]interface{})
@@ -662,11 +683,6 @@ func (e *Emitter) emitCondition(c ast.Condition) map[string]interface{} {
 		return map[string]interface{}{
 			"type":   "check",
 			"result": v.Result,
-		}
-	case *ast.RatingCondition:
-		return map[string]interface{}{
-			"type":  "rating",
-			"grade": v.Grade,
 		}
 	default:
 		e.warn("unknown condition type: %T", c)

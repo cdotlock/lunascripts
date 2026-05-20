@@ -14,12 +14,27 @@ import (
 // knownKeywords are @-directive keywords that are NOT character names.
 var knownKeywords = map[string]bool{
 	"bg": true, "cg": true, "phone": true, "text": true,
-	"music": true, "sfx": true, "minigame": true, "choice": true,
+	"music": true, "sfx": true, "minigame": true, "trick": true,
+	"choice": true,
 	"affection": true, "signal": true,
 	"butterfly": true, "if": true, "else": true, "label": true,
 	"goto": true, "episode": true,
 	"option": true, "gate": true, "next": true, "pause": true,
 	"ending": true, "achievement": true,
+}
+
+// validTrickTypes enumerates the 9 locked trick types accepted by the
+// engine. Keep in sync with the Trick* constants in package ast.
+var validTrickTypes = map[string]bool{
+	ast.TrickTap:       true,
+	ast.TrickHold:      true,
+	ast.TrickSwipe:     true,
+	ast.TrickShake:     true,
+	ast.TrickSwing:     true,
+	ast.TrickHoldStill: true,
+	ast.TrickNod:       true,
+	ast.TrickTurnAway:  true,
+	ast.TrickCloseEyes: true,
 }
 
 // validEndingTypes enumerates the accepted values for @ending <type>.
@@ -433,6 +448,8 @@ func (p *Parser) parseDirective() (ast.Node, error) {
 		return p.parseSfx()
 	case "minigame":
 		return p.parseMinigame()
+	case "trick":
+		return p.parseTrick()
 	case "choice":
 		return p.parseChoice()
 	case "affection":
@@ -452,7 +469,7 @@ func (p *Parser) parseDirective() (ast.Node, error) {
 	case "achievement":
 		return p.parseAchievement()
 	case "on":
-		return nil, fmt.Errorf("line %d col %d: @on is not a MSS directive — use @if (check.success) / @if (rating.X) inside brave options and minigames", p.cur.Line, p.cur.Col)
+		return nil, fmt.Errorf("line %d col %d: @on is not a MSS directive — use @if (check.success) / @else inside brave options", p.cur.Line, p.cur.Col)
 	default:
 		// Not a known keyword — treat as character directive.
 		return p.parseCharDirective(keyword)
@@ -688,47 +705,84 @@ func (p *Parser) parseSfx() (ast.Node, error) {
 	return &ast.SfxPlayNode{Sound: sound.Literal}, nil
 }
 
-// parseMinigame parses:
+// parseMinigame parses: @minigame <name> "<description>"
 //
-//	@minigame <id> <ATTR> "<description>" {
-//	  <body>  // typically @if (rating.S) { ... } @else @if (rating.A) { ... } ...
-//	}
+// The minigame is generated downstream by a vibe-coding agent from the
+// description prose (which describes both the scene and the simple
+// gameplay). There is no body, no attribute, no rating branching, and
+// no script-side reward declaration — the engine owns rewards for
+// anti-cheat. The directive is a leaf.
 //
-// Description is a short English narrative tying the minigame to the
-// scene. Body is standard MSS; branching on the result uses
-// RatingCondition (rating.<grade>) in @if.
+// Legacy form `@minigame <id> <ATTR> "<desc>" { ... }` is no longer
+// accepted; the parser detects the old shape and emits a hint pointing
+// at the new syntax (the fixer also flags it before compile).
 func (p *Parser) parseMinigame() (ast.Node, error) {
 	p.advance() // consume "minigame"
-	id, err := p.expect(token.IDENT)
+	name, err := p.expect(token.IDENT)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("line %d col %d: @minigame requires an asset name", name.Line, name.Col)
 	}
-	attr, err := p.expect(token.IDENT)
-	if err != nil {
-		return nil, err
+
+	// Detect the legacy `<ATTR>` second positional and reject with a
+	// specific migration hint. The new form goes straight to STRING.
+	if p.cur.Type == token.IDENT {
+		attr := p.cur
+		return nil, fmt.Errorf("line %d col %d: @minigame %s %s ...: legacy <ATTR> positional has been removed — write `@minigame %s \"<description>\"` (one-liner, no attribute, no body, no rating branches)",
+			attr.Line, attr.Col, name.Literal, attr.Literal, name.Literal)
 	}
+
 	desc, err := p.expect(token.STRING)
 	if err != nil {
-		return nil, fmt.Errorf("line %d col %d: @minigame requires a quoted description after the attribute", desc.Line, desc.Col)
-	}
-	if _, err := p.expect(token.LBRACE); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("line %d col %d: @minigame %s requires a quoted description", desc.Line, desc.Col, name.Literal)
 	}
 
-	body, err := p.parseBlock()
-	if err != nil {
-		return nil, err
-	}
-
-	if _, err := p.expect(token.RBRACE); err != nil {
-		return nil, err
+	// Detect a legacy body `{ ... }` and reject with the migration hint.
+	if p.cur.Type == token.LBRACE {
+		return nil, fmt.Errorf("line %d col %d: @minigame %s: legacy `{ ... }` body (with @if (rating.X)) has been removed — `@minigame` is now a one-liner. Rewards are engine-owned; per-rating narrative is gone. Use @trick for mandatory body-interaction beats instead.",
+			p.cur.Line, p.cur.Col, name.Literal)
 	}
 
 	return &ast.MinigameNode{
-		ID:          id.Literal,
-		Attr:        attr.Literal,
+		Name:        name.Literal,
 		Description: desc.Literal,
-		Body:        body,
+	}, nil
+}
+
+// parseTrick parses: @trick <type> "<prompt>"
+//
+// Both <type> and "<prompt>" are required. <type> must be one of the
+// nine engine-supported trick types (see ast.Trick* constants); the
+// parser whitelists at parse time so authors get an immediate hint.
+// "<prompt>" is the one-line player-facing imperative. The directive is
+// a leaf: no body, no rating, no reward, no branching.
+func (p *Parser) parseTrick() (ast.Node, error) {
+	p.advance() // consume "trick"
+
+	typeTok, err := p.expect(token.IDENT)
+	if err != nil {
+		return nil, fmt.Errorf("line %d col %d: @trick requires a type (tap/hold/swipe/shake/swing/hold-still/nod/turn-away/close-eyes)", typeTok.Line, typeTok.Col)
+	}
+	if !validTrickTypes[typeTok.Literal] {
+		return nil, fmt.Errorf("line %d col %d: invalid @trick type %q (valid: tap, hold, swipe, shake, swing, hold-still, nod, turn-away, close-eyes)", typeTok.Line, typeTok.Col, typeTok.Literal)
+	}
+
+	promptTok, err := p.expect(token.STRING)
+	if err != nil {
+		return nil, fmt.Errorf("line %d col %d: @trick %s requires a quoted player-facing prompt", promptTok.Line, promptTok.Col, typeTok.Literal)
+	}
+	if promptTok.Literal == "" {
+		return nil, fmt.Errorf("line %d col %d: @trick %s prompt must not be empty", promptTok.Line, promptTok.Col, typeTok.Literal)
+	}
+
+	// Reject a body — trick has no body. Anything that looks like one
+	// is almost certainly an author migrating @minigame patterns.
+	if p.cur.Type == token.LBRACE {
+		return nil, fmt.Errorf("line %d col %d: @trick %s: @trick has no body (it is a leaf directive)", p.cur.Line, p.cur.Col, typeTok.Literal)
+	}
+
+	return &ast.TrickNode{
+		Type:   typeTok.Literal,
+		Prompt: promptTok.Literal,
 	}, nil
 }
 
@@ -1270,9 +1324,8 @@ func (p *Parser) parseConditionPrimary() (ast.Condition, error) {
 		return &ast.InfluenceCondition{Description: tok.Literal}, nil
 	}
 
-	// Dotted forms: <first>.<second>. Five shapes recognised:
+	// Dotted forms: <first>.<second>. Four shapes recognised:
 	//   - check.success / check.fail   → CheckCondition   (context-local to brave option body)
-	//   - rating.<grade>               → RatingCondition  (context-local to minigame body)
 	//   - affection.<char> <op> <N>    → ComparisonCondition with affection operand
 	//   - <option_id>.success|fail|any → ChoiceCondition  (retrospective query from outside option)
 	//   - anything else dotted         → error
@@ -1296,9 +1349,12 @@ func (p *Parser) parseConditionPrimary() (ast.Condition, error) {
 			return &ast.CheckCondition{Result: secondTok.Literal}, nil
 		}
 
-		// Context-local: rating.<grade>.
+		// `rating.<grade>` was removed along with @minigame body
+		// branches — surface a specific hint so authors migrating from
+		// the old spec see exactly what changed.
 		if firstTok.Literal == "rating" {
-			return &ast.RatingCondition{Grade: secondTok.Literal}, nil
+			return nil, fmt.Errorf("line %d col %d: rating.%s: rating conditions were removed when @minigame became a one-liner. Per-rating narrative is gone; minigame rewards are engine-owned. Use a different mechanism (e.g. @if (affection.X >= N) or a flag) if you need post-minigame branching.",
+				secondTok.Line, secondTok.Col, secondTok.Literal)
 		}
 
 		// affection.<char> <op> <N> — comparison with affection operand.

@@ -68,7 +68,6 @@ func (g *GateBlock) nodeType() string { return "gate" }
 //   - ComparisonCondition   : structured numeric comparison
 //   - CompoundCondition     : && / || tree of sub-conditions
 //   - CheckCondition        : this-option's check result (check.success / check.fail) — context-local to brave option body
-//   - RatingCondition       : this-minigame's rating (rating.S / rating.A / …) — context-local to minigame body
 type Condition interface {
 	ConditionKind() string
 }
@@ -141,16 +140,6 @@ type CheckCondition struct {
 }
 
 func (c *CheckCondition) ConditionKind() string { return "check" }
-
-// RatingCondition is the context-local condition for a minigame's grade.
-// Source syntax: rating.<grade>, valid only inside the body of a
-// @minigame. Grade is a single identifier (typically S / A / B / C / D,
-// but the language does not enforce a specific vocabulary).
-type RatingCondition struct {
-	Grade string // e.g. "S", "A"
-}
-
-func (c *RatingCondition) ConditionKind() string { return "rating" }
 
 // GateRoute is a single condition→target pair inside a @gate block.
 type GateRoute struct {
@@ -380,15 +369,62 @@ func (s *SfxPlayNode) nodeType() string { return "sfx_play" }
 // Game-mechanic nodes
 // ----------------------------------------------------------------------------
 
-// MinigameNode triggers a mini-game. Body holds the nodes that run during
-// and after the minigame resolves; author uses standard @if with
-// RatingCondition (e.g. @if (rating.S) { ... }) to branch on the result.
+// Valid trick types. The set is intentionally closed: each entry has
+// engine-native detection on the device, no per-script tuning, no body.
+// The trick is a mandatory body-interaction beat — the player must
+// complete it to advance.
+//
+// Modality:
+//   - touch (no permission): TrickTap, TrickHold, TrickSwipe
+//   - motion (no runtime prompt on iOS): TrickShake, TrickSwing, TrickHoldStill
+//   - camera (camera permission, frames stay on device): TrickNod, TrickTurnAway, TrickCloseEyes
+//
+// The asset/permission contract lives outside MSS: the engine owns the
+// detection threshold and the prompt overlay; the script only declares
+// what trick fires and what one-line prompt the player sees.
+const (
+	TrickTap        = "tap"
+	TrickHold       = "hold"
+	TrickSwipe      = "swipe"
+	TrickShake      = "shake"
+	TrickSwing      = "swing"
+	TrickHoldStill  = "hold-still"
+	TrickNod        = "nod"
+	TrickTurnAway   = "turn-away"
+	TrickCloseEyes  = "close-eyes"
+)
+
+// TrickNode triggers a mandatory body-interaction beat. The player must
+// complete <Type> for the engine to advance. There is no rating, no
+// branching, no reward — see MinigameNode for that. Source syntax:
+//
+//	@trick <type> "<prompt>"
+//
+// Type is one of the locked constants above; the validator rejects any
+// other value. Prompt is a one-line imperative shown to the player as
+// narrative glue (e.g. "Tap the screen until you hear the door give"
+// for TrickTap, "Hold your breath" for TrickHold).
+type TrickNode struct {
+	ConcurrentFlag
+	Type   string // one of the Trick* constants
+	Prompt string // one-line player-facing imperative
+}
+
+func (t *TrickNode) nodeType() string { return "trick" }
+
+// MinigameNode triggers an optional embedded mini-game. The game itself
+// is generated downstream by a vibe-coding agent from Description (which
+// describes both the scene and the simple gameplay) — there is no
+// pre-built library. The player may play or skip; if they play, the
+// engine scales the reward by the H5 result. There is no body, no
+// rating-driven branching, no attribute coupling, and no script-side
+// reward declaration: rewards are owned by the engine for anti-cheat.
+//
+// Source syntax: @minigame <name> "<description>"
 type MinigameNode struct {
 	ConcurrentFlag
-	ID          string
-	Attr        string // governing attribute, e.g. "ATK"
-	Description string // short English narrative tying the minigame to the scene
-	Body        []Node
+	Name        string // asset handle (also used as @cg show name does)
+	Description string // continuous English prose: scene + simple gameplay
 }
 
 func (m *MinigameNode) nodeType() string { return "minigame" }

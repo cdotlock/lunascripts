@@ -324,33 +324,23 @@ func TestGotoInsideCgShow(t *testing.T) {
 	}
 }
 
-func TestGotoInsideMinigame(t *testing.T) {
+// TestMinigameLeafNoBodyValidates pins the new leaf shape — a minigame
+// with a name and description passes validation cleanly (there is no
+// body to recurse into anymore).
+func TestMinigameLeafNoBodyValidates(t *testing.T) {
 	ep := &ast.Episode{
 		BranchKey: "main:01", Title: "T",
 		Body: []ast.Node{
 			&ast.MinigameNode{
-				ID:          "mg1",
-				Attr:        "STR",
+				Name:        "mg1",
 				Description: "minigame description placeholder",
-				Body: []ast.Node{
-					&ast.IfNode{
-						Condition: &ast.RatingCondition{Grade: "S"},
-						Then:      []ast.Node{&ast.GotoNode{Name: "MISSING"}},
-					},
-				},
 			},
 		},
 		Gate: &ast.GateBlock{Routes: []*ast.GateRoute{{Target: "main:02"}}},
 	}
 	errs := Validate(ep)
-	found := false
-	for _, e := range errs {
-		if e.Code == GotoNoLabel {
-			found = true
-		}
-	}
-	if !found {
-		t.Error("expected GOTO_NO_LABEL for goto inside MinigameNode")
+	if len(errs) != 0 {
+		t.Errorf("leaf minigame should validate cleanly, got %v", errs)
 	}
 }
 
@@ -396,28 +386,107 @@ func TestLabelInsideCgShow(t *testing.T) {
 	}
 }
 
-func TestLabelInsideMinigame(t *testing.T) {
+// TestMinigameMissingDescription pins the validator error code for
+// minigame missing required description.
+func TestMinigameMissingDescription(t *testing.T) {
 	ep := &ast.Episode{
 		BranchKey: "main:01", Title: "T",
 		Body: []ast.Node{
-			&ast.MinigameNode{
-				ID:          "mg1",
-				Attr:        "STR",
-				Description: "minigame description placeholder",
-				Body: []ast.Node{
-					&ast.IfNode{
-						Condition: &ast.RatingCondition{Grade: "S"},
-						Then:      []ast.Node{&ast.LabelNode{Name: "MG_LABEL"}},
-					},
-				},
-			},
-			&ast.GotoNode{Name: "MG_LABEL"},
+			&ast.MinigameNode{Name: "mg1"},
 		},
 		Gate: &ast.GateBlock{Routes: []*ast.GateRoute{{Target: "main:02"}}},
 	}
 	errs := Validate(ep)
-	if len(errs) != 0 {
-		t.Errorf("expected no errors, got %v", errs)
+	found := false
+	for _, e := range errs {
+		if e.Code == MinigameMissingDescription {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected MINIGAME_MISSING_DESCRIPTION, got %v", errs)
+	}
+}
+
+// TestMinigameMissingName pins the validator error for the empty-name case.
+func TestMinigameMissingName(t *testing.T) {
+	ep := &ast.Episode{
+		BranchKey: "main:01", Title: "T",
+		Body: []ast.Node{
+			&ast.MinigameNode{Description: "d"},
+		},
+		Gate: &ast.GateBlock{Routes: []*ast.GateRoute{{Target: "main:02"}}},
+	}
+	errs := Validate(ep)
+	found := false
+	for _, e := range errs {
+		if e.Code == MinigameMissingName {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected MINIGAME_MISSING_NAME, got %v", errs)
+	}
+}
+
+// TestTrickValidationWhitelist verifies the validator accepts every one
+// of the nine locked trick types and rejects anything outside.
+func TestTrickValidationWhitelist(t *testing.T) {
+	good := []string{
+		ast.TrickTap, ast.TrickHold, ast.TrickSwipe,
+		ast.TrickShake, ast.TrickSwing, ast.TrickHoldStill,
+		ast.TrickNod, ast.TrickTurnAway, ast.TrickCloseEyes,
+	}
+	for _, ty := range good {
+		ep := &ast.Episode{
+			BranchKey: "main:01", Title: "T",
+			Body: []ast.Node{
+				&ast.TrickNode{Type: ty, Prompt: "do it."},
+			},
+			Gate: &ast.GateBlock{Routes: []*ast.GateRoute{{Target: "main:02"}}},
+		}
+		if errs := Validate(ep); len(errs) != 0 {
+			t.Errorf("trick type %q should validate cleanly, got %v", ty, errs)
+		}
+	}
+
+	bad := &ast.Episode{
+		BranchKey: "main:01", Title: "T",
+		Body: []ast.Node{
+			&ast.TrickNode{Type: "blink", Prompt: "Blink."},
+		},
+		Gate: &ast.GateBlock{Routes: []*ast.GateRoute{{Target: "main:02"}}},
+	}
+	errs := Validate(bad)
+	found := false
+	for _, e := range errs {
+		if e.Code == InvalidTrickType {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected INVALID_TRICK_TYPE for 'blink', got %v", errs)
+	}
+}
+
+// TestTrickMissingPrompt verifies empty prompt is rejected.
+func TestTrickMissingPrompt(t *testing.T) {
+	ep := &ast.Episode{
+		BranchKey: "main:01", Title: "T",
+		Body: []ast.Node{
+			&ast.TrickNode{Type: ast.TrickTap, Prompt: ""},
+		},
+		Gate: &ast.GateBlock{Routes: []*ast.GateRoute{{Target: "main:02"}}},
+	}
+	errs := Validate(ep)
+	found := false
+	for _, e := range errs {
+		if e.Code == TrickMissingPrompt {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected TRICK_MISSING_PROMPT, got %v", errs)
 	}
 }
 
@@ -683,19 +752,8 @@ func TestValuesInsideNestedNodes(t *testing.T) {
 				Then:      []ast.Node{&ast.CharShowNode{Char: "c", Look: "l", Position: "oops3"}},
 				Else:      []ast.Node{&ast.CharShowNode{Char: "c", Look: "l", Position: "oops4"}},
 			},
-			&ast.MinigameNode{
-				ID:          "mg1",
-				Attr:        "STR",
-				Description: "minigame description placeholder",
-				Body: []ast.Node{
-					&ast.IfNode{
-						Condition: &ast.RatingCondition{Grade: "S"},
-						Then:      []ast.Node{&ast.CharShowNode{Char: "c", Look: "l", Position: "oops5"}},
-					},
-				},
-			},
 			&ast.PhoneShowNode{
-				Body: []ast.Node{&ast.CharShowNode{Char: "c", Look: "l", Position: "oops6"}},
+				Body: []ast.Node{&ast.CharShowNode{Char: "c", Look: "l", Position: "oops5"}},
 			},
 		},
 		Gate: &ast.GateBlock{Routes: []*ast.GateRoute{{Target: "main:02"}}},
@@ -711,8 +769,10 @@ func TestValuesInsideNestedNodes(t *testing.T) {
 			bubbleErrors++
 		}
 	}
-	if positionErrors < 6 {
-		t.Errorf("expected at least 6 INVALID_POSITION errors from nested nodes, got %d", positionErrors)
+	// 5 invalid positions: cg body, brave then, brave else, brave body
+	// trailer (oops2), if then (oops3), if else (oops4), phone body (oops5).
+	if positionErrors < 5 {
+		t.Errorf("expected at least 5 INVALID_POSITION errors from nested nodes, got %d", positionErrors)
 	}
 	if bubbleErrors < 2 {
 		t.Errorf("expected at least 2 INVALID_BUBBLE_TYPE errors from nested nodes, got %d", bubbleErrors)
@@ -755,28 +815,11 @@ func TestBraveOptionsInsideNestedNodes(t *testing.T) {
 					},
 				},
 			},
-			&ast.MinigameNode{
-				ID:          "mg1",
-				Attr:        "STR",
-				Description: "minigame description placeholder",
-				Body: []ast.Node{
-					&ast.IfNode{
-						Condition: &ast.RatingCondition{Grade: "S"},
-						Then: []ast.Node{
-							&ast.ChoiceNode{
-								Options: []*ast.OptionNode{
-									{ID: "D", Mode: "brave", Text: "d"},
-								},
-							},
-						},
-					},
-				},
-			},
 			&ast.PhoneShowNode{
 				Body: []ast.Node{
 					&ast.ChoiceNode{
 						Options: []*ast.OptionNode{
-							{ID: "E", Mode: "brave", Text: "e"},
+							{ID: "D", Mode: "brave", Text: "d"},
 						},
 					},
 				},
@@ -791,9 +834,10 @@ func TestBraveOptionsInsideNestedNodes(t *testing.T) {
 			braveErrors++
 		}
 	}
-	// 5 brave options without check → 5 BRAVE_NO_CHECK errors.
-	if braveErrors < 5 {
-		t.Errorf("expected at least 5 BRAVE_NO_CHECK errors from nested nodes, got %d", braveErrors)
+	// 4 brave options without check → 4 BRAVE_NO_CHECK errors
+	// (cg body, if then, if else, phone body).
+	if braveErrors < 4 {
+		t.Errorf("expected at least 4 BRAVE_NO_CHECK errors from nested nodes, got %d", braveErrors)
 	}
 }
 

@@ -1315,39 +1315,19 @@ func TestAudit_ChoiceMultipleOptions(t *testing.T) {
 	}
 }
 
-// TestAudit_MinigameSingleRating tests branching on a rating via @if
-// (rating.S) inside a minigame body.
-func TestAudit_MinigameSingleRating(t *testing.T) {
+// TestAudit_MinigameLeafShape pins the new @minigame leaf form: name +
+// description only. No ATTR, no body, no rating branching.
+func TestAudit_MinigameLeafShape(t *testing.T) {
 	src := `@episode main:01 "T" {
-	@minigame test STR "minigame description placeholder" {
-		@if (rating.S) {
-			NARRATOR: Perfect.
-		} @else {
-			NARRATOR: Failed.
-		}
-	}
+	@minigame test "minigame description placeholder"
 	@gate { @next main:02 }
 }`
 	ep := parseOrFail(t, src)
 	mg := ep.Body[0].(*ast.MinigameNode)
+	if mg.Name != "test" {
+		t.Errorf("Name: got %q, want %q", mg.Name, "test")
+	}
 	if mg.Description != "minigame description placeholder" {
 		t.Errorf("Description: got %q", mg.Description)
-	}
-	if len(mg.Body) != 1 {
-		t.Fatalf("Body length: got %d, want 1 (single @if)", len(mg.Body))
-	}
-	ifNode, ok := mg.Body[0].(*ast.IfNode)
-	if !ok {
-		t.Fatalf("Body[0]: expected *IfNode, got %T", mg.Body[0])
-	}
-	rc, ok := ifNode.Condition.(*ast.RatingCondition)
-	if !ok || rc.Grade != "S" {
-		t.Errorf("Condition: got %T %+v, want RatingCondition{S}", ifNode.Condition, ifNode.Condition)
-	}
-	if len(ifNode.Then) != 1 {
-		t.Errorf("Then length: got %d, want 1", len(ifNode.Then))
-	}
-	if len(ifNode.Else) != 1 {
-		t.Errorf("Else length: got %d, want 1", len(ifNode.Else))
 	}
 }

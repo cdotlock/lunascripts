@@ -26,8 +26,25 @@ const (
 	InvalidCgDuration          = "INVALID_CG_DURATION"
 	CgMissingContent           = "CG_MISSING_CONTENT"
 	MinigameMissingDescription = "MINIGAME_MISSING_DESCRIPTION"
+	MinigameMissingName        = "MINIGAME_MISSING_NAME"
+	InvalidTrickType           = "INVALID_TRICK_TYPE"
+	TrickMissingPrompt         = "TRICK_MISSING_PROMPT"
 	ReservedIntName            = "RESERVED_INT_NAME"
 )
+
+// validTrickTypes mirrors the locked set in package ast. Keep in sync
+// with the Trick* constants there.
+var validTrickTypes = map[string]bool{
+	ast.TrickTap:       true,
+	ast.TrickHold:      true,
+	ast.TrickSwipe:     true,
+	ast.TrickShake:     true,
+	ast.TrickSwing:     true,
+	ast.TrickHoldStill: true,
+	ast.TrickNod:       true,
+	ast.TrickTurnAway:  true,
+	ast.TrickCloseEyes: true,
+}
 
 var validSignalKinds = map[string]bool{
 	ast.SignalKindMark: true,
@@ -169,8 +186,6 @@ func checkSignals(nodes []ast.Node, errs *[]Error) {
 		case *ast.IfNode:
 			checkSignals(v.Then, errs)
 			checkSignals(v.Else, errs)
-		case *ast.MinigameNode:
-			checkSignals(v.Body, errs)
 		case *ast.PhoneShowNode:
 			checkSignals(v.Body, errs)
 		}
@@ -219,8 +234,6 @@ func checkAchievements(nodes []ast.Node, errs *[]Error) {
 		case *ast.IfNode:
 			checkAchievements(v.Then, errs)
 			checkAchievements(v.Else, errs)
-		case *ast.MinigameNode:
-			checkAchievements(v.Body, errs)
 		case *ast.PhoneShowNode:
 			checkAchievements(v.Body, errs)
 		}
@@ -251,8 +264,6 @@ func checkConditions(nodes []ast.Node, errs *[]Error) {
 			for _, opt := range v.Options {
 				checkConditions(opt.Body, errs)
 			}
-		case *ast.MinigameNode:
-			checkConditions(v.Body, errs)
 		case *ast.PhoneShowNode:
 			checkConditions(v.Body, errs)
 		}
@@ -319,13 +330,6 @@ func checkCondition(c ast.Condition, errs *[]Error) {
 				Message: fmt.Sprintf("check condition result %q is invalid (must be success or fail)", v.Result),
 			})
 		}
-	case *ast.RatingCondition:
-		if v.Grade == "" {
-			*errs = append(*errs, Error{
-				Code:    InvalidCondition,
-				Message: "rating condition has empty grade",
-			})
-		}
 	case nil:
 		// nil condition can appear in unconditional gate routes; caller handles.
 	default:
@@ -351,8 +355,6 @@ func collectLabels(nodes []ast.Node, labels map[string]bool) {
 		case *ast.IfNode:
 			collectLabels(v.Then, labels)
 			collectLabels(v.Else, labels)
-		case *ast.MinigameNode:
-			collectLabels(v.Body, labels)
 		case *ast.PhoneShowNode:
 			collectLabels(v.Body, labels)
 		}
@@ -379,8 +381,6 @@ func checkGotos(nodes []ast.Node, labels map[string]bool, errs *[]Error) {
 		case *ast.IfNode:
 			checkGotos(v.Then, labels, errs)
 			checkGotos(v.Else, labels, errs)
-		case *ast.MinigameNode:
-			checkGotos(v.Body, labels, errs)
 		case *ast.PhoneShowNode:
 			checkGotos(v.Body, labels, errs)
 		}
@@ -432,8 +432,6 @@ func checkBraveOptions(nodes []ast.Node, errs *[]Error) {
 		case *ast.IfNode:
 			checkBraveOptions(v.Then, errs)
 			checkBraveOptions(v.Else, errs)
-		case *ast.MinigameNode:
-			checkBraveOptions(v.Body, errs)
 		case *ast.PhoneShowNode:
 			checkBraveOptions(v.Body, errs)
 		}
@@ -520,13 +518,31 @@ func checkValues(nodes []ast.Node, errs *[]Error) {
 			checkValues(v.Then, errs)
 			checkValues(v.Else, errs)
 		case *ast.MinigameNode:
+			if v.Name == "" {
+				*errs = append(*errs, Error{
+					Code:    MinigameMissingName,
+					Message: "@minigame missing required <name> (asset handle)",
+				})
+			}
 			if v.Description == "" {
 				*errs = append(*errs, Error{
 					Code:    MinigameMissingDescription,
-					Message: fmt.Sprintf("@minigame %q missing required description", v.ID),
+					Message: fmt.Sprintf("@minigame %q missing required description (one prose paragraph: scene + simple gameplay)", v.Name),
 				})
 			}
-			checkValues(v.Body, errs)
+		case *ast.TrickNode:
+			if !validTrickTypes[v.Type] {
+				*errs = append(*errs, Error{
+					Code:    InvalidTrickType,
+					Message: fmt.Sprintf("@trick has invalid type %q (valid: tap, hold, swipe, shake, swing, hold-still, nod, turn-away, close-eyes)", v.Type),
+				})
+			}
+			if v.Prompt == "" {
+				*errs = append(*errs, Error{
+					Code:    TrickMissingPrompt,
+					Message: fmt.Sprintf("@trick %s missing required quoted prompt", v.Type),
+				})
+			}
 		case *ast.PhoneShowNode:
 			checkValues(v.Body, errs)
 		}

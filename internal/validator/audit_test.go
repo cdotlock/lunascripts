@@ -214,75 +214,12 @@ func TestRecursion_LabelsInAllOptionFields(t *testing.T) {
 	}
 }
 
-// E3. checkValues must recurse into MinigameNode.Body — rating branching
-// lives inside an @if (rating.X) tree in the plain body.
-func TestRecursion_ValuesInsideMinigame(t *testing.T) {
-	ep := &ast.Episode{
-		BranchKey: "main:01", Title: "T",
-		Body: []ast.Node{
-			&ast.MinigameNode{
-				ID:          "mg1",
-				Attr:        "STR",
-				Description: "minigame description placeholder",
-				Body: []ast.Node{
-					&ast.IfNode{
-						Condition: &ast.RatingCondition{Grade: "S"},
-						Then:      []ast.Node{&ast.CharShowNode{Char: "c", Look: "l", Position: "invalid_pos"}},
-					},
-				},
-			},
-		},
-		Gate: &ast.GateBlock{Routes: []*ast.GateRoute{{Target: "main:02"}}},
-	}
-	errs := Validate(ep)
-	found := false
-	for _, e := range errs {
-		if e.Code == InvalidPosition && strings.Contains(e.Message, "invalid_pos") {
-			found = true
-		}
-	}
-	if !found {
-		t.Error("checkValues should recurse into MinigameNode.Body (through IfNode.Then)")
-	}
-}
-
-// E4. checkBraveOptions must recurse into MinigameNode.Body (through
-// nested IfNode.Then/Else for rating-branch trees).
-func TestRecursion_BraveOptionsInsideMinigame(t *testing.T) {
-	ep := &ast.Episode{
-		BranchKey: "main:01", Title: "T",
-		Body: []ast.Node{
-			&ast.MinigameNode{
-				ID:          "mg1",
-				Attr:        "STR",
-				Description: "minigame description placeholder",
-				Body: []ast.Node{
-					&ast.IfNode{
-						Condition: &ast.RatingCondition{Grade: "S"},
-						Then: []ast.Node{
-							&ast.ChoiceNode{
-								Options: []*ast.OptionNode{
-									{ID: "A", Mode: "brave", Text: "a"},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-		Gate: &ast.GateBlock{Routes: []*ast.GateRoute{{Target: "main:02"}}},
-	}
-	errs := Validate(ep)
-	found := false
-	for _, e := range errs {
-		if e.Code == BraveNoCheck {
-			found = true
-		}
-	}
-	if !found {
-		t.Error("checkBraveOptions should recurse into MinigameNode.Body (through IfNode.Then)")
-	}
-}
+// E3/E4. MinigameNode is now a leaf — there is no body to recurse into.
+// The legacy `TestRecursion_ValuesInsideMinigame` /
+// `TestRecursion_BraveOptionsInsideMinigame` tests have been removed
+// because their premise (rating-branch trees inside minigame body) no
+// longer exists in the spec. See `TestMinigameLeafNoBodyValidates` in
+// validator_test.go for the positive pin.
 
 // E5. Deeply nested: CgShow > IfNode > ChoiceNode > brave Option with a
 // goto inside the check.success branch of its inner @if tree.
@@ -405,44 +342,21 @@ func TestValidatorEmptyChoice(t *testing.T) {
 	}
 }
 
-// EDGE: MinigameNode with empty body — rating branching is optional, so
-// an empty body is valid and must not raise a validator error.
-func TestValidatorEmptyMinigameBody(t *testing.T) {
+// EDGE: MinigameNode in the new leaf shape — name + description, no body.
+func TestValidatorMinigameLeafShape(t *testing.T) {
 	ep := &ast.Episode{
 		BranchKey: "main:01", Title: "T",
 		Body: []ast.Node{
 			&ast.MinigameNode{
-				ID:          "mg1",
-				Attr:        "STR",
+				Name:        "mg1",
 				Description: "minigame description placeholder",
-				Body:        []ast.Node{},
 			},
 		},
 		Gate: &ast.GateBlock{Routes: []*ast.GateRoute{{Target: "main:02"}}},
 	}
 	errs := Validate(ep)
 	if len(errs) != 0 {
-		t.Errorf("empty minigame body should have no errors, got: %v", errs)
-	}
-}
-
-// EDGE: MinigameNode with nil body — the walk must not panic on a nil slice.
-func TestValidatorNilMinigameBody(t *testing.T) {
-	ep := &ast.Episode{
-		BranchKey: "main:01", Title: "T",
-		Body: []ast.Node{
-			&ast.MinigameNode{
-				ID:          "mg1",
-				Attr:        "STR",
-				Description: "minigame description placeholder",
-				Body:        nil,
-			},
-		},
-		Gate: &ast.GateBlock{Routes: []*ast.GateRoute{{Target: "main:02"}}},
-	}
-	errs := Validate(ep)
-	if len(errs) != 0 {
-		t.Errorf("nil minigame body should have no errors, got: %v", errs)
+		t.Errorf("leaf minigame should have no errors, got: %v", errs)
 	}
 }
 
