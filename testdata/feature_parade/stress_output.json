@@ -443,47 +443,29 @@
       "trick_type": "hold-still",
       "type": "trick"
     },
-    {
-      "id": "0045_trk",
-      "prompt": "Nod if you understand.",
-      "trick_type": "nod",
-      "type": "trick"
-    },
-    {
-      "id": "0046_trk",
-      "prompt": "Look away — you can't watch this.",
-      "trick_type": "turn-away",
-      "type": "trick"
-    },
-    {
-      "id": "0047_trk",
-      "prompt": "Close your eyes and listen.",
-      "trick_type": "close-eyes",
-      "type": "trick"
-    },
     [
       {
-        "id": "0048_bg",
+        "id": "0045_bg",
         "name": "hallway",
         "transition": "fade",
         "type": "bg",
         "url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/bg/hallway.png"
       },
       {
-        "id": "0049_mus",
+        "id": "0046_mus",
         "name": "upbeat",
         "type": "music_crossfade",
         "url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/music/upbeat.mp3"
       },
       {
-        "id": "0050_sfx",
+        "id": "0047_sfx",
         "name": "bell",
         "type": "sfx_play",
         "url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/sfx/bell.mp3"
       },
       {
         "character": "malia",
-        "id": "0051_char",
+        "id": "0048_char",
         "look": "flat",
         "position": "center",
         "type": "char_show",
@@ -491,12 +473,12 @@
       }
     ],
     {
-      "id": "0052_nar",
+      "id": "0049_nar",
       "text": "[T56] Choice stress: brave omits @else; safe nests an @if.",
       "type": "narrator"
     },
     {
-      "id": "0053_ch",
+      "id": "0050_ch",
       "options": [
         {
           "check": {
@@ -511,17 +493,17 @@
                 "result": "success",
                 "type": "check"
               },
-              "id": "0054_ctrl",
+              "id": "0051_ctrl",
               "then": [
                 {
-                  "id": "0055_nar",
+                  "id": "0052_nar",
                   "text": "[T56a] brave check.success — no paired @else (allowed).",
                   "type": "narrator"
                 },
                 {
                   "character": "easton",
                   "delta": 1,
-                  "id": "0056_aff",
+                  "id": "0053_aff",
                   "type": "affection"
                 }
               ],
@@ -546,21 +528,21 @@
               },
               "else": [
                 {
-                  "id": "0060_you",
+                  "id": "0057_you",
                   "text": "[T56c] safe body nested @else.",
                   "type": "you"
                 }
               ],
-              "id": "0057_ctrl",
+              "id": "0054_ctrl",
               "then": [
                 {
-                  "id": "0058_you",
+                  "id": "0055_you",
                   "text": "[T56b] safe body nested @if true.",
                   "type": "you"
                 },
                 {
                   "description": "Walked away but hesitated",
-                  "id": "0059_btf",
+                  "id": "0056_btf",
                   "type": "butterfly"
                 }
               ],
@@ -573,21 +555,21 @@
       "type": "choice"
     },
     {
-      "id": "0061_nar",
+      "id": "0058_nar",
       "text": "[T57] @phone show with ZERO messages — empty block edge case.",
       "type": "narrator"
     },
     {
-      "id": "0062_phn",
+      "id": "0059_phn",
       "type": "phone_show"
     },
     {
-      "id": "0063_phn",
+      "id": "0060_phn",
       "type": "phone_hide"
     },
     [
       {
-        "id": "0064_bg",
+        "id": "0061_bg",
         "name": "gym",
         "transition": "cut",
         "type": "bg",
@@ -595,13 +577,13 @@
       },
       {
         "character": "malia",
-        "id": "0065_char",
+        "id": "0062_char",
         "position": "right",
         "type": "char_move"
       },
       {
         "character": "josie",
-        "id": "0066_char",
+        "id": "0063_char",
         "look": "excited",
         "position": "left",
         "type": "char_show",
@@ -609,33 +591,33 @@
       }
     ],
     {
-      "id": "0067_nar",
+      "id": "0064_nar",
       "text": "[T58] Concurrent-group boundary test: dialogue breaks the group above; new @ below starts a fresh group.",
       "type": "narrator"
     },
     {
       "clicks": 1,
-      "id": "0068_pau",
+      "id": "0065_pau",
       "type": "pause"
     },
     {
-      "id": "0069_nar",
+      "id": "0066_nar",
       "text": "[T58a] @pause for 1 — single click to advance.",
       "type": "narrator"
     },
     {
       "event": "STRESS_DONE",
-      "id": "0070_sig",
+      "id": "0067_sig",
       "kind": "mark",
       "type": "signal"
     },
     {
-      "id": "0071_nar",
+      "id": "0068_nar",
       "text": "[T58b] @signal int — three write forms plus a comparison read.",
       "type": "narrator"
     },
     {
-      "id": "0072_sig",
+      "id": "0069_sig",
       "kind": "int",
       "name": "stress_count",
       "op": "=",
@@ -643,7 +625,7 @@
       "value": 0
     },
     {
-      "id": "0073_sig",
+      "id": "0070_sig",
       "kind": "int",
       "name": "stress_count",
       "op": "+",
@@ -651,7 +633,7 @@
       "value": 2
     },
     {
-      "id": "0074_sig",
+      "id": "0071_sig",
       "kind": "int",
       "name": "stress_count",
       "op": "-",
@@ -670,15 +652,15 @@
       },
       "else": [
         {
-          "id": "0077_nar",
+          "id": "0074_nar",
           "text": "[T58b-lo] stress_count below threshold.",
           "type": "narrator"
         }
       ],
-      "id": "0075_ctrl",
+      "id": "0072_ctrl",
       "then": [
         {
-          "id": "0076_nar",
+          "id": "0073_nar",
           "text": "[T58b-hi] stress_count crossed the 2 threshold.",
           "type": "narrator"
         }
@@ -686,7 +668,7 @@
       "type": "if"
     },
     {
-      "id": "0078_nar",
+      "id": "0075_nar",
       "text": "[T60 → main:02] Stress gate has only a fallback @else — will jump to ep02.md unconditionally.",
       "type": "narrator"
     }

@@ -77,7 +77,7 @@
   @minigame survive_30_seconds "Late-night dodgeball in the gym — lights flicker, balls fly. Player swipes left/right to dodge hazards for thirty seconds. Take three hits and Malia's out."
 
   // ================================================================
-  // [T55t] @trick 全 9 类型 — 触摸 3 / 运动 3 / 摄像头 3
+  // [T55t] @trick 全 6 类型 — 触摸 3 / 运动 3
   // ================================================================
   NARRATOR: [T55t] @trick suite — every locked type appears once; each is a mandatory body-interaction beat.
   @trick tap "Tap the screen to keep your hand from shaking."
@@ -86,9 +86,6 @@
   @trick shake "Shake the bottle hard."
   @trick swing "Swing the bat through the strike zone."
   @trick hold-still "Don't move — he's right behind you."
-  @trick nod "Nod if you understand."
-  @trick turn-away "Look away — you can't watch this."
-  @trick close-eyes "Close your eyes and listen."
 
   // ================================================================
   // [T56] brave option 省略 @else（validator 宽松）+ safe option 嵌套 @if
