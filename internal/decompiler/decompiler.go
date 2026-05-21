@@ -393,22 +393,9 @@ func (d *decompiler) writeCg(w *sourceWriter, step map[string]interface{}, inden
 }
 
 func (d *decompiler) writeMinigame(w *sourceWriter, step map[string]interface{}, indent int, prefix string) error {
-	// Compiled JSON from the current emitter uses `name`; tolerate
-	// legacy `game_id` payloads so historical compiled output can still
-	// round-trip into the new source form.
 	name := stringValue(step["name"])
-	if name == "" {
-		name = stringValue(step["game_id"])
-	}
 	d.record("minigames", "minigames", "", name, stringValue(step["game_url"]))
-
 	desc := stringValue(step["description"])
-	if desc == "" {
-		desc = fmt.Sprintf("Recovered minigame description for %s.", name)
-		d.warn("minigame %q missing description; used a placeholder", name)
-	}
-
-	// One-liner: `@minigame <name> "<description>"`. No attr, no body.
 	w.line(indent, "%sminigame %s %s", prefix, name, quote(desc))
 	return nil
 }

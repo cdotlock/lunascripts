@@ -249,13 +249,11 @@ func (e *Emitter) emitNode(n ast.Node) map[string]interface{} {
 	case *ast.ButterflyNode:
 		return map[string]interface{}{"type": "butterfly", "description": v.Description}
 	case *ast.AchievementNode:
-		// The JSON `achievement_id` field carries the semantic id from MSS
-		// source `@achievement <id> { ... }` (e.g. "RARE_COURAGE"), distinct
-		// from the new compiler-assigned `id` field (the cursor stable-step
-		// id, format `<seq>_<tag>`). This mirrors MinigameStep.game_id —
-		// keeping the semantic id under a domain-specific key avoids
-		// collision with the universal stable step id stamped by
-		// assignStepID after this map is returned.
+		// The JSON `achievement_id` field carries the semantic id from
+		// MSS source `@achievement <id> { ... }` (e.g. "RARE_COURAGE"),
+		// distinct from the universal `id` field (the cursor stable-step
+		// id, format `<seq>_<tag>`) stamped by assignStepID. Keeping the
+		// semantic id under a domain-specific key avoids collision.
 		return map[string]interface{}{
 			"type":           "achievement",
 			"achievement_id": v.ID,
@@ -457,16 +455,8 @@ func (e *Emitter) emitSfxPlay(n *ast.SfxPlayNode) map[string]interface{} {
 }
 
 func (e *Emitter) emitMinigame(n *ast.MinigameNode) map[string]interface{} {
-	// Field shape:
-	//   - name: semantic asset handle (mirrors `@cg show <name>`'s key).
-	//   - description: continuous prose that scene-sets AND defines the
-	//     simple gameplay; the vibe-coding agent generates the game from
-	//     this. Runtime players can ignore it; asset-prep pipelines need it.
-	//   - game_url: resolved through the asset mapping (the URL the
-	//     player loads). Empty until the generator finishes.
-	//
-	// Notably absent: attr, game_id (use name), steps/body, rating
-	// branching. Rewards are engine-owned and never declared here.
+	// Leaf step: { type, name, description, game_url }. Rewards live
+	// entirely on the engine side; the script declares none of them.
 	m := map[string]interface{}{
 		"type":        "minigame",
 		"name":        n.Name,
@@ -482,10 +472,9 @@ func (e *Emitter) emitMinigame(n *ast.MinigameNode) map[string]interface{} {
 }
 
 func (e *Emitter) emitTrick(n *ast.TrickNode) map[string]interface{} {
-	// Trick is engine-native: no asset, no URL, no rewards. Just the
-	// type the engine should detect and the one-line prompt to show.
-	// Trick is a mandatory body-interaction beat — the engine MUST wait
-	// for completion before advancing.
+	// Engine-native leaf step: { type, trick_type, prompt }. No asset,
+	// no URL, no rewards. The engine MUST block until the player
+	// completes the body action.
 	return map[string]interface{}{
 		"type":       "trick",
 		"trick_type": n.Type,

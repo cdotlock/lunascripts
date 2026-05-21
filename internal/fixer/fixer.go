@@ -564,17 +564,6 @@ var oldFormatKeywords = map[string]string{
 	"@on":        "not part of MSS syntax — use @if (check.success) / @else inside brave options",
 }
 
-// minigameLegacyArgsRe matches the legacy `@minigame <id> <ATTR> "..."`
-// form (an IDENT before the quoted description), which was retired when
-// minigame became a one-liner. We surface this as an Errors entry with a
-// migration hint pointing at the new shape.
-var minigameLegacyArgsRe = regexp.MustCompile(`^\s*@minigame\s+([\w/:-]+)\s+([A-Za-z_][\w]*)\s+"`)
-
-// minigameLegacyBraceRe matches a legacy `@minigame ... {` (a brace at
-// the end of an @minigame line), which is no longer allowed — @minigame
-// is a leaf directive in the new model.
-var minigameLegacyBraceRe = regexp.MustCompile(`^\s*@minigame\b.*\{\s*$`)
-
 func checkOldFormatSyntax(lines []string, r *FixResult) {
 	for i, line := range lines {
 		trimmed := strings.TrimSpace(line)
@@ -583,19 +572,6 @@ func checkOldFormatSyntax(lines []string, r *FixResult) {
 				r.Errors = append(r.Errors, fmt.Sprintf("line %d: old-format syntax %q detected — %s", i+1, keyword, hint))
 				break
 			}
-		}
-
-		// Legacy @minigame migration hints — the parser also rejects
-		// these, but flagging in the fixer surfaces them earlier and
-		// covers `mss fix --check` dry-runs.
-		if m := minigameLegacyArgsRe.FindStringSubmatch(line); m != nil {
-			r.Errors = append(r.Errors, fmt.Sprintf(
-				"line %d: legacy @minigame syntax (`@minigame %s %s \"...\"`) — drop the <ATTR> positional. New form: `@minigame %s \"<description>\"` (one-liner, no body, no rating branches).",
-				i+1, m[1], m[2], m[1]))
-		} else if minigameLegacyBraceRe.MatchString(line) {
-			r.Errors = append(r.Errors, fmt.Sprintf(
-				"line %d: legacy @minigame body `{ ... }` — @minigame is now a one-liner; per-rating narrative and script-side rewards have been removed. Use @trick for mandatory body-interaction beats.",
-				i+1))
 		}
 	}
 }

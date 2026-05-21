@@ -392,43 +392,6 @@ func TestParseMinigame(t *testing.T) {
 	}
 }
 
-// TestParseMinigameRejectsLegacyAttr verifies the parser surfaces a
-// specific migration hint when an author still writes the old
-// `@minigame <name> <ATTR> "<desc>"` form.
-func TestParseMinigameRejectsLegacyAttr(t *testing.T) {
-	src := `@episode main:01 "Mini" {
-	@minigame arm_wrestle STR "an arm wrestling duel"
-	@gate { @next main:02 }
-}`
-	_, err := parseSource(src)
-	if err == nil {
-		t.Fatal("expected parse error for legacy <ATTR> positional, got nil")
-	}
-	if !strings.Contains(err.Error(), "legacy <ATTR>") {
-		t.Errorf("error should mention the legacy ATTR migration, got: %v", err)
-	}
-}
-
-// TestParseMinigameRejectsLegacyBody verifies the parser surfaces a
-// migration hint when an author still writes `@minigame ... { ... }`.
-func TestParseMinigameRejectsLegacyBody(t *testing.T) {
-	src := `@episode main:01 "Mini" {
-	@minigame arm_wrestle "duel" {
-		@if (rating.S) {
-			NARRATOR: ok
-		}
-	}
-	@gate { @next main:02 }
-}`
-	_, err := parseSource(src)
-	if err == nil {
-		t.Fatal("expected parse error for legacy { body }, got nil")
-	}
-	if !strings.Contains(err.Error(), "legacy `{ ... }` body") {
-		t.Errorf("error should mention the legacy body migration, got: %v", err)
-	}
-}
-
 // TestParseTrick covers the new @trick <type> "<prompt>" one-liner.
 func TestParseTrick(t *testing.T) {
 	tests := []struct {
@@ -443,9 +406,6 @@ func TestParseTrick(t *testing.T) {
 		{"shake", `@trick shake "Shake him awake."`, "shake", "Shake him awake."},
 		{"swing", `@trick swing "Cast the line."`, "swing", "Cast the line."},
 		{"hold-still", `@trick hold-still "Don't move — he's right behind you."`, "hold-still", "Don't move — he's right behind you."},
-		{"nod", `@trick nod "Nod if you understand."`, "nod", "Nod if you understand."},
-		{"turn-away", `@trick turn-away "Look away — you can't watch this."`, "turn-away", "Look away — you can't watch this."},
-		{"close-eyes", `@trick close-eyes "Close your eyes."`, "close-eyes", "Close your eyes."},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -469,50 +429,20 @@ func TestParseTrick(t *testing.T) {
 }
 
 // TestParseTrickRejectsUnknownType verifies the parser rejects any
-// trick type outside the 9-type whitelist.
+// trick type outside the 6-type whitelist (covers the three removed
+// camera types plus a never-supported value).
 func TestParseTrickRejectsUnknownType(t *testing.T) {
-	src := `@episode main:01 "T" {
-	@trick blink "Blink twice."
-	@gate { @next main:02 }
-}`
-	_, err := parseSource(src)
-	if err == nil {
-		t.Fatal("expected parse error for unknown trick type, got nil")
-	}
-	if !strings.Contains(err.Error(), "invalid @trick type") {
-		t.Errorf("error should mention invalid trick type, got: %v", err)
-	}
-}
-
-// TestParseTrickRejectsBody verifies the parser rejects a body on @trick.
-func TestParseTrickRejectsBody(t *testing.T) {
-	src := `@episode main:01 "T" {
-	@trick tap "Tap." {
-		NARRATOR: nope
-	}
-	@gate { @next main:02 }
-}`
-	_, err := parseSource(src)
-	if err == nil {
-		t.Fatal("expected parse error for trick with body, got nil")
-	}
-}
-
-// TestParseRatingConditionRemoved verifies that `rating.<grade>` is no
-// longer a valid condition — the parser surfaces a migration hint.
-func TestParseRatingConditionRemoved(t *testing.T) {
-	src := `@episode main:01 "T" {
-	@if (rating.S) {
-		NARRATOR: nope
-	}
-	@gate { @next main:02 }
-}`
-	_, err := parseSource(src)
-	if err == nil {
-		t.Fatal("expected parse error for rating.S condition, got nil")
-	}
-	if !strings.Contains(err.Error(), "rating") {
-		t.Errorf("error should mention the rating migration, got: %v", err)
+	for _, ty := range []string{"blink", "nod", "turn-away", "close-eyes"} {
+		t.Run(ty, func(t *testing.T) {
+			src := "@episode main:01 \"T\" {\n  @trick " + ty + " \"go.\"\n  @gate { @next main:02 }\n}"
+			_, err := parseSource(src)
+			if err == nil {
+				t.Fatal("expected parse error, got nil")
+			}
+			if !strings.Contains(err.Error(), "invalid @trick type") {
+				t.Errorf("error should mention invalid trick type, got: %v", err)
+			}
+		})
 	}
 }
 

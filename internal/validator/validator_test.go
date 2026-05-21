@@ -429,13 +429,12 @@ func TestMinigameMissingName(t *testing.T) {
 	}
 }
 
-// TestTrickValidationWhitelist verifies the validator accepts every one
-// of the nine locked trick types and rejects anything outside.
+// TestTrickValidationWhitelist verifies the validator accepts every
+// one of the six locked trick types and rejects anything outside.
 func TestTrickValidationWhitelist(t *testing.T) {
 	good := []string{
 		ast.TrickTap, ast.TrickHold, ast.TrickSwipe,
 		ast.TrickShake, ast.TrickSwing, ast.TrickHoldStill,
-		ast.TrickNod, ast.TrickTurnAway, ast.TrickCloseEyes,
 	}
 	for _, ty := range good {
 		ep := &ast.Episode{
@@ -450,22 +449,28 @@ func TestTrickValidationWhitelist(t *testing.T) {
 		}
 	}
 
-	bad := &ast.Episode{
-		BranchKey: "main:01", Title: "T",
-		Body: []ast.Node{
-			&ast.TrickNode{Type: "blink", Prompt: "Blink."},
-		},
-		Gate: &ast.GateBlock{Routes: []*ast.GateRoute{{Target: "main:02"}}},
-	}
-	errs := Validate(bad)
-	found := false
-	for _, e := range errs {
-		if e.Code == InvalidTrickType {
-			found = true
-		}
-	}
-	if !found {
-		t.Errorf("expected INVALID_TRICK_TYPE for 'blink', got %v", errs)
+	// "blink" was never supported; "nod" is one of the three camera
+	// types removed in this iteration — both must now be rejected.
+	for _, ty := range []string{"blink", "nod", "turn-away", "close-eyes"} {
+		t.Run(ty, func(t *testing.T) {
+			ep := &ast.Episode{
+				BranchKey: "main:01", Title: "T",
+				Body: []ast.Node{
+					&ast.TrickNode{Type: ty, Prompt: "go."},
+				},
+				Gate: &ast.GateBlock{Routes: []*ast.GateRoute{{Target: "main:02"}}},
+			}
+			errs := Validate(ep)
+			found := false
+			for _, e := range errs {
+				if e.Code == InvalidTrickType {
+					found = true
+				}
+			}
+			if !found {
+				t.Errorf("expected INVALID_TRICK_TYPE for %q, got %v", ty, errs)
+			}
+		})
 	}
 }
 

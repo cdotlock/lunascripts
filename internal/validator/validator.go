@@ -41,9 +41,6 @@ var validTrickTypes = map[string]bool{
 	ast.TrickShake:     true,
 	ast.TrickSwing:     true,
 	ast.TrickHoldStill: true,
-	ast.TrickNod:       true,
-	ast.TrickTurnAway:  true,
-	ast.TrickCloseEyes: true,
 }
 
 var validSignalKinds = map[string]bool{
@@ -534,7 +531,7 @@ func checkValues(nodes []ast.Node, errs *[]Error) {
 			if !validTrickTypes[v.Type] {
 				*errs = append(*errs, Error{
 					Code:    InvalidTrickType,
-					Message: fmt.Sprintf("@trick has invalid type %q (valid: tap, hold, swipe, shake, swing, hold-still, nod, turn-away, close-eyes)", v.Type),
+					Message: fmt.Sprintf("@trick has invalid type %q (valid: tap, hold, swipe, shake, swing, hold-still)", v.Type),
 				})
 			}
 			if v.Prompt == "" {

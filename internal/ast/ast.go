@@ -375,23 +375,19 @@ func (s *SfxPlayNode) nodeType() string { return "sfx_play" }
 // complete it to advance.
 //
 // Modality:
-//   - touch (no permission): TrickTap, TrickHold, TrickSwipe
-//   - motion (no runtime prompt on iOS): TrickShake, TrickSwing, TrickHoldStill
-//   - camera (camera permission, frames stay on device): TrickNod, TrickTurnAway, TrickCloseEyes
+//   - touch  (no permission): TrickTap, TrickHold, TrickSwipe
+//   - motion (no runtime prompt): TrickShake, TrickSwing, TrickHoldStill
 //
-// The asset/permission contract lives outside MSS: the engine owns the
-// detection threshold and the prompt overlay; the script only declares
-// what trick fires and what one-line prompt the player sees.
+// The engine owns the detection threshold and the prompt overlay; the
+// script only declares what trick fires and what one-line prompt the
+// player sees.
 const (
-	TrickTap        = "tap"
-	TrickHold       = "hold"
-	TrickSwipe      = "swipe"
-	TrickShake      = "shake"
-	TrickSwing      = "swing"
-	TrickHoldStill  = "hold-still"
-	TrickNod        = "nod"
-	TrickTurnAway   = "turn-away"
-	TrickCloseEyes  = "close-eyes"
+	TrickTap       = "tap"
+	TrickHold      = "hold"
+	TrickSwipe     = "swipe"
+	TrickShake     = "shake"
+	TrickSwing     = "swing"
+	TrickHoldStill = "hold-still"
 )
 
 // TrickNode triggers a mandatory body-interaction beat. The player must
@@ -400,9 +396,9 @@ const (
 //
 //	@trick <type> "<prompt>"
 //
-// Type is one of the locked constants above; the validator rejects any
-// other value. Prompt is a one-line imperative shown to the player as
-// narrative glue (e.g. "Tap the screen until you hear the door give"
+// Type is one of the six locked constants above; the validator rejects
+// any other value. Prompt is a one-line imperative shown to the player
+// as narrative glue (e.g. "Tap the screen until you hear the door give"
 // for TrickTap, "Hold your breath" for TrickHold).
 type TrickNode struct {
 	ConcurrentFlag

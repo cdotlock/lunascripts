@@ -23,7 +23,7 @@ var knownKeywords = map[string]bool{
 	"ending": true, "achievement": true,
 }
 
-// validTrickTypes enumerates the 9 locked trick types accepted by the
+// validTrickTypes enumerates the 6 locked trick types accepted by the
 // engine. Keep in sync with the Trick* constants in package ast.
 var validTrickTypes = map[string]bool{
 	ast.TrickTap:       true,
@@ -32,9 +32,6 @@ var validTrickTypes = map[string]bool{
 	ast.TrickShake:     true,
 	ast.TrickSwing:     true,
 	ast.TrickHoldStill: true,
-	ast.TrickNod:       true,
-	ast.TrickTurnAway:  true,
-	ast.TrickCloseEyes: true,
 }
 
 // validEndingTypes enumerates the accepted values for @ending <type>.
@@ -709,39 +706,18 @@ func (p *Parser) parseSfx() (ast.Node, error) {
 //
 // The minigame is generated downstream by a vibe-coding agent from the
 // description prose (which describes both the scene and the simple
-// gameplay). There is no body, no attribute, no rating branching, and
-// no script-side reward declaration — the engine owns rewards for
-// anti-cheat. The directive is a leaf.
-//
-// Legacy form `@minigame <id> <ATTR> "<desc>" { ... }` is no longer
-// accepted; the parser detects the old shape and emits a hint pointing
-// at the new syntax (the fixer also flags it before compile).
+// gameplay). The directive is a leaf — no body, no attribute, no rating
+// branching, no script-side reward.
 func (p *Parser) parseMinigame() (ast.Node, error) {
 	p.advance() // consume "minigame"
 	name, err := p.expect(token.IDENT)
 	if err != nil {
-		return nil, fmt.Errorf("line %d col %d: @minigame requires an asset name", name.Line, name.Col)
+		return nil, err
 	}
-
-	// Detect the legacy `<ATTR>` second positional and reject with a
-	// specific migration hint. The new form goes straight to STRING.
-	if p.cur.Type == token.IDENT {
-		attr := p.cur
-		return nil, fmt.Errorf("line %d col %d: @minigame %s %s ...: legacy <ATTR> positional has been removed — write `@minigame %s \"<description>\"` (one-liner, no attribute, no body, no rating branches)",
-			attr.Line, attr.Col, name.Literal, attr.Literal, name.Literal)
-	}
-
 	desc, err := p.expect(token.STRING)
 	if err != nil {
-		return nil, fmt.Errorf("line %d col %d: @minigame %s requires a quoted description", desc.Line, desc.Col, name.Literal)
+		return nil, err
 	}
-
-	// Detect a legacy body `{ ... }` and reject with the migration hint.
-	if p.cur.Type == token.LBRACE {
-		return nil, fmt.Errorf("line %d col %d: @minigame %s: legacy `{ ... }` body (with @if (rating.X)) has been removed — `@minigame` is now a one-liner. Rewards are engine-owned; per-rating narrative is gone. Use @trick for mandatory body-interaction beats instead.",
-			p.cur.Line, p.cur.Col, name.Literal)
-	}
-
 	return &ast.MinigameNode{
 		Name:        name.Literal,
 		Description: desc.Literal,
@@ -750,34 +726,23 @@ func (p *Parser) parseMinigame() (ast.Node, error) {
 
 // parseTrick parses: @trick <type> "<prompt>"
 //
-// Both <type> and "<prompt>" are required. <type> must be one of the
-// nine engine-supported trick types (see ast.Trick* constants); the
-// parser whitelists at parse time so authors get an immediate hint.
-// "<prompt>" is the one-line player-facing imperative. The directive is
-// a leaf: no body, no rating, no reward, no branching.
+// <type> must be one of the six engine-supported trick types (see
+// ast.Trick* constants). "<prompt>" is the one-line player-facing
+// imperative. The directive is a leaf — no body, no rating, no reward.
 func (p *Parser) parseTrick() (ast.Node, error) {
 	p.advance() // consume "trick"
 
 	typeTok, err := p.expect(token.IDENT)
 	if err != nil {
-		return nil, fmt.Errorf("line %d col %d: @trick requires a type (tap/hold/swipe/shake/swing/hold-still/nod/turn-away/close-eyes)", typeTok.Line, typeTok.Col)
+		return nil, err
 	}
 	if !validTrickTypes[typeTok.Literal] {
-		return nil, fmt.Errorf("line %d col %d: invalid @trick type %q (valid: tap, hold, swipe, shake, swing, hold-still, nod, turn-away, close-eyes)", typeTok.Line, typeTok.Col, typeTok.Literal)
+		return nil, fmt.Errorf("line %d col %d: invalid @trick type %q (valid: tap, hold, swipe, shake, swing, hold-still)", typeTok.Line, typeTok.Col, typeTok.Literal)
 	}
 
 	promptTok, err := p.expect(token.STRING)
 	if err != nil {
-		return nil, fmt.Errorf("line %d col %d: @trick %s requires a quoted player-facing prompt", promptTok.Line, promptTok.Col, typeTok.Literal)
-	}
-	if promptTok.Literal == "" {
-		return nil, fmt.Errorf("line %d col %d: @trick %s prompt must not be empty", promptTok.Line, promptTok.Col, typeTok.Literal)
-	}
-
-	// Reject a body — trick has no body. Anything that looks like one
-	// is almost certainly an author migrating @minigame patterns.
-	if p.cur.Type == token.LBRACE {
-		return nil, fmt.Errorf("line %d col %d: @trick %s: @trick has no body (it is a leaf directive)", p.cur.Line, p.cur.Col, typeTok.Literal)
+		return nil, err
 	}
 
 	return &ast.TrickNode{
@@ -1347,14 +1312,6 @@ func (p *Parser) parseConditionPrimary() (ast.Condition, error) {
 					secondTok.Line, secondTok.Col, secondTok.Literal)
 			}
 			return &ast.CheckCondition{Result: secondTok.Literal}, nil
-		}
-
-		// `rating.<grade>` was removed along with @minigame body
-		// branches — surface a specific hint so authors migrating from
-		// the old spec see exactly what changed.
-		if firstTok.Literal == "rating" {
-			return nil, fmt.Errorf("line %d col %d: rating.%s: rating conditions were removed when @minigame became a one-liner. Per-rating narrative is gone; minigame rewards are engine-owned. Use a different mechanism (e.g. @if (affection.X >= N) or a flag) if you need post-minigame branching.",
-				secondTok.Line, secondTok.Col, secondTok.Literal)
 		}
 
 		// affection.<char> <op> <N> — comparison with affection operand.
