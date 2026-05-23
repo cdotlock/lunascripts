@@ -405,7 +405,7 @@ func TestParseTrick(t *testing.T) {
 		{"swipe", `@trick swipe "Wipe the fog off the mirror."`, "swipe", "Wipe the fog off the mirror."},
 		{"shake", `@trick shake "Shake him awake."`, "shake", "Shake him awake."},
 		{"swing", `@trick swing "Cast the line."`, "swing", "Cast the line."},
-		{"hold-still", `@trick hold-still "Don't move — he's right behind you."`, "hold-still", "Don't move — he's right behind you."},
+		{"tilt", `@trick tilt "Peek around the corner — is he still there?"`, "tilt", "Peek around the corner — is he still there?"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -430,9 +430,9 @@ func TestParseTrick(t *testing.T) {
 
 // TestParseTrickRejectsUnknownType verifies the parser rejects any
 // trick type outside the 6-type whitelist (covers the three removed
-// camera types plus a never-supported value).
+// camera types, the removed hold-still, plus a never-supported value).
 func TestParseTrickRejectsUnknownType(t *testing.T) {
-	for _, ty := range []string{"blink", "nod", "turn-away", "close-eyes"} {
+	for _, ty := range []string{"blink", "nod", "turn-away", "close-eyes", "hold-still"} {
 		t.Run(ty, func(t *testing.T) {
 			src := "@episode main:01 \"T\" {\n  @trick " + ty + " \"go.\"\n  @gate { @next main:02 }\n}"
 			_, err := parseSource(src)

@@ -84,7 +84,7 @@ Bubbles: `anger` `sweat` `heart` `question` `exclaim` `idea` `music` `doom` `ell
 
 | Directive | Example |
 |-----------|---------|
-| `@trick <type> "<prompt>"` | `@trick hold "Hold your breath until he walks past."` — mandatory body-interaction beat; leaf; `<type>` ∈ `tap` / `hold` / `swipe` / `shake` / `swing` / `hold-still` (touch + motion only) |
+| `@trick <type> "<prompt>"` | `@trick hold "Hold your breath until he walks past."` — mandatory body-interaction beat; leaf; `<type>` ∈ `tap` / `hold` / `swipe` / `shake` / `swing` / `tilt` (touch + motion only) |
 | `@minigame <name> "<description>"` | `@minigame casino_showdown "Mauricio drags Malia into..."` — optional embedded mini-game; leaf; `description` is one prose paragraph that scenes the moment AND defines the simple gameplay; downstream vibe-coding agent generates the H5 |
 | `@choice { }` | Contains @option blocks |
 | `@option <ID> brave <text> { }` | Body must contain `check { }`; outcome branching via `@if (check.success) { } @else { }` |

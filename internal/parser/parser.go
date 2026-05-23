@@ -26,12 +26,12 @@ var knownKeywords = map[string]bool{
 // validTrickTypes enumerates the 6 locked trick types accepted by the
 // engine. Keep in sync with the Trick* constants in package ast.
 var validTrickTypes = map[string]bool{
-	ast.TrickTap:       true,
-	ast.TrickHold:      true,
-	ast.TrickSwipe:     true,
-	ast.TrickShake:     true,
-	ast.TrickSwing:     true,
-	ast.TrickHoldStill: true,
+	ast.TrickTap:   true,
+	ast.TrickHold:  true,
+	ast.TrickSwipe: true,
+	ast.TrickShake: true,
+	ast.TrickSwing: true,
+	ast.TrickTilt:  true,
 }
 
 // validEndingTypes enumerates the accepted values for @ending <type>.
@@ -737,7 +737,7 @@ func (p *Parser) parseTrick() (ast.Node, error) {
 		return nil, err
 	}
 	if !validTrickTypes[typeTok.Literal] {
-		return nil, fmt.Errorf("line %d col %d: invalid @trick type %q (valid: tap, hold, swipe, shake, swing, hold-still)", typeTok.Line, typeTok.Col, typeTok.Literal)
+		return nil, fmt.Errorf("line %d col %d: invalid @trick type %q (valid: tap, hold, swipe, shake, swing, tilt)", typeTok.Line, typeTok.Col, typeTok.Literal)
 	}
 
 	promptTok, err := p.expect(token.STRING)

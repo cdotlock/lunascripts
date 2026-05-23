@@ -376,18 +376,18 @@ func (s *SfxPlayNode) nodeType() string { return "sfx_play" }
 //
 // Modality:
 //   - touch  (no permission): TrickTap, TrickHold, TrickSwipe
-//   - motion (no runtime prompt): TrickShake, TrickSwing, TrickHoldStill
+//   - motion (no runtime prompt): TrickShake, TrickSwing, TrickTilt
 //
 // The engine owns the detection threshold and the prompt overlay; the
 // script only declares what trick fires and what one-line prompt the
 // player sees.
 const (
-	TrickTap       = "tap"
-	TrickHold      = "hold"
-	TrickSwipe     = "swipe"
-	TrickShake     = "shake"
-	TrickSwing     = "swing"
-	TrickHoldStill = "hold-still"
+	TrickTap   = "tap"
+	TrickHold  = "hold"
+	TrickSwipe = "swipe"
+	TrickShake = "shake"
+	TrickSwing = "swing"
+	TrickTilt  = "tilt"
 )
 
 // TrickNode triggers a mandatory body-interaction beat. The player must

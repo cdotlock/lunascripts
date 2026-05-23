@@ -434,7 +434,7 @@ func TestMinigameMissingName(t *testing.T) {
 func TestTrickValidationWhitelist(t *testing.T) {
 	good := []string{
 		ast.TrickTap, ast.TrickHold, ast.TrickSwipe,
-		ast.TrickShake, ast.TrickSwing, ast.TrickHoldStill,
+		ast.TrickShake, ast.TrickSwing, ast.TrickTilt,
 	}
 	for _, ty := range good {
 		ep := &ast.Episode{
@@ -450,8 +450,9 @@ func TestTrickValidationWhitelist(t *testing.T) {
 	}
 
 	// "blink" was never supported; "nod" is one of the three camera
-	// types removed in this iteration — both must now be rejected.
-	for _, ty := range []string{"blink", "nod", "turn-away", "close-eyes"} {
+	// types removed in an earlier iteration; "hold-still" was removed
+	// when tilt replaced it — all must now be rejected.
+	for _, ty := range []string{"blink", "nod", "turn-away", "close-eyes", "hold-still"} {
 		t.Run(ty, func(t *testing.T) {
 			ep := &ast.Episode{
 				BranchKey: "main:01", Title: "T",

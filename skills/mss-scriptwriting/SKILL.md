@@ -14,7 +14,7 @@ description: >
 
 You are generating scripts for a mobile interactive visual novel player. The genre is **TRPG mechanics + Galgame presentation**: players read through dialogue-driven scenes with character sprites and backgrounds (Galgame), and at key beats make choices that resolve via D20 attribute checks against a difficulty class (TRPG). Body-interaction beats (`@trick`) and optional embedded games (`@minigame`) punctuate the reading. Each `.md` script file is one episode — a self-contained narrative unit with dialogue, visual staging, game mechanics, and routing to the next episode.
 
-The player experiences this as: tap to read dialogue → see characters enter/leave at left/right/center → occasionally complete a forced body action (tap / hold / swipe / shake / swing / hold-still) → occasionally skip-or-play a downstream-generated mini-game → at key beats make a choice that may roll dice → episode ends and routes to the next one.
+The player experiences this as: tap to read dialogue → see characters enter/leave at left/right/center → occasionally complete a forced body action (tap / hold / swipe / shake / swing / tilt) → occasionally skip-or-play a downstream-generated mini-game → at key beats make a choice that may roll dice → episode ends and routes to the next one.
 
 Your scripts will be parsed by a Go interpreter that outputs JSON for the frontend. The interpreter is strict — syntax errors break the build. This guide teaches you to write scripts the interpreter accepts and the player renders well.
 
@@ -244,7 +244,7 @@ The phone overlay sits on top of everything. Keep messages short — they render
 
 ### Tricks (forced body-interaction beats)
 
-`@trick <type> "<prompt>"` is a one-liner that forces the player to complete a small body action before the story advances. It's the embodied upgrade of `@pause for N`: the player must tap / hold / swipe / shake / swing / stay still, with a one-line on-screen prompt you author. There is no rating, no reward, no branching — the value is *presence*, not winning.
+`@trick <type> "<prompt>"` is a one-liner that forces the player to complete a small body action before the story advances. It's the embodied upgrade of `@pause for N`: the player must tap / hold / swipe / shake / swing / tilt the device, with a one-line on-screen prompt you author. There is no rating, no reward, no branching — the value is *presence*, not winning.
 
 ```
 @trick hold "Hold your breath until he walks past."
@@ -261,14 +261,14 @@ The phone overlay sits on top of everything. Keep messages short — they render
 | `swipe` | touch | wiping fog, brushing tears, pushing away — direction only |
 | `shake` | motion | shaking awake, shaking a bottle, trembling, an earthquake |
 | `swing` | motion | swinging a bat, casting a line, throwing a punch, knocking |
-| `hold-still` | motion | steadying a hand, holding breath, freezing so you aren't seen |
+| `tilt` | motion | peeking around a corner, listening at a door, cocking your head to observe |
 
 All six types use touch or device-motion sensors only — no camera, no microphone, no runtime permission prompt.
 
 **Authoring rules:**
 
 - `@trick` is a leaf — no `{ }` body. Adding one is a parse error.
-- Pick a type that fits the *embodied verb* of the moment. "Holding your breath" is `hold`, not `hold-still`; "don't move so he doesn't notice you" is `hold-still`. `swipe` is direction-only, not path-tracing.
+- Pick a type that fits the *embodied verb* of the moment. "Holding your breath" is `hold`; "peek around the corner" or "listen at the door" is `tilt`. `swipe` is direction-only, not path-tracing.
 - The prompt is the player-facing imperative. Keep it under one short sentence; write it in second person ("Hold your breath...", "Tap fast..."). It doubles as narrative glue.
 - Use sparingly — typically 1–3 per episode at moments that *feel* embodied. Every trick is a forced gate; if the player can't perform the action they can't continue. Don't gate on a trick at a beat the player must reach.
 

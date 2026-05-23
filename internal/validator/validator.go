@@ -35,12 +35,12 @@ const (
 // validTrickTypes mirrors the locked set in package ast. Keep in sync
 // with the Trick* constants there.
 var validTrickTypes = map[string]bool{
-	ast.TrickTap:       true,
-	ast.TrickHold:      true,
-	ast.TrickSwipe:     true,
-	ast.TrickShake:     true,
-	ast.TrickSwing:     true,
-	ast.TrickHoldStill: true,
+	ast.TrickTap:   true,
+	ast.TrickHold:  true,
+	ast.TrickSwipe: true,
+	ast.TrickShake: true,
+	ast.TrickSwing: true,
+	ast.TrickTilt:  true,
 }
 
 var validSignalKinds = map[string]bool{
@@ -531,7 +531,7 @@ func checkValues(nodes []ast.Node, errs *[]Error) {
 			if !validTrickTypes[v.Type] {
 				*errs = append(*errs, Error{
 					Code:    InvalidTrickType,
-					Message: fmt.Sprintf("@trick has invalid type %q (valid: tap, hold, swipe, shake, swing, hold-still)", v.Type),
+					Message: fmt.Sprintf("@trick has invalid type %q (valid: tap, hold, swipe, shake, swing, tilt)", v.Type),
 				})
 			}
 			if v.Prompt == "" {

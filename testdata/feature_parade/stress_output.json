@@ -439,8 +439,8 @@
     },
     {
       "id": "0044_trk",
-      "prompt": "Don't move — he's right behind you.",
-      "trick_type": "hold-still",
+      "prompt": "Peek around the corner — is he still there?",
+      "trick_type": "tilt",
       "type": "trick"
     },
     [

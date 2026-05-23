@@ -1,5 +1,5 @@
 // Feature Parade STRESS — 高强度逻辑压测
-// 覆盖: 3 层 @if 嵌套、复合条件括号、6 种 condition 混链（rating 自重构后已删）、空块边界、作用域交错、brave 省略 else、@trick 全 9 类型
+// 覆盖: 3 层 @if 嵌套、复合条件括号、6 种 condition 混链（rating 自重构后已删）、空块边界、作用域交错、brave 省略 else、@trick 全 6 类型
 
 @episode main/stress:01 "Stress Test" {
 
@@ -85,7 +85,7 @@
   @trick swipe "Wipe the steam off the mirror."
   @trick shake "Shake the bottle hard."
   @trick swing "Swing the bat through the strike zone."
-  @trick hold-still "Don't move — he's right behind you."
+  @trick tilt "Peek around the corner — is he still there?"
 
   // ================================================================
   // [T56] brave option 省略 @else（validator 宽松）+ safe option 嵌套 @if
