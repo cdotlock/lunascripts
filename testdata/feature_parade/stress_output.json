@@ -17,7 +17,7 @@
       {
         "id": "0002_mus",
         "name": "tense",
-        "type": "music_play",
+        "type": "music",
         "url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/music/tense.mp3"
       }
     ],
@@ -29,12 +29,12 @@
     {
       "id": "0004_sfx",
       "name": "huh",
-      "type": "sfx_play",
+      "type": "sfx",
       "url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/sfx/huh.mp3"
     },
     {
       "id": "0005_nar",
-      "text": "[T50a] @sfx play huh — the \"huh?\" sound effect plays once.",
+      "text": "[T50a] @sfx huh — the \"huh?\" sound effect plays once.",
       "type": "narrator"
     },
     {
@@ -68,7 +68,10 @@
               "kind": "affection"
             },
             "op": "\u003e=",
-            "right": 3,
+            "right": {
+              "kind": "literal",
+              "value": 3
+            },
             "type": "comparison"
           },
           "else": {
@@ -78,7 +81,10 @@
                 "kind": "affection"
               },
               "op": "\u003e=",
-              "right": 1,
+              "right": {
+                "kind": "literal",
+                "value": 1
+              },
               "type": "comparison"
             },
             "else": [
@@ -111,7 +117,10 @@
                   "name": "san"
                 },
                 "op": "\u003e=",
-                "right": 50,
+                "right": {
+                  "kind": "literal",
+                  "value": 50
+                },
                 "type": "comparison"
               },
               "else": [
@@ -166,7 +175,10 @@
               "kind": "affection"
             },
             "op": "\u003e=",
-            "right": 2,
+            "right": {
+              "kind": "literal",
+              "value": 2
+            },
             "type": "comparison"
           },
           "op": "||",
@@ -207,7 +219,10 @@
               "name": "san"
             },
             "op": "\u003e",
-            "right": 30,
+            "right": {
+              "kind": "literal",
+              "value": 30
+            },
             "type": "comparison"
           },
           "type": "compound"
@@ -225,7 +240,10 @@
               "kind": "affection"
             },
             "op": "\u003c",
-            "right": 0,
+            "right": {
+              "kind": "literal",
+              "value": 0
+            },
             "type": "comparison"
           },
           "type": "compound"
@@ -244,7 +262,7 @@
     },
     {
       "id": "0023_nar",
-      "text": "[T54] One @if chain mixing choice / flag / influence / comparison-affection / comparison-value / compound — 6 kinds.",
+      "text": "[T54] One @if chain mixing choice / flag / comparison-affection / comparison-value / compound — 5 kinds.",
       "type": "narrator"
     },
     {
@@ -260,8 +278,16 @@
         },
         "else": {
           "condition": {
-            "description": "Player hesitated at every fork",
-            "type": "influence"
+            "left": {
+              "kind": "value",
+              "name": "stress_count"
+            },
+            "op": "\u003e=",
+            "right": {
+              "kind": "literal",
+              "value": 1
+            },
+            "type": "comparison"
           },
           "else": {
             "condition": {
@@ -270,7 +296,10 @@
                 "kind": "affection"
               },
               "op": "\u003e=",
-              "right": 1,
+              "right": {
+                "kind": "literal",
+                "value": 1
+              },
               "type": "comparison"
             },
             "else": {
@@ -280,7 +309,10 @@
                   "name": "san"
                 },
                 "op": "\u003c=",
-                "right": 50,
+                "right": {
+                  "kind": "literal",
+                  "value": 50
+                },
                 "type": "comparison"
               },
               "else": {
@@ -297,7 +329,10 @@
                       "name": "san"
                     },
                     "op": "\u003e",
-                    "right": 0,
+                    "right": {
+                      "kind": "literal",
+                      "value": 0
+                    },
                     "type": "comparison"
                   },
                   "type": "compound"
@@ -339,7 +374,7 @@
           "then": [
             {
               "id": "0027_nar",
-              "text": "[T54c] influence condition branch.",
+              "text": "[T54c] signal-int comparison branch (replaces removed influence-kind).",
               "type": "narrator"
             }
           ],
@@ -366,119 +401,395 @@
     },
     {
       "id": "0032_nar",
+      "text": "[T54x] MAX/MIN aggregate operand — 2-arg, 3-arg, 4-arg, mixed-kind, recursive nesting.",
+      "type": "narrator"
+    },
+    {
+      "condition": {
+        "left": {
+          "args": [
+            {
+              "char": "easton",
+              "kind": "affection"
+            },
+            {
+              "char": "mauricio",
+              "kind": "affection"
+            }
+          ],
+          "kind": "max"
+        },
+        "op": "\u003e=",
+        "right": {
+          "kind": "literal",
+          "value": 3
+        },
+        "type": "comparison"
+      },
+      "id": "0033_ctrl",
+      "then": [
+        {
+          "id": "0034_nar",
+          "text": "[T54x-a] 2-arg MAX over two affections.",
+          "type": "narrator"
+        }
+      ],
+      "type": "if"
+    },
+    {
+      "condition": {
+        "left": {
+          "args": [
+            {
+              "char": "easton",
+              "kind": "affection"
+            },
+            {
+              "char": "mauricio",
+              "kind": "affection"
+            },
+            {
+              "char": "elias",
+              "kind": "affection"
+            }
+          ],
+          "kind": "min"
+        },
+        "op": "\u003e=",
+        "right": {
+          "kind": "literal",
+          "value": 1
+        },
+        "type": "comparison"
+      },
+      "id": "0035_ctrl",
+      "then": [
+        {
+          "id": "0036_nar",
+          "text": "[T54x-b] 3-arg MIN over three affections.",
+          "type": "narrator"
+        }
+      ],
+      "type": "if"
+    },
+    {
+      "condition": {
+        "left": {
+          "args": [
+            {
+              "char": "easton",
+              "kind": "affection"
+            },
+            {
+              "char": "mauricio",
+              "kind": "affection"
+            },
+            {
+              "char": "elias",
+              "kind": "affection"
+            },
+            {
+              "char": "josie",
+              "kind": "affection"
+            }
+          ],
+          "kind": "max"
+        },
+        "op": "\u003e=",
+        "right": {
+          "kind": "literal",
+          "value": 5
+        },
+        "type": "comparison"
+      },
+      "id": "0037_ctrl",
+      "then": [
+        {
+          "id": "0038_nar",
+          "text": "[T54x-c] 4-arg MAX over four affections.",
+          "type": "narrator"
+        }
+      ],
+      "type": "if"
+    },
+    {
+      "condition": {
+        "left": {
+          "args": [
+            {
+              "char": "easton",
+              "kind": "affection"
+            },
+            {
+              "kind": "value",
+              "name": "san"
+            },
+            {
+              "kind": "literal",
+              "value": 3
+            }
+          ],
+          "kind": "max"
+        },
+        "op": "\u003e=",
+        "right": {
+          "kind": "literal",
+          "value": 4
+        },
+        "type": "comparison"
+      },
+      "id": "0039_ctrl",
+      "then": [
+        {
+          "id": "0040_nar",
+          "text": "[T54x-d] mixed-kind MAX (affection + value + literal).",
+          "type": "narrator"
+        }
+      ],
+      "type": "if"
+    },
+    {
+      "condition": {
+        "left": {
+          "args": [
+            {
+              "char": "easton",
+              "kind": "affection"
+            },
+            {
+              "args": [
+                {
+                  "char": "mauricio",
+                  "kind": "affection"
+                },
+                {
+                  "char": "elias",
+                  "kind": "affection"
+                }
+              ],
+              "kind": "min"
+            }
+          ],
+          "kind": "max"
+        },
+        "op": "\u003e=",
+        "right": {
+          "kind": "literal",
+          "value": 2
+        },
+        "type": "comparison"
+      },
+      "id": "0041_ctrl",
+      "then": [
+        {
+          "id": "0042_nar",
+          "text": "[T54x-e] recursive nesting — MAX of (affection, MIN(...)).",
+          "type": "narrator"
+        }
+      ],
+      "type": "if"
+    },
+    {
+      "condition": {
+        "left": {
+          "char": "easton",
+          "kind": "affection"
+        },
+        "op": "\u003e",
+        "right": {
+          "char": "mauricio",
+          "kind": "affection"
+        },
+        "type": "comparison"
+      },
+      "id": "0043_ctrl",
+      "then": [
+        {
+          "id": "0044_nar",
+          "text": "[T54x-f] affection vs affection comparison.",
+          "type": "narrator"
+        }
+      ],
+      "type": "if"
+    },
+    {
+      "condition": {
+        "left": {
+          "args": [
+            {
+              "char": "easton",
+              "kind": "affection"
+            },
+            {
+              "char": "mauricio",
+              "kind": "affection"
+            }
+          ],
+          "kind": "max"
+        },
+        "op": "\u003e",
+        "right": {
+          "args": [
+            {
+              "char": "elias",
+              "kind": "affection"
+            },
+            {
+              "char": "josie",
+              "kind": "affection"
+            }
+          ],
+          "kind": "min"
+        },
+        "type": "comparison"
+      },
+      "id": "0045_ctrl",
+      "then": [
+        {
+          "id": "0046_nar",
+          "text": "[T54x-g] MAX vs MIN comparison — both sides aggregate.",
+          "type": "narrator"
+        }
+      ],
+      "type": "if"
+    },
+    {
+      "condition": {
+        "left": {
+          "kind": "literal",
+          "value": 5
+        },
+        "op": "\u003c",
+        "right": {
+          "char": "easton",
+          "kind": "affection"
+        },
+        "type": "comparison"
+      },
+      "id": "0047_ctrl",
+      "then": [
+        {
+          "id": "0048_nar",
+          "text": "[T54x-h] literal-left comparison.",
+          "type": "narrator"
+        }
+      ],
+      "type": "if"
+    },
+    {
+      "id": "0049_nar",
       "text": "[T55] @minigame power_swing — leaf shape. Prose seeds the vibe-coding agent; engine owns rewards; per-rating narrative removed.",
       "type": "narrator"
     },
     {
       "description": "Mauricio drags Malia to the baseball cage at lunch. She has to hit three pitches off the machine while he calls the count. The player taps Swing at the exact moment the pitch crosses the strike zone; mistime and the ball clips foul. Three pitches, two hits to clear.",
       "game_url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/minigames/power-swing/index.html",
-      "id": "0033_mg",
+      "id": "0050_mg",
       "name": "power_swing",
       "type": "minigame"
     },
     {
-      "id": "0034_nar",
+      "id": "0051_nar",
       "text": "[T59] Minigame roundup — three more leaf minigames covering different scenes. Scene + simple gameplay all in the prose; vibe-coding agent generates each.",
       "type": "narrator"
     },
     {
       "description": "Mark drags everyone to the boardwalk arcade. Malia pulls the lever on a vintage slot machine — taps Hold on each reel to lock symbols, taps Spin to roll the rest, chasing matching trios.",
       "game_url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/minigames/slot-machine/index.html",
-      "id": "0035_mg",
+      "id": "0052_mg",
       "name": "slot_machine",
       "type": "minigame"
     },
     {
       "description": "Friday afternoon at the lake with Elias. The player drags the catch icon into a moving zone to keep it inside the bar; let it slip and the line snaps. Catch one fish, the conversation actually starts.",
       "game_url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/minigames/stardew-fishing/index.html",
-      "id": "0036_mg",
+      "id": "0053_mg",
       "name": "stardew_fishing",
       "type": "minigame"
     },
     {
       "description": "Late-night dodgeball in the gym — lights flicker, balls fly. Player swipes left/right to dodge hazards for thirty seconds. Take three hits and Malia's out.",
       "game_url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/minigames/survive-30-seconds/index.html",
-      "id": "0037_mg",
+      "id": "0054_mg",
       "name": "survive_30_seconds",
       "type": "minigame"
     },
     {
-      "id": "0038_nar",
+      "id": "0055_nar",
       "text": "[T55t] @trick suite — every locked type appears once; each is a mandatory body-interaction beat.",
       "type": "narrator"
     },
     {
-      "id": "0039_trk",
+      "id": "0056_trk",
       "prompt": "Tap the screen to keep your hand from shaking.",
       "trick_type": "tap",
       "type": "trick"
     },
     {
-      "id": "0040_trk",
+      "id": "0057_trk",
       "prompt": "Hold your breath — count to five.",
       "trick_type": "hold",
       "type": "trick"
     },
     {
-      "id": "0041_trk",
+      "id": "0058_trk",
       "prompt": "Wipe the steam off the mirror.",
       "trick_type": "swipe",
       "type": "trick"
     },
     {
-      "id": "0042_trk",
+      "id": "0059_trk",
       "prompt": "Shake the bottle hard.",
       "trick_type": "shake",
       "type": "trick"
     },
     {
-      "id": "0043_trk",
+      "id": "0060_trk",
       "prompt": "Swing the bat through the strike zone.",
       "trick_type": "swing",
       "type": "trick"
     },
     {
-      "id": "0044_trk",
+      "id": "0061_trk",
       "prompt": "Peek around the corner — is he still there?",
       "trick_type": "tilt",
       "type": "trick"
     },
     [
       {
-        "id": "0045_bg",
+        "id": "0062_bg",
         "name": "hallway",
         "transition": "fade",
         "type": "bg",
         "url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/bg/hallway.png"
       },
       {
-        "id": "0046_mus",
+        "id": "0063_mus",
         "name": "upbeat",
-        "type": "music_crossfade",
+        "type": "music",
         "url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/music/upbeat.mp3"
       },
       {
-        "id": "0047_sfx",
+        "id": "0064_sfx",
         "name": "bell",
-        "type": "sfx_play",
+        "type": "sfx",
         "url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/sfx/bell.mp3"
       },
       {
         "character": "malia",
-        "id": "0048_char",
+        "id": "0065_char",
         "look": "flat",
-        "position": "center",
         "type": "char_show",
         "url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/characters/malia_flat.png"
       }
     ],
     {
-      "id": "0049_nar",
+      "id": "0066_nar",
       "text": "[T56] Choice stress: brave omits @else; safe nests an @if.",
       "type": "narrator"
     },
     {
-      "id": "0050_ch",
+      "id": "0067_ch",
       "options": [
         {
           "check": {
@@ -493,17 +804,17 @@
                 "result": "success",
                 "type": "check"
               },
-              "id": "0051_ctrl",
+              "id": "0068_ctrl",
               "then": [
                 {
-                  "id": "0052_nar",
+                  "id": "0069_nar",
                   "text": "[T56a] brave check.success — no paired @else (allowed).",
                   "type": "narrator"
                 },
                 {
                   "character": "easton",
                   "delta": 1,
-                  "id": "0053_aff",
+                  "id": "0070_aff",
                   "type": "affection"
                 }
               ],
@@ -523,26 +834,29 @@
                   "kind": "affection"
                 },
                 "op": "\u003e=",
-                "right": 2,
+                "right": {
+                  "kind": "literal",
+                  "value": 2
+                },
                 "type": "comparison"
               },
               "else": [
                 {
-                  "id": "0057_you",
+                  "id": "0074_you",
                   "text": "[T56c] safe body nested @else.",
                   "type": "you"
                 }
               ],
-              "id": "0054_ctrl",
+              "id": "0071_ctrl",
               "then": [
                 {
-                  "id": "0055_you",
+                  "id": "0072_you",
                   "text": "[T56b] safe body nested @if true.",
                   "type": "you"
                 },
                 {
                   "description": "Walked away but hesitated",
-                  "id": "0056_btf",
+                  "id": "0073_btf",
                   "type": "butterfly"
                 }
               ],
@@ -555,69 +869,66 @@
       "type": "choice"
     },
     {
-      "id": "0058_nar",
-      "text": "[T57] @phone show with ZERO messages — empty block edge case.",
+      "id": "0075_nar",
+      "text": "[T57] @phone block with a single message — minimum non-empty edge case.",
       "type": "narrator"
     },
     {
-      "id": "0059_phn",
+      "id": "0076_phn",
+      "messages": [
+        {
+          "character": "easton",
+          "direction": "from",
+          "id": "0077_phn",
+          "text": "Are you there?",
+          "type": "text_message"
+        }
+      ],
       "type": "phone_show"
-    },
-    {
-      "id": "0060_phn",
-      "type": "phone_hide"
     },
     [
       {
-        "id": "0061_bg",
+        "id": "0078_bg",
         "name": "gym",
         "transition": "cut",
         "type": "bg",
         "url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/bg/gym.png"
       },
       {
-        "character": "malia",
-        "id": "0062_char",
-        "position": "right",
-        "type": "char_move"
-      },
-      {
         "character": "josie",
-        "id": "0063_char",
+        "id": "0079_char",
         "look": "excited",
-        "position": "left",
         "type": "char_show",
         "url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/characters/josie_excited.png"
       }
     ],
     {
-      "id": "0064_nar",
+      "id": "0080_nar",
       "text": "[T58] Concurrent-group boundary test: dialogue breaks the group above; new @ below starts a fresh group.",
       "type": "narrator"
     },
     {
-      "clicks": 1,
-      "id": "0065_pau",
+      "id": "0081_pau",
       "type": "pause"
     },
     {
-      "id": "0066_nar",
-      "text": "[T58a] @pause for 1 — single click to advance.",
+      "id": "0082_nar",
+      "text": "[T58a] @pause — single click to advance.",
       "type": "narrator"
     },
     {
       "event": "STRESS_DONE",
-      "id": "0067_sig",
+      "id": "0083_sig",
       "kind": "mark",
       "type": "signal"
     },
     {
-      "id": "0068_nar",
+      "id": "0084_nar",
       "text": "[T58b] @signal int — three write forms plus a comparison read.",
       "type": "narrator"
     },
     {
-      "id": "0069_sig",
+      "id": "0085_sig",
       "kind": "int",
       "name": "stress_count",
       "op": "=",
@@ -625,7 +936,7 @@
       "value": 0
     },
     {
-      "id": "0070_sig",
+      "id": "0086_sig",
       "kind": "int",
       "name": "stress_count",
       "op": "+",
@@ -633,7 +944,7 @@
       "value": 2
     },
     {
-      "id": "0071_sig",
+      "id": "0087_sig",
       "kind": "int",
       "name": "stress_count",
       "op": "-",
@@ -647,20 +958,23 @@
           "name": "stress_count"
         },
         "op": "\u003e=",
-        "right": 2,
+        "right": {
+          "kind": "literal",
+          "value": 2
+        },
         "type": "comparison"
       },
       "else": [
         {
-          "id": "0074_nar",
+          "id": "0090_nar",
           "text": "[T58b-lo] stress_count below threshold.",
           "type": "narrator"
         }
       ],
-      "id": "0072_ctrl",
+      "id": "0088_ctrl",
       "then": [
         {
-          "id": "0073_nar",
+          "id": "0089_nar",
           "text": "[T58b-hi] stress_count crossed the 2 threshold.",
           "type": "narrator"
         }
@@ -668,8 +982,8 @@
       "type": "if"
     },
     {
-      "id": "0075_nar",
-      "text": "[T60 → main:02] Stress gate has only a fallback @else — will jump to ep02.md unconditionally.",
+      "id": "0091_nar",
+      "text": "[T60 → main:02] Stress gate has a single unconditional leaf — jumps to ep02 unconditionally.",
       "type": "narrator"
     }
   ],

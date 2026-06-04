@@ -17,62 +17,45 @@
       {
         "id": "0002_mus",
         "name": "lunch",
-        "type": "music_play",
+        "type": "music",
         "url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/music/lunch.mp3"
       },
       {
-        "character": "malia",
-        "id": "0003_char",
-        "look": "flat",
-        "position": "left",
-        "type": "char_show",
-        "url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/characters/malia_flat.png"
-      },
-      {
         "character": "mark",
-        "id": "0004_char",
+        "id": "0003_char",
         "look": "grin",
-        "position": "center",
         "type": "char_show",
         "url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/characters/mark_grin.png"
-      },
-      {
-        "character": "mauricio",
-        "id": "0005_char",
-        "look": "smirk",
-        "position": "right",
-        "type": "char_show",
-        "url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/characters/mauricio_smirk.png"
       }
     ],
     {
-      "id": "0006_nar",
-      "text": "[T30] position 3 档: left / center / right 同屏出场。",
+      "id": "0004_nar",
+      "text": "[T30] char_show 新语法 — 单角色出场，引擎从 gamestate.MC 派生位置。",
       "type": "narrator"
     },
     {
-      "id": "0007_nar",
+      "id": "0005_nar",
       "text": "[T31] char_look with transition=dissolve (Malia and Mauricio change looks).",
       "type": "narrator"
     },
     {
       "character": "malia",
-      "id": "0008_char",
+      "id": "0006_char",
       "look": "smile",
       "transition": "dissolve",
-      "type": "char_look",
+      "type": "char_show",
       "url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/characters/malia_smile.png"
     },
     {
       "character": "mauricio",
-      "id": "0009_char",
+      "id": "0007_char",
       "look": "almost_smile",
       "transition": "dissolve",
-      "type": "char_look",
+      "type": "char_show",
       "url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/characters/mauricio_almost_smile.png"
     },
     {
-      "id": "0010_nar",
+      "id": "0008_nar",
       "text": "[T32] Comparison op == (strict equal).",
       "type": "narrator"
     },
@@ -83,7 +66,10 @@
           "kind": "affection"
         },
         "op": "==",
-        "right": 3,
+        "right": {
+          "kind": "literal",
+          "value": 3
+        },
         "type": "comparison"
       },
       "else": {
@@ -93,29 +79,32 @@
             "kind": "affection"
           },
           "op": "!=",
-          "right": 0,
+          "right": {
+            "kind": "literal",
+            "value": 0
+          },
           "type": "comparison"
         },
         "else": [
           {
-            "id": "0014_you",
+            "id": "0012_you",
             "text": "[T32c] all comparison fell through.",
             "type": "you"
           }
         ],
         "then": [
           {
-            "id": "0013_you",
+            "id": "0011_you",
             "text": "[T32b] affection.easton != 0 fallback.",
             "type": "you"
           }
         ],
         "type": "if"
       },
-      "id": "0011_ctrl",
+      "id": "0009_ctrl",
       "then": [
         {
-          "id": "0012_you",
+          "id": "0010_you",
           "text": "[T32a] affection.easton == 3 exactly.",
           "type": "you"
         }
@@ -123,7 +112,7 @@
       "type": "if"
     },
     {
-      "id": "0015_nar",
+      "id": "0013_nar",
       "text": "[T33] Comparison op \u003e and \u003c on engine value.",
       "type": "narrator"
     },
@@ -134,7 +123,10 @@
           "name": "san"
         },
         "op": "\u003e",
-        "right": 50,
+        "right": {
+          "kind": "literal",
+          "value": 50
+        },
         "type": "comparison"
       },
       "else": {
@@ -144,24 +136,27 @@
             "name": "san"
           },
           "op": "\u003c",
-          "right": 50,
+          "right": {
+            "kind": "literal",
+            "value": 50
+          },
           "type": "comparison"
         },
         "then": [
           {
             "character": "malia",
-            "id": "0018_dlg",
+            "id": "0016_dlg",
             "text": "[T33b] san \u003c 50 branch.",
             "type": "dialogue"
           }
         ],
         "type": "if"
       },
-      "id": "0016_ctrl",
+      "id": "0014_ctrl",
       "then": [
         {
           "character": "malia",
-          "id": "0017_dlg",
+          "id": "0015_dlg",
           "text": "[T33a] san \u003e 50 branch.",
           "type": "dialogue"
         }
@@ -169,7 +164,7 @@
       "type": "if"
     },
     {
-      "id": "0019_nar",
+      "id": "0017_nar",
       "text": "[T34] Three achievements below cover rarity rare / epic / legendary (uncommon was in T21).",
       "type": "narrator"
     },
@@ -178,18 +173,18 @@
         "name": "EP01_FACED_EASTON",
         "type": "flag"
       },
-      "id": "0020_ctrl",
+      "id": "0018_ctrl",
       "then": [
         {
           "achievement_id": "RARE_COURAGE",
           "description": "You faced him twice.",
-          "id": "0021_ach",
+          "id": "0019_ach",
           "name": "Quiet Courage",
           "rarity": "rare",
           "type": "achievement"
         },
         {
-          "id": "0022_nar",
+          "id": "0020_nar",
           "text": "[T34a] rarity=rare unlocked.",
           "type": "narrator"
         }
@@ -209,23 +204,26 @@
             "kind": "affection"
           },
           "op": "\u003e=",
-          "right": 3,
+          "right": {
+            "kind": "literal",
+            "value": 3
+          },
           "type": "comparison"
         },
         "type": "compound"
       },
-      "id": "0023_ctrl",
+      "id": "0021_ctrl",
       "then": [
         {
           "achievement_id": "EPIC_BOND",
           "description": "Two episodes. Still standing together.",
-          "id": "0024_ach",
+          "id": "0022_ach",
           "name": "Full Circle",
           "rarity": "epic",
           "type": "achievement"
         },
         {
-          "id": "0025_nar",
+          "id": "0023_nar",
           "text": "[T34b] rarity=epic unlocked.",
           "type": "narrator"
         }
@@ -253,23 +251,26 @@
             "kind": "affection"
           },
           "op": "\u003e=",
-          "right": 5,
+          "right": {
+            "kind": "literal",
+            "value": 5
+          },
           "type": "comparison"
         },
         "type": "compound"
       },
-      "id": "0026_ctrl",
+      "id": "0024_ctrl",
       "then": [
         {
           "achievement_id": "LEGENDARY_PARADE",
           "description": "Every choice, every risk. You took the hard road.",
-          "id": "0027_ach",
+          "id": "0025_ach",
           "name": "Parade Monarch",
           "rarity": "legendary",
           "type": "achievement"
         },
         {
-          "id": "0028_nar",
+          "id": "0026_nar",
           "text": "[T34c] rarity=legendary unlocked.",
           "type": "narrator"
         }
@@ -278,27 +279,27 @@
     },
     [
       {
-        "id": "0029_bg",
+        "id": "0027_bg",
         "name": "gym",
         "transition": "fade",
         "type": "bg",
         "url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/bg/gym.png"
       },
       {
-        "id": "0030_mus",
+        "id": "0028_mus",
         "name": "night",
-        "type": "music_crossfade",
+        "type": "music",
         "url": "https://mobai-file.oss-cn-shanghai.aliyuncs.com/moonshort-script/testdata/feature_parade/music/night.mp3"
       }
     ],
     {
-      "id": "0031_you",
-      "text": "[T35] Final @ending complete — story wraps, credits roll.",
+      "id": "0029_you",
+      "text": "[T35] Final @gate { @end complete } — story wraps, credits roll.",
       "type": "you"
     },
     {
       "event": "EP02_DONE",
-      "id": "0032_sig",
+      "id": "0030_sig",
       "kind": "mark",
       "type": "signal"
     }

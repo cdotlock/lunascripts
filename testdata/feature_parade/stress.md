@@ -1,14 +1,14 @@
 // Feature Parade STRESS — 高强度逻辑压测
-// 覆盖: 3 层 @if 嵌套、复合条件括号、6 种 condition 混链（rating 自重构后已删）、空块边界、作用域交错、brave 省略 else、@trick 全 6 类型
+// 覆盖: 3 层 @if 嵌套、复合条件括号、5 种 condition 混链、空块边界、作用域交错、brave 省略 else、@trick 全 6 类型、MAX/MIN 聚合、operand-vs-operand 比较
 
 @episode main/stress:01 "Stress Test" {
 
   @bg set classroom
-  &music play tense
+  &music tense
 
   NARRATOR: [T50] Stress suite starts — each sub-test announces itself.
-  @sfx play huh
-  NARRATOR: [T50a] @sfx play huh — the "huh?" sound effect plays once.
+  @sfx huh
+  NARRATOR: [T50a] @sfx huh — the "huh?" sound effect plays once.
 
   // ================================================================
   // [T51] 3 层 @if 嵌套
@@ -46,15 +46,15 @@
   }
 
   // ================================================================
-  // [T54] 同一 if 链混合全部 5 种 gate-合法 condition（check/rating 在 T55/T56 验证）
+  // [T54] 同一 if 链混合全部 5 种 gate-合法 condition（check 在 brave 体内验证）
   // ================================================================
-  NARRATOR: [T54] One @if chain mixing choice / flag / influence / comparison-affection / comparison-value / compound — 6 kinds.
+  NARRATOR: [T54] One @if chain mixing choice / flag / comparison-affection / comparison-value / compound — 5 kinds.
   @if (A.fail) {
     NARRATOR: [T54a] choice condition branch.
   } @else @if (EP01_COMPLETE) {
     NARRATOR: [T54b] flag condition branch.
-  } @else @if (influence "Player hesitated at every fork") {
-    NARRATOR: [T54c] influence condition branch.
+  } @else @if (stress_count >= 1) {
+    NARRATOR: [T54c] signal-int comparison branch (replaces removed influence-kind).
   } @else @if (affection.easton >= 1) {
     NARRATOR: [T54d] comparison on affection.
   } @else @if (san <= 50) {
@@ -63,6 +63,46 @@
     NARRATOR: [T54f] compound of choice && comparison.
   } @else {
     NARRATOR: [T54g] fall-through @else.
+  }
+
+  // ================================================================
+  // [T54x] MAX/MIN 聚合 + operand-vs-operand 比较
+  // ================================================================
+  NARRATOR: [T54x] MAX/MIN aggregate operand — 2-arg, 3-arg, 4-arg, mixed-kind, recursive nesting.
+
+  @if (MAX(affection.easton, affection.mauricio) >= 3) {
+    NARRATOR: [T54x-a] 2-arg MAX over two affections.
+  }
+
+  @if (MIN(affection.easton, affection.mauricio, affection.elias) >= 1) {
+    NARRATOR: [T54x-b] 3-arg MIN over three affections.
+  }
+
+  @if (MAX(affection.easton, affection.mauricio, affection.elias, affection.josie) >= 5) {
+    NARRATOR: [T54x-c] 4-arg MAX over four affections.
+  }
+
+  @if (MAX(affection.easton, san, 3) >= 4) {
+    NARRATOR: [T54x-d] mixed-kind MAX (affection + value + literal).
+  }
+
+  @if (MAX(affection.easton, MIN(affection.mauricio, affection.elias)) >= 2) {
+    NARRATOR: [T54x-e] recursive nesting — MAX of (affection, MIN(...)).
+  }
+
+  // operand-vs-operand: 两侧都是变量
+  @if (affection.easton > affection.mauricio) {
+    NARRATOR: [T54x-f] affection vs affection comparison.
+  }
+
+  // operand-vs-operand: 聚合 vs 聚合
+  @if (MAX(affection.easton, affection.mauricio) > MIN(affection.elias, affection.josie)) {
+    NARRATOR: [T54x-g] MAX vs MIN comparison — both sides aggregate.
+  }
+
+  // 字面量在左、变量在右
+  @if (5 < affection.easton) {
+    NARRATOR: [T54x-h] literal-left comparison.
   }
 
   // ================================================================
@@ -91,9 +131,9 @@
   // [T56] brave option 省略 @else（validator 宽松）+ safe option 嵌套 @if
   // ================================================================
   @bg set hallway fade
-  &music crossfade upbeat
-  &sfx play bell
-  &malia show flat at center
+  &music upbeat
+  &sfx bell
+  &malia flat
 
   NARRATOR: [T56] Choice stress: brave omits @else; safe nests an @if.
   @choice {
@@ -118,24 +158,23 @@
   }
 
   // ================================================================
-  // [T57] 空手机块（0 条消息）
+  // [T57] 单消息手机块（最小非空边界）
   // ================================================================
-  NARRATOR: [T57] @phone show with ZERO messages — empty block edge case.
-  @phone show {
+  NARRATOR: [T57] @phone block with a single message — minimum non-empty edge case.
+  @phone {
+    @text from EASTON: Are you there?
   }
-  @phone hide
 
   // ================================================================
   // [T58] 并发组边界: 连续 @ / & / 对话交替
   // ================================================================
   @bg set gym cut
-  &malia move to right
-  &josie show excited at left
+  &josie excited
 
   NARRATOR: [T58] Concurrent-group boundary test: dialogue breaks the group above; new @ below starts a fresh group.
 
-  @pause for 1
-  NARRATOR: [T58a] @pause for 1 — single click to advance.
+  @pause
+  NARRATOR: [T58a] @pause — single click to advance.
 
   @signal mark STRESS_DONE
 
@@ -152,8 +191,8 @@
     NARRATOR: [T58b-lo] stress_count below threshold.
   }
 
-  NARRATOR: [T60 → main:02] Stress gate has only a fallback @else — will jump to ep02.md unconditionally.
+  NARRATOR: [T60 → main:02] Stress gate has a single unconditional leaf — jumps to ep02 unconditionally.
   @gate {
-    @else: @next main:02
+    @next main:02
   }
 }
