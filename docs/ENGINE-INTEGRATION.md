@@ -4,28 +4,34 @@
 
 ## 运行模型
 
-MSS 编译器输出按集（episode）为单位的 JSON。引擎一次加载一集，按顺序遍历 `steps`，遇到选择/路由/结束时做状态决策。每集 JSON 是自包含的——跨集共享的状态（marks、affection、choice history、butterfly records、已解锁成就）由引擎维护在**持久存储**中。
+MSS 编译器输出按集（episode）为单位的 JSON。引擎一次加载一集，按顺序遍历 `steps`，遇到选择/路由/结束时做状态决策。每集 JSON 是自包含的——跨集共享的状态（marks、int signals、affection、choice history、butterfly records、已解锁成就）由引擎维护在**持久存储**中。
 
 ### Player cursor：用 step `id` 而不是数字索引
 
-每个 step 都带一个稳定的 `id` 字段（格式 `<seq>_<tag>`，详见 [JSON-OUTPUT.md §4.0](./JSON-OUTPUT.md)）。当后端持久化玩家进度时，**cursor 必须用完整的 ID 路径**（如 `["0005_ch", "options", "A", "steps", "0006_dlg"]`），**不要**用纯数字索引（如 `[4, "options", 0, "steps", 0]`）。原因：remix patch 可能 insert/replace 同一容器内的 step，纯数字索引会静默指错位置；ID-keyed cursor 在结构变更后仍然能 lookup 到正确节点。`id` 是冻结契约，编译器算法一旦发布即不可变更——若 backend 需要变化，必须配套写一次性 cursor migration。
+每个 step 都带一个稳定的 `id` 字段（格式 `<seq>_<tag>`，详见 [JSON-OUTPUT.md §4.0](./JSON-OUTPUT.md)）。当后端持久化玩家进度时，**cursor 必须用完整的 ID 路径**（如 `["0005_ch", "options", "A", "steps", "0006_dlg"]`），**不要**用纯数字索引。原因：remix patch 可能 insert/replace 同一容器内的 step，纯数字索引会静默指错位置；ID-keyed cursor 在结构变更后仍然能 lookup 到正确节点。`id` 是冻结契约，编译器算法一旦发布即不可变更——若 backend 需要变化，必须配套写一次性 cursor migration。
 
-引擎需要维护的跨集持久状态：
+### 引擎维护的跨集持久状态
 
 | 存储 | 写入来源 | 读取来源 |
 |------|---------|---------|
 | Flag store | `{type:"signal", kind:"mark", event:X}` | `{type:"flag", name:X}` 条件 |
-| Affection map | `{type:"affection", character:X, delta:N}` | `{type:"comparison", left:{kind:"affection", char:X}, ...}` |
+| Int signal store | `{type:"signal", kind:"int", name:X, op:Y, value:N}` | `{kind:"value", name:X}` operand |
+| Affection map | `{type:"affection", character:X, delta:N}` | `{kind:"affection", char:X}` operand |
 | Choice history | 选择后 | `{type:"choice", option:X, result:Y}` 条件 |
-| Butterfly records | `{type:"butterfly", description:X}` | `{type:"influence", description:X}` 条件（经 LLM 求值） |
-| Engine values (san / CHA / etc.) | 引擎内部规则 | `{type:"comparison", left:{kind:"value", name:X}, ...}` |
+| Butterfly records | `{type:"butterfly", description:X}` | 喂下游内容生成 agent（Remix Executor / Dream）。**不参与运行时路由判定** |
+| Engine values (san / CHA / etc.) | 引擎内部规则 | `{kind:"value", name:X}` operand（与 int signal 共享裸名空间） |
 | Unlocked achievements | `{type:"achievement", achievement_id, name, rarity, description}` | — 纯通知，不反向查询 |
 
-集内临时状态（单集生命周期内有效）：
+### 引擎维护的集内临时状态
 
 - **当前 brave option 的 check 结果** — 玩家点选 brave option → 引擎掷 D20 + 属性修正，判定 success/fail → 进入 option 的 `steps`，求值 `check.success/fail` 条件
+- **角色可见性 + 最后 pose** — `char_show` 写入；`dialogue` 读取并隐式调整；`narrator`/`you` 清屏
 
 `@minigame` 不参与 D20 检定（无属性绑定）。`@trick` 不写任何状态（无评级、无奖励）。两者都不在临时状态里出现。
+
+### MC 身份注入
+
+MSS 编译产物**不携带 MC 身份信息**。引擎在加载玩家会话时从 gamestate / 业务层读取"哪个角色是 MC"。所有 step 中的 `character` 字段就是角色 ID 本身——引擎用它去比对当前 MC 身份决定显示位置（MC 左、其余右）。
 
 ## Step 消费规则
 
@@ -43,30 +49,63 @@ for element in steps:
             wait_for_player_click()
 ```
 
-**点击等待的 step 类型**：`dialogue` / `narrator` / `you` / `pause`（`pause.clicks` 指定等待几次）。
+**点击等待的 step 类型**：`dialogue` / `narrator` / `you` / `pause`。
 
-**阻塞交互的 step 类型**：`choice`（等待玩家选择）、`minigame`（等待游戏结果或玩家跳过）、`trick`（必须等玩家完成；不可跳）、`phone_show` / `phone_hide`（UI 切换）、`cg_show`（放视频）、`if`（引擎判定后执行对应分支）。
+**阻塞交互的 step 类型**：`choice`（等待玩家选择）、`minigame`（等待游戏结果或玩家跳过）、`trick`（必须等玩家完成；不可跳）、`phone_show`（UI 切换）、`cg_show`（放视频）、`if`（引擎判定后执行对应分支）。
 
-**自动推进的 step 类型**：其余全部——`bg` / `char_show` / `char_hide` / `char_look` / `char_move` / `bubble` / `music_play` / `music_crossfade` / `music_fadeout` / `sfx_play` / `affection` / `signal` / `achievement` / `butterfly` / `label` / `goto`。
+**自动推进的 step 类型**：其余全部——`bg` / `char_show` / `bubble` / `music` / `music_stop` / `sfx` / `affection` / `signal` / `achievement` / `butterfly`。
 
 ## 关键 step 类型
+
+### `char_show` 与角色可见性
+
+```json
+{"type": "char_show", "character": "mauricio", "look": "neutral_smirk", "url": "..."}
+```
+
+引擎语义（同屏一人规则）：
+
+1. 查询 mauricio 当前是否可见
+2. 不可见 → 显示（带 `transition`）；同时隐式隐藏屏幕上的其他角色（淡出 / 直切由引擎决定）
+3. 已可见 → 切 pose（带 `transition`）
+4. 记录 mauricio 的"最后 pose"为 `neutral_smirk`，供后续 `dialogue` step 使用
+
+`position` 字段**不在 JSON 中**——引擎从 MC 身份派生：character == MC → left；其他 → right。
+
+### `dialogue` 的隐式角色显示
+
+```json
+{"type": "dialogue", "character": "easton", "text": "Can I sit?"}
+```
+
+引擎语义：
+
+1. 查询 easton 当前是否可见
+2. 不可见 → 用 easton 的"最后 pose"显示（如果没有，用默认 pose）；同时隐藏屏幕上的其他角色
+3. 已可见 → 不变
+4. 显示对白文本，等玩家点击
+
+**`narrator` 和 `you` step 触发清屏**——所有角色立绘移出舞台。再次出现 dialogue 时角色重新进入。
 
 ### `signal`
 
 ```json
 {"type": "signal", "kind": "mark", "event": "EVENT_NAME"}
+{"type": "signal", "kind": "int", "name": "rejections", "op": "+", "value": 1}
 ```
 
-当前 kind 只有 `"mark"`——写入持久 flag store。`kind` 字段保留在 JSON 里，方便未来扩展新 kind 时不破坏消费者：**引擎见到未知 kind 应当忽略并记日志**，不要崩溃、不要写入。
+按 `kind` 分派：
+- `mark` → 写入持久 flag store
+- `int` → 按 op 更新持久 int store；首次引用从 0 起算
 
-后续条件求值 `{"type":"flag","name":"EVENT_NAME"}` 时在 flag store 中查找即可。
+**未知 kind**：引擎见到未知 kind 应当忽略并记日志，不要崩溃、不要写入。
 
 ### `achievement`
 
 ```json
 {
   "type": "achievement",
-  "id": "HIGH_HEEL_DOUBLE_KILL",
+  "achievement_id": "HIGH_HEEL_DOUBLE_KILL",
   "name": "Heel Twice Over",
   "rarity": "epic",
   "description": "Once is improvisation. Twice is a signature move."
@@ -75,12 +114,29 @@ for element in steps:
 
 Step 自带完整元数据——引擎不需要另外的声明表查找，消费时：
 
-1. 检查 `id` 是否已在持久 unlock store 中：
+1. 检查 `achievement_id` 是否已在持久 unlock store 中：
    - 是 → 跳过（不重复弹窗）
    - 否 → 写入 unlock store、弹 UI、推数据上报
 2. 不写 flag store——`@if (HIGH_HEEL_DOUBLE_KILL)` 永远 false（成就是外发通知）
 
-剧本侧的形态：`@achievement <id> { name / rarity / description }`。条件触发由外层 `@if` 承担，典型写法 `@if (mark1 && mark2) { @achievement X { ... } }`——只有所有前置 mark 已在 flag store 时才会执行到 achievement step。
+剧本侧的形态：`@achievement <id> { name / rarity / description }`。条件触发由外层 `@if` 承担，典型写法 `@if (mark1 && mark2) { @achievement X { ... } }`。
+
+### `butterfly`
+
+```json
+{"type": "butterfly", "description": "Accepted Easton's approach at the cafeteria"}
+```
+
+消费流程：
+
+1. 追加到玩家的 butterfly 累积存储（英文 prose 列表）
+2. **不影响运行时路由**——gate 求值不会读取 butterfly
+
+下游消费者：
+- **Remix Executor** — 生成 remix 内容时读 butterfly 累积，保持玩家性格的连续性
+- **Dream** — 生成衍生内容时同上
+
+引擎只负责落盘，不解释、不汇总——下游 LLM 直接消费 prose 列表。
 
 ### `choice` → brave option
 
@@ -123,7 +179,7 @@ Step 自带完整元数据——引擎不需要另外的声明表查找，消费
   "type": "minigame",
   "name": "qte_challenge",
   "game_url": "https://.../qte_challenge/index.html",
-  "description": "Mr. Chen pairs Malia and Mauricio for the opening reading exercise — they trade lines from Jane Eyre..."
+  "description": "Mr. Chen pairs Malia and Mauricio for the opening reading exercise..."
 }
 ```
 
@@ -179,25 +235,38 @@ Step 自带完整元数据——引擎不需要另外的声明表查找，消费
 {
   "type": "cg_show",
   "name": "window_stare",
-  "url": "https://.../window_stare.png",
-  "transition": "fade",
-  "duration": "medium",
-  "content": "The camera opens on Malia's silhouette against the rain-streaked window...",
-  "steps": [
-    {"type": "you", "text": "The city lights blurred through my tears."}
-  ]
+  "url": "https://.../window_stare.mp4",
+  "content": "The camera opens on Malia's silhouette against the rain-streaked window..."
 }
 ```
 
 **谁消费哪些字段**：
 
-- **agent-forge（视频管线）**：`duration` 档位（low/medium/high）和 `content` 叙事是视频生成的输入。管线据此调度镜头、生成视频文件，把输出 URL 写进素材映射。
-- **运行时播放器**：只播放 `url` 指向的视频文件（或图片，如果还没过 agent-forge）。`duration` 和 `content` 可忽略——但可以作为预检查字段（url 未生成时根据 content 显示文本 fallback）。
-- **body steps**：CG 放映期间叠加在视频上的对白/叙事。播放器按正常 step 消费。
+- **agent-forge（视频管线）**：`content` 叙事是视频生成的输入。管线据此调度镜头、生成视频文件，把输出 URL 写进素材映射。
+- **运行时播放器**：只播放 `url` 指向的视频文件。`content` 可忽略——但可以作为预检查字段（url 未生成时根据 content 显示文本 fallback）。
+- **leaf step**：CG 期间没有叠加对白，要在 CG 前后说话用普通 dialogue/narrator/you step。
+
+### `music` / `music_stop` / `sfx`
+
+```json
+{"type": "music", "name": "calm_morning", "url": "..."}
+{"type": "music_stop"}
+{"type": "sfx", "name": "door_slam", "url": "..."}
+```
+
+**`music`** 引擎语义：
+- 当前无 BGM → 淡入新 BGM
+- 当前有 BGM → 交叉淡入新 BGM
+
+脚本只表达"现在应该播这首"，引擎自己决定怎么过渡。
+
+**`music_stop`**：淡出当前 BGM。
+
+**`sfx`**：一次性播放音效，不阻塞，不需要 stop。
 
 ## 条件类型
 
-`if` step 和 gate route 的 `condition` 字段都是结构化对象。完整类型见 JSON-OUTPUT.md §4.8；这里只强调 context-local 的两个：
+`if` step 和 gate route 的 `condition` 字段都是结构化对象。完整类型见 JSON-OUTPUT.md §4.8；这里只强调 context-local 的 `check` 条件：
 
 | type | 字段 | 作用域 | 求值 |
 |------|------|-------|------|
@@ -207,19 +276,53 @@ Step 自带完整元数据——引擎不需要另外的声明表查找，消费
 
 **不做作用域静态校验**——编译器允许作者把 `{"type":"check"}` 条件写在任何位置。如果不在 brave option 体内求值，引擎就没 check context，**返回 false 即可**（不要崩溃）。这是设计意图：作用域错放是作者的剧情 bug，不是语法错。
 
+## Gate 路由消费
+
+gate 是嵌套的 if/else 链，叶子节点是 `{next: <branch_key>}` 或 `{end: <ending_type>}`。
+
+消费流程：
+
+1. 集 steps 遍历完毕
+2. 检查 `ending` 字段：非 null → 进入对应终结画面，结束
+3. 检查 `gate` 字段：null 是编译错误（unreachable）；非 null → 走 gate AST 判定
+4. 沿 if → else 链按条件求值，命中第一个匹配的 if
+5. 命中节点的叶子动作：
+   - `next: X` → 加载 episode X
+   - `end: TYPE` → 进入对应终结画面（complete/to_be_continued/bad_ending）
+
+```pseudocode
+function resolve_gate(gate_node, ctx):
+    if "if" not in gate_node:
+        # 兜底叶子节点
+        return apply_leaf(gate_node)
+    if evaluate_condition(gate_node.if, ctx):
+        return apply_leaf(gate_node)   # 用本节点的 next 或 end
+    return resolve_gate(gate_node.else, ctx)
+
+function apply_leaf(node):
+    if "next" in node:
+        return {action: "route", target: node.next}
+    if "end" in node:
+        return {action: "end", ending_type: node.end}
+```
+
 ## 常见消费逻辑示例
 
 ### 处理 signal step
 
 ```pseudocode
 function handle_signal(step):
-    kind = step.kind
-    event = step.event
-    switch kind:
+    switch step.kind:
         case "mark":
-            flag_store.insert(event)
+            flag_store.insert(step.event)
+        case "int":
+            current = int_store.get(step.name, 0)
+            switch step.op:
+                case "=": int_store.set(step.name, step.value)
+                case "+": int_store.set(step.name, current + step.value)
+                case "-": int_store.set(step.name, current - step.value)
         default:
-            log_warning("unknown signal kind", kind)  # forward-compat
+            log_warning("unknown signal kind", step.kind)
 ```
 
 ### 处理 achievement step
@@ -244,8 +347,9 @@ function evaluate_condition(cond, ctx):
         case "flag":
             return flag_store.contains(cond.name)
         case "comparison":
-            left = read_operand(cond.left, ctx)
-            return compare(left, cond.op, cond.right)
+            l = evaluate_operand(cond.left, ctx)
+            r = evaluate_operand(cond.right, ctx)
+            return compare(l, cond.op, r)
         case "compound":
             l = evaluate_condition(cond.left, ctx)
             r = evaluate_condition(cond.right, ctx)
@@ -255,11 +359,25 @@ function evaluate_condition(cond, ctx):
             if hist is null: return false
             if cond.result == "any": return true
             return hist.result == cond.result
-        case "influence":
-            return llm_judge(butterfly_records, cond.description)
         case "check":
             if ctx.check is null: return false  # 作用域外
             return ctx.check.result == cond.result
+
+function evaluate_operand(operand, ctx):
+    switch operand.kind:
+        case "literal":
+            return operand.value
+        case "affection":
+            return affection_map.get(operand.char, 0)
+        case "value":
+            # 引擎数值与 signal int 共享裸名空间——按优先级或合一查找
+            if engine_values.has(operand.name):
+                return engine_values.get(operand.name)
+            return int_store.get(operand.name, 0)
+        case "max":
+            return max(evaluate_operand(arg, ctx) for arg in operand.args)
+        case "min":
+            return min(evaluate_operand(arg, ctx) for arg in operand.args)
 ```
 
 `ctx` 是引擎维护的当前集临时状态，包含 `ctx.check`（当前 brave option 的检定结果，离开 option 体时清空）。
@@ -304,4 +422,39 @@ function handle_trick(step):
     detector.await_completion()                              # 阻塞；玩家不能跳
     ui.hide_prompt_overlay()
     # 无奖励、无 ctx 写入、无评级 — trick 的唯一作用是制造"在场感"
+```
+
+### 处理 char_show / dialogue（角色可见性）
+
+```pseudocode
+function handle_char_show(step):
+    if step.character in scene.visible:
+        scene.change_pose(step.character, step.look, step.transition)
+    else:
+        # 同屏一人——隐藏其他
+        for ch in scene.visible.copy():
+            if ch != step.character:
+                scene.hide(ch)
+        position = (step.character == mc_identity) ? "left" : "right"
+        scene.show(step.character, step.look, position, step.transition)
+    scene.last_pose[step.character] = step.look
+
+function handle_dialogue(step):
+    if step.character not in scene.visible:
+        # 隐式入场
+        pose = scene.last_pose.get(step.character, default_pose(step.character))
+        for ch in scene.visible.copy():
+            if ch != step.character:
+                scene.hide(ch)
+        position = (step.character == mc_identity) ? "left" : "right"
+        scene.show(step.character, pose, position)
+    ui.show_dialogue(step.character, step.text)
+    wait_for_click()
+
+function handle_narrator_or_you(step):
+    # 清屏
+    for ch in scene.visible.copy():
+        scene.hide(ch)
+    ui.show_text(step.text, style=step.type)  # narrator vs you 用不同样式
+    wait_for_click()
 ```
