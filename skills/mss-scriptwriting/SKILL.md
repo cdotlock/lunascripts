@@ -14,7 +14,7 @@ description: >
 
 You are generating scripts for a mobile interactive visual novel player. The genre is **TRPG mechanics + Galgame presentation**: players read through dialogue-driven scenes with character sprites and backgrounds (Galgame), and at key beats make choices that resolve via D20 attribute checks against a difficulty class (TRPG). Body-interaction beats (`@trick`) and optional embedded games (`@minigame`) punctuate the reading. Each `.md` script file is one episode — a self-contained narrative unit with dialogue, visual staging, game mechanics, and routing to the next episode.
 
-The player experiences this as: tap to read dialogue → see characters enter/leave at left/right/center → occasionally complete a forced body action (tap / hold / swipe / shake / swing / tilt) → occasionally skip-or-play a downstream-generated mini-game → at key beats make a choice that may roll dice → episode ends and routes to the next one.
+The player experiences this as: tap to read dialogue → see one character at a time on screen (MC pinned left, others pinned right by the engine) → occasionally complete a forced body action (tap / hold / swipe / shake / swing / tilt) → occasionally skip-or-play a downstream-generated mini-game → at key beats make a choice that may roll dice → episode ends and routes to the next one.
 
 Your scripts will be parsed by a Go interpreter that outputs JSON for the frontend. The interpreter is strict — syntax errors break the build. This guide teaches you to write scripts the interpreter accepts and the player renders well.
 
@@ -37,23 +37,24 @@ Every script follows this skeleton:
   // Narrative content (scenes, dialogue, choices, mini-games)
   // ...
 
-  // Terminal — MUST be last. Exactly one of @gate or @ending.
+  // Terminal — MUST be last. Exactly one @gate block.
 
-  // Option A: routing to another episode
   @gate {
     @if (<condition>): @next <target>
-    @else @if (<condition>): @next <target>
+    @else @if (<condition>): @end <type>
     @else: @next <fallback>
   }
-
-  // Option B: terminal ending (no next episode)
-  // @ending complete        // full story end
-  // @ending to_be_continued  // cliffhanger, next chapter not yet written
-  // @ending bad_ending       // bad-path terminus
 }
 ```
 
-**Every episode must end with either `@gate { ... }` or `@ending <type>`** — they are mutually exclusive. An episode with neither is a validator error.
+**Every episode ends with exactly one `@gate { ... }` block.** No `@gate` = `MISSING_TERMINAL` validator error.
+
+`@gate` leaves are either `@next <branch_key>` (route to another episode) or `@end <type>` (terminate the story). A single gate may mix both — see "Routing (Gate)" below for the full pattern. The minimal forms are:
+
+```
+@gate { @next main:02 }            // pure unconditional route
+@gate { @end bad_ending }          // pure terminal episode
+```
 
 The `branch_key` follows a strict addressing format. Read `references/addressing.md` for the full scheme.
 
@@ -64,15 +65,15 @@ MSS has three syntaxes that alternate freely:
 **1. Directive lines** start with `@` — these control visuals, audio, game mechanics, and flow. Each `@` starts a new sequential step:
 ```
 @bg set school_hallway fade
-@mauricio show neutral_smirk at right
-@music play tense_strings
+@mauricio neutral_smirk
+@music tense_strings
 ```
 
 **2. Concurrent directives** start with `&` — these execute simultaneously with the preceding `@` directive. Use `&` to group actions that should happen at the same time (e.g. scene setup):
 ```
 @bg set school_hallway fade          // @ starts a new step group
-&music crossfade tense_strings       // & concurrent with bg
-&mauricio show neutral_smirk at right // & concurrent with bg
+&music tense_strings                 // & concurrent with bg
+&mauricio neutral_smirk              // & concurrent with bg
 ```
 
 **3. Dialogue lines** start with a CHARACTER NAME in caps followed by colon — these are what the player reads:
@@ -84,11 +85,11 @@ YOU: He hasn't called me that in eight years.
 
 Three special names: `NARRATOR` (third-person scene narration), `YOU` (MC's inner monologue), and any other name (character dialogue). Character names in dialogue are case-insensitive with their `@` directive counterparts — `MAURICIO:` in dialogue = `@mauricio` in directives.
 
-**Syntax sugar — look change + dialogue in one line:**
+**Syntax sugar — pose change + dialogue in one line:**
 ```
-CHARACTER [look]: text
+CHARACTER [pose]: text
 ```
-This is shorthand for `@character look look` followed by `CHARACTER: text`. Use it to keep the script tight when a character's look changes right before they speak:
+This is shorthand for `@character pose` followed by `CHARACTER: text`. Use it to keep the script tight when a character's pose changes right before they speak:
 ```
 MAURICIO [arms_crossed_angry]: Your call, Butterfly.
 ```
@@ -97,16 +98,15 @@ MAURICIO [arms_crossed_angry]: Your call, Butterfly.
 
 Read this before writing. LLMs reliably fall into specific traps that pass the parser but bloat the episode or break narrative flow. Self-correct against these as you write — the validator can't catch most of them.
 
-1. **Don't invent character positions.** Only `left` / `right` / `center` are supported. `front`, `back`, `corner`, `top`, `behind`, `upstage` etc. don't exist — they fail asset mapping or render wrong. Most scenes use only L/R; reserve C for monologue or close-up beats.
-2. **Don't mint a sprite library.** Aim for **~3–6 distinct looks per character per episode**, and **reuse aggressively**. Every new look name has an upstream cost (semantic name → mapping JSON → OSS asset). If two beats both want "happy", reuse `gentle_smile` instead of minting `gentle_smile_morning_light_v2`. The character does not need fifty micro-expressions.
-3. **Don't carpet-bomb music and SFX.** One BGM at scene start + a `crossfade` on major mood shifts is usually enough — typically **≤3 distinct music tracks per episode**. Don't open every scene with `@music play` if the previous BGM still fits. SFX should punctuate beats (a slap, a phone notification), **not** narrate ambient sound the player can imagine.
-4. **Do change backgrounds when the location does.** The opposite failure: LLMs sometimes run two scenes off the same backdrop. If you wrote a scene-cut in your head (cafeteria → rooftop), that's two `@bg set ...` calls — backgrounds anchor the player's spatial sense.
-5. **`@butterfly` only feeds inter-episode gate routing.** Butterfly's *only* consumer is `@gate` with `@if (influence "...")` — the engine accumulates butterflies across episodes and an LLM evaluates whether the gate's influence description matches the player's history, picking the next episode accordingly. **No downstream gate routes on influence = no point emitting butterflies.** When you *do* want a beat to count toward future episode routing, butterfly is the tool. For intra-episode story-flag branching (an `@if` body that gates content within the same episode) use `@signal mark`; for repeat-event counters use `@signal int counter +1`.
-6. **Don't write essay-length option text.** Choice option text is the player's UI button label — keep it under **~12 words**. Long narrative belongs *inside* the option block, not in the option text. Bad: `@option A brave "Stand your ground and tell him exactly how you feel about everything that happened last summer when he lied" { ... }`. Good: `@option A brave "Stand your ground." { ... }`.
-7. **Don't compress when you should breathe.** LLMs default to terse summarization; Galgame pacing is the opposite. Let scenes land — `@pause for 1` after scene setup, an internal `YOU:` line between two pieces of dialogue, an extra silent beat after a confession. Token pressure pushes you toward "compress"; resist it. Players paid to live the moments, not skim a plot summary.
-8. **Don't write side branches with no entry, or gate routes with no destination.** Every side episode (`main/route/...`, `main/bad/...`) you imagine needs a `@gate` somewhere upstream that routes into it via `@next`. Conversely, every `@next <branch_key>` in a `@gate` must point at an episode file you actually wrote. A beautiful unreachable bad-end is dead content; a `@next main/route/001:01` with no file is a broken link.
-9. **Respect the concurrency rules.** `&` follows `@` and runs *together* with the previous step — it's for scene-setup bundles (bg + music + character entrances). `&` cannot lead a sequence, cannot be used on block structures (`choice`, `cg`, `phone`, `if`, `gate`), and cannot be used on dialogue (`CHARACTER:` lines are always their own sequential step). `@trick` and `@minigame` are leaf directives, so `&` is technically permitted on them, but you almost never want one of those bundled into a scene-setup group — keep them on `@` for narrative clarity. When in doubt, use `@`.
-10. **Run the fixer before compiling.** The interpreter ships `mss fix <file>` that auto-repairs the most common LLM mistakes (missing `@if` parens, `&` on blocks, `@on` migration, character-name casing in `@affection`, BOM/CRLF, unclosed blocks). **If the script was LLM-generated, run `mss fix` first, then `mss validate`, then `mss compile`.** This is the single highest-ROI habit when iterating with LLMs.
+1. **Don't mint a sprite library.** Aim for **~3–6 distinct poses per character per episode**, and **reuse aggressively**. Every new pose name has an upstream cost (semantic name → mapping JSON → OSS asset). If two beats both want "happy", reuse `gentle_smile` instead of minting `gentle_smile_morning_light_v2`. The character does not need fifty micro-expressions.
+2. **Don't carpet-bomb music and SFX.** One BGM at scene start, with later `@music <new_name>` lines on major mood shifts, is usually enough — typically **≤3 distinct music tracks per episode**. Don't restart a track if the current one still fits. SFX should punctuate beats (a slap, a phone notification), **not** narrate ambient sound the player can imagine.
+3. **Do change backgrounds when the location does.** The opposite failure: LLMs sometimes run two scenes off the same backdrop. If you wrote a scene-cut in your head (cafeteria → rooftop), that's two `@bg set ...` calls — backgrounds anchor the player's spatial sense.
+4. **`@butterfly` feeds downstream content generators, not gate routing.** Butterfly's *only* consumers are downstream content-generation agents — **Remix Executor** (regenerating remix branches consistent with the player's pattern) and **Dream** (generating dream-sequence inserts). Gate evaluation does **not** read butterfly accumulation; all routing relies on deterministic state (`@signal mark`, `@signal int`, `@affection`, choice history). When you *do* want a beat to count toward future remix / dream generation, butterfly is the tool — write a specific description of what *this* player did that another player wouldn't have. Bad: "Made a choice." Good: "Showed vulnerability by accepting help from a former rival." For intra-episode story-flag branching use `@signal mark`; for repeat-event counters use `@signal int counter +1`.
+5. **Don't write essay-length option text.** Choice option text is the player's UI button label — keep it under **~12 words**. Long narrative belongs *inside* the option block, not in the option text. Bad: `@option A brave "Stand your ground and tell him exactly how you feel about everything that happened last summer when he lied" { ... }`. Good: `@option A brave "Stand your ground." { ... }`.
+6. **Don't compress when you should breathe.** LLMs default to terse summarization; Galgame pacing is the opposite. Let scenes land — an `@pause` after scene setup, an internal `YOU:` line between two pieces of dialogue, an extra silent beat after a confession. Token pressure pushes you toward "compress"; resist it. Players paid to live the moments, not skim a plot summary.
+7. **Don't write side branches with no entry, or gate routes with no destination.** Every side episode (`main/route/...`, `main/bad/...`) you imagine needs a `@gate` somewhere upstream that routes into it via `@next`. Conversely, every `@next <branch_key>` in a `@gate` must point at an episode file you actually wrote. A beautiful unreachable bad-end is dead content; a `@next main/route/001:01` with no file is a broken link.
+8. **Respect the concurrency rules.** `&` follows `@` and runs *together* with the previous step — it's for scene-setup bundles (bg + music + character entrance). `&` cannot lead a sequence, cannot be used on block structures (`choice`, `phone`, `if`, `gate`), and cannot be used on dialogue (`CHARACTER:` lines are always their own sequential step). `@trick`, `@minigame`, and `@cg` are leaf directives, so `&` is technically permitted on them, but you almost never want one of those bundled into a scene-setup group — keep them on `@` for narrative clarity. When in doubt, use `@`.
+9. **Run the fixer before compiling.** The interpreter ships `mss fix <file>` that auto-repairs common LLM mistakes (missing `@if` parens, `&` on blocks, character-name casing in `@affection`, BOM/CRLF, unclosed blocks). **If the script was LLM-generated, run `mss fix` first, then `mss validate`, then `mss compile`.** This is the single highest-ROI habit when iterating with LLMs.
 
 The directive table (`references/directive-table.md`) is the authoritative quick reference — when unsure of syntax, check it instead of inventing.
 
@@ -114,32 +114,35 @@ The directive table (`references/directive-table.md`) is the authoritative quick
 
 All visual directives use **object-action** order: `@<object> <action> [params]`.
 
-**Scene setup** — use `&` to group the background, music, and character entrances that happen together at the start of a scene:
+**Scene setup** — use `&` to group the background, music, and character entrance that happen together at the start of a scene:
 
 ```
 @bg set school_front fade
-&music crossfade upbeat_school
-&malia show neutral_flat at left
-&josie show cheerful_wave at right
+&music upbeat_school
+&malia neutral_flat
 ```
 
 ### Characters
 
 ```
-@mauricio show neutral_smirk at right     // Enter stage
-@mauricio look arms_crossed_angry         // Change look (instant)
-@mauricio look arms_crossed_angry dissolve // Change look (crossfade)
-@mauricio move to left                    // Slide to new position
-@mauricio bubble heart                    // Emotion bubble (auto-disappears)
-@mauricio hide                            // Exit (instant)
-@mauricio hide fade                       // Exit (fade out)
+@mauricio neutral_smirk              // Enter / switch to pose (instant)
+@mauricio arms_crossed_angry dissolve // Switch pose (crossfade)
+@mauricio neutral_smirk fade         // Switch pose (fade in)
+@mauricio bubble heart               // Emotion bubble (one-shot, auto-disappears)
 ```
 
-**Positions:** `left` | `right` | `center` — **these three only.** No other position values are supported; `front` / `back` / `corner` / `top` / `behind` etc. fail asset mapping. Most scenes use only L/R; reserve C for monologue or close-up beats.
+Just two forms:
 
-**Look names** are semantic — they map to asset files via the interpreter. Use `snake_case`: `neutral_smirk`, `arms_crossed_angry`, `vulnerable_hopeful`. You can use any descriptive snake_case name, but **reuse aggressively** — target ~3–6 distinct looks per character per episode and reuse them across beats. Every new look name carries a mapping-JSON + OSS asset cost.
+- **`@<char> <pose> [transition]`** — first appearance enters the character; subsequent uses switch their pose. Position is fixed by the engine (MC pinned left, others pinned right) — the script never specifies left/right/center. **Only one character is on screen at a time.** Whichever character speaks or is directed last replaces the previous one; `NARRATOR:` / `YOU:` clear the stage.
+- **`@<char> bubble <type>`** — a one-shot bubble animation over the current character. Auto-disappears.
 
-**Bubble types:** `anger` `sweat` `heart` `question` `exclaim` `idea` `music` `doom` `ellipsis`
+**`bubble` is a reserved word** — it cannot be a pose name. `@malia bubble` always parses as "play a bubble", never as "switch to a pose called bubble".
+
+**Pose names** are semantic — they map to asset files via the interpreter. Use `snake_case`: `neutral_smirk`, `arms_crossed_angry`, `vulnerable_hopeful`. You can use any descriptive snake_case name, but **reuse aggressively** — target ~3–6 distinct poses per character per episode and reuse them across beats. Every new pose name carries a mapping-JSON + OSS asset cost.
+
+**Bubble types (9, locked):** `anger` `sweat` `heart` `question` `exclaim` `idea` `music` `doom` `ellipsis`. The `<type>` argument is **required**.
+
+**Transitions:** unset = instant; `dissolve` = 0.3s crossfade; `fade` = fade in. (Bg has its own transition set — see below.)
 
 ### Backgrounds
 
@@ -152,25 +155,24 @@ All visual directives use **object-action** order: `@<object> <action> [params]`
 
 ### CG (Full-screen illustrations)
 
-CG replaces the entire screen. It's not a still image — downstream the `cg_show` step is generated as a short video by agent-forge. MSS is flow-control plus content, so the script has to carry the narrative material the video pipeline needs.
-
-Two fields are **required** at the top of a CG block, before any body nodes:
-
-- **`duration:`** — one of `low` / `medium` / `high`. A length tier, not seconds. agent-forge decides the actual timing.
-- **`content:`** — a quoted English string describing the CG's camera and story beats. Plain, concrete, no purple prose — what happens, what the camera does, what the frame emphasises.
-
-Body nodes after the two fields play during the CG, same as before. When the block ends, the previous background and characters restore automatically.
+CG replaces the entire screen and is rendered by downstream agent-forge as a short video. **`@cg <name> "<content>"` is a leaf directive** — one line, no `{ }` body, no duration, no transition. The interpreter passes `<content>` to the video pipeline; agent-forge decides timing and camera based on the prose.
 
 ```
-@cg show window_stare fade {
-  duration: medium
-  content: "The camera opens on Malia's silhouette against the rain-streaked window. Slow push-in on her eyes — one tear tracks down, catching the cold blue of the skyline. Her reflection doubles her, ghost-like, in the glass."
-  YOU: The city lights blurred through my tears.
-  NARRATOR: She stood there for what felt like hours.
-}
+@cg window_stare "The camera opens on Malia's silhouette against the rain-streaked window. Slow push-in on her eyes — one tear tracks down, catching the cold blue of the skyline. Her reflection doubles her, ghost-like, in the glass."
 ```
 
-A `@cg show` block without both fields is a parse error. Validator checks a duration whitelist and rejects empty `content`.
+- `<name>` is the asset handle. After agent-forge finishes generating, the URL is filled into `assets.cg.<name>`.
+- `<content>` is a single English paragraph: concrete description of camera + story beat. No purple prose — what happens, what the camera does, what the frame emphasises.
+
+CG carries **no embedded dialogue**. If a beat needs voiceover or inner monologue around the CG, write the dialogue lines **before** the `@cg` directive (the lead-up) and **after** it (the aftermath). The engine restores the previous background and any character afterwards automatically.
+
+```
+YOU: The city lights blurred through my tears.
+@cg window_stare "The camera opens on Malia's silhouette against the rain-streaked window. Slow push-in on her eyes — one tear tracks down, catching the cold blue of the skyline."
+NARRATOR: She stood there for what felt like hours.
+```
+
+`@cg` is symmetric with `@minigame`: both are leaf directives of the form `@<primitive> <name> "<prose>"` whose content prose is consumed by a downstream generation agent.
 
 ## Concurrency (@ vs &)
 
@@ -182,35 +184,34 @@ A `@cg show` block without both fields is a parse error. Validator checks a dura
 
 ### Rules
 
-- `&` CANNOT be used on block structures: `choice`, `cg`, `phone`, `if`, `gate`, `episode`. These always use `@`.
-- `&` is technically permitted on `@trick` and `@minigame` (they are leaf directives, not blocks), but bundling them into a scene-setup group is almost never what you want — keep them on `@` so the player notices the beat.
+- `&` CANNOT be used on block structures: `choice`, `phone`, `if`, `gate`, `episode`. These always use `@`.
+- `&` is technically permitted on `@trick`, `@minigame`, and `@cg` (they are leaf directives), but bundling them into a scene-setup group is almost never what you want — keep them on `@` so the player notices the beat.
 - A `&` line must follow an `@` line or another `&` line — it cannot appear at the start of a sequence with no preceding `@`.
 
 ### When to use `&`
 
-- **Scene setup**: bg + music + characters entering at the start of a scene should fire together:
+- **Scene setup**: bg + music + the entering character should fire together:
   ```
   @bg set school_cafeteria fade
-  &music crossfade casual_lunch
-  &mark show grin_confident at right
-  &malia show neutral_flat at left
+  &music casual_lunch
+  &mark grin_confident
   ```
 - **State changes that happen together**: multiple stat changes after a single event.
 
 ### When to use `@`
 
-- **Standalone actions**: anything that needs to visually complete before the next step (e.g. a character entrance the player should notice individually).
-- **Anything that needs to complete before the next step**: a background change that sets the mood before characters appear.
+- **Standalone actions**: anything that needs to visually complete before the next step.
+- **Anything that needs to complete before the next step**: a background change that sets the mood before the character appears.
 
-### `@pause for N`
+### `@pause`
 
-Wait for N player clicks before advancing to the next step. Use this to give the player a moment to absorb a new scene before dialogue starts.
+Wait for one player click before advancing to the next step. Use this to give the player a moment to absorb a new scene before dialogue starts. `@pause` takes **no arguments** — for longer beats, write multiple `@pause` lines in a row.
 
 ```
 @bg set malias_bedroom_morning
-&music play calm_morning
-&malia show neutral_phone at left
-@pause for 1
+&music calm_morning
+&malia neutral_phone
+@pause
 NARRATOR: Senior year. Day one.
 ```
 
@@ -219,32 +220,38 @@ The player sees the scene load (background, music, and character all at once), t
 ## Audio
 
 ```
-@music play calm_morning          // Start BGM (loops)
-@music crossfade tense_strings    // Smooth transition to new BGM
-@music fadeout                    // Fade current BGM to silence
-@sfx play door_slam               // One-shot sound effect
+@music calm_morning               // Start / switch BGM (engine decides from-silence vs crossfade)
+@music stop                       // Stop BGM (fade out)
+@sfx door_slam                    // One-shot sound effect
 ```
 
-**Restraint matters.** A typical episode uses **≤3 distinct music tracks** (one per major mood block) and SFX only on punctuating beats. Don't open every scene with `@music play` if the previous BGM still fits, and don't underline narrated ambient sound the player can imagine.
+`@music <name>` is unified — the engine inspects the current playback state and either fades in from silence or crossfades from the current track. The script doesn't distinguish "play" vs "crossfade".
+
+**Restraint matters.** A typical episode uses **≤3 distinct music tracks** (one per major mood block) and SFX only on punctuating beats. Don't restart a track if the previous one still fits, and don't underline narrated ambient sound the player can imagine.
 
 ## Phone / Messages
 
 The phone overlay sits on top of everything. Keep messages short — they render in chat bubbles.
 
 ```
-@phone show {
+@phone {
   @text from EASTON: Can we talk? I miss you.
   @text from EASTON: I know I messed up.
   @text to MAURICIO: How do you know where I live?
 }
-@phone hide
 ```
+
+- `@phone { ... }` pops the phone overlay; the block end automatically dismisses it. There is no `@phone hide`.
+- `@text from <CHAR>: content` — incoming message (gray bubble, left).
+- `@text to <CHAR>: content` — outgoing message (blue bubble, right).
+
+**Whitelist: only `@text from/to` lines are allowed inside a `@phone` block.** No narration, no SFX, no state changes, no `@if` — those all live outside the phone block. Anything else inside `@phone` is a parse error.
 
 ## Game Mechanics
 
 ### Tricks (forced body-interaction beats)
 
-`@trick <type> "<prompt>"` is a one-liner that forces the player to complete a small body action before the story advances. It's the embodied upgrade of `@pause for N`: the player must tap / hold / swipe / shake / swing / tilt the device, with a one-line on-screen prompt you author. There is no rating, no reward, no branching — the value is *presence*, not winning.
+`@trick <type> "<prompt>"` is a one-liner that forces the player to complete a small body action before the story advances. It's the embodied upgrade of `@pause`: the player must tap / hold / swipe / shake / swing / tilt the device, with a one-line on-screen prompt you author. There is no rating, no reward, no branching — the value is *presence*, not winning.
 
 ```
 @trick hold "Hold your breath until he walks past."
@@ -304,20 +311,19 @@ Every episode has one choice point. Each option has an ID (A, B, C...) and a mod
       dc: 12
     }
     @if (check.success) {
-      @easton look relieved
+      @easton relieved
       EASTON: Can I sit?
       MALIA: You have two minutes.
       @affection easton +2
       @butterfly "Accepted Easton's approach at the cafeteria"
     } @else {
-      @easton look hurt
+      @easton hurt
       MALIA: I... I can't do this.
       @butterfly "Tried to face Easton but lost courage"
     }
   }
   @option B safe "Have Mark make a scene." {
-    @mark show grin_mischief at right
-    @easton hide fade
+    @mark grin_mischief
     MARK: HEY EASTON! You want some of my mystery casserole?
     YOU: Thank god for Mark.
     @butterfly "Had Mark create a diversion to avoid Easton"
@@ -336,8 +342,9 @@ Every episode has one choice point. Each option has an ID (A, B, C...) and a mod
 - Content goes directly inside the option block as plain body nodes.
 
 **Every outcome path should include:**
-- `@butterfly` description (what happened as a result of this choice — these records feed the downstream `@gate` `@if (influence ...)` routing that decides the next episode)
+- `@butterfly` description (what happened as a result of this choice — these records feed downstream content generators: Remix Executor and Dream)
 - Optionally: `@affection` if the choice changes a relationship
+- Optionally: `@signal mark` or `@signal int` if a *later* `@if` will branch on this beat
 
 **Do NOT drop a `@signal mark` on every choice outcome.** Marks are only for key story points that a later `@if` branch or an `@achievement` unlock will actually query. See "State Changes" below.
 
@@ -347,7 +354,7 @@ These are declarations — the game engine handles the actual math.
 
 ```
 @affection easton +2                                   // Character relationship
-@butterfly "Accepted Easton's approach"                // Flavor memory for LLM route evaluation
+@butterfly "Accepted Easton's approach"                // Flavor memory for downstream content generators
 @signal mark HIGH_HEEL_EP05                            // Key story point — queried later
 @signal int rejections +1                              // Persistent integer counter — free to mutate
 @signal int rejections = 0                             // Explicit reset / initialization
@@ -369,8 +376,8 @@ Achievements are **not** a signal kind — use `@achievement <id> { ... }` for t
 
 | kind | Role | Checkable in `@if`? |
 |------|------|---------------------|
-| `mark` | Persistent boolean flag. Engine stores it forever. `@if (NAME)` queries this store. **Use only for key story points** — hidden-route triggers and achievement-unlock guards. | **Yes** — becomes a `FlagCondition` in conditions |
-| `int` | Persistent integer variable. Engine stores across episodes. `@if (NAME <cmp> N)` queries the value via comparison. Free to mutate as often as needed — counters are the whole point. | **Yes** — becomes a `ComparisonCondition` with `left.kind="value"` |
+| `mark` | Persistent boolean flag. Engine stores it forever. `@if (NAME)` queries this store. **Use only for key story points** — hidden-route triggers and achievement-unlock guards. | **Yes** — becomes a `flag` condition |
+| `int` | Persistent integer variable. Engine stores across episodes. `@if (NAME <cmp> N)` queries the value via comparison. Free to mutate as often as needed — counters are the whole point. | **Yes** — becomes a `comparison` condition with `left.kind="value"` |
 
 For `mark`, `event` can be a bare identifier or a double-quoted string. For `int`, `name` is a bare `snake_case` identifier.
 
@@ -397,7 +404,7 @@ Guidelines for ints:
 - ❌ `@signal mark EP01_COMPLETE` at the end of every episode — the engine knows which episodes the player cleared from episode_id itself
 - ❌ `@signal mark CHOSE_OPTION_A` after a choice — the choice history is in the engine's choice log; gate `@if (A.success)` queries it directly
 - ❌ `@signal mark AFFECTION_RAISED` — `@affection` already updated the number; `@if (affection.easton >= 5)` queries the value directly
-- ❌ `@signal mark EASTON_ACKNOWLEDGED` as a character-moment marker with no follow-up — that's what `@butterfly` is for (LLM-evaluated, not boolean-queried)
+- ❌ `@signal mark EASTON_ACKNOWLEDGED` as a character-moment marker with no follow-up — that's what `@butterfly` is for (feeds Remix / Dream, not boolean-queried)
 - ❌ Don't use `@signal mark COUNTER_HIT_3` to track thresholds — that's what `@signal int` is for. Use `@signal int counter +1` then `@if (counter >= 3)`.
 
 **DO emit marks for these cases:**
@@ -444,7 +451,18 @@ Guidelines for ints:
 
 **Where to put the `@if ... { @achievement ID }` guard** for arc achievements: put it after the *last* mark in the chain is emitted — the guard only fires if every required mark is already set. Putting it at the start of an episode works too but is redundant (you'd re-check every time). One clean guard beats multiple scattered checks.
 
-**`@butterfly` only feeds inter-episode gate routing.** Butterflies accumulate across episodes and are consumed by `@gate` blocks that route on `@if (influence "<description>")` — at runtime the engine hands the player's full butterfly log to an LLM and asks whether the influence description matches the player's accumulated narrative pattern, then picks the next episode accordingly. **If no downstream gate routes on influence, don't emit butterflies — they go nowhere.** Conversely, when you do want a beat to count toward later episodes' route selection, write a clear, specific description of what *this* player did that another player wouldn't have. Bad: "Made a choice." Good: "Showed vulnerability by accepting help from a former rival." For intra-episode story-flag branching (`@if` inside the same episode body) use `@signal mark`; for repeat-event counting use `@signal int counter +1` then `@if (counter >= N)`.
+### `@butterfly` — feeds downstream generators, NOT routing
+
+**Butterfly is content-generation memory, not a routing signal.** The engine accumulates butterfly records across the playthrough and hands them to two downstream LLM-powered agents:
+
+- **Remix Executor** — when the player remixes a scene, butterflies inform the regenerated content so it stays consistent with the player's pattern.
+- **Dream** — when a dream-sequence insert is generated, butterflies shape what the dream surfaces.
+
+**Butterflies do NOT participate in gate routing.** `@gate` blocks evaluate only the deterministic state types — `@signal mark`, `@signal int`, `@affection`, choice history, and engine values. There is no `influence` condition. If no downstream agent will read this butterfly, don't emit it — it goes nowhere.
+
+When you do want a beat to inform downstream content, write a clear, specific description of what *this* player did that another player wouldn't have. Bad: "Made a choice." Good: "Showed vulnerability by accepting help from a former rival."
+
+For intra-episode story-flag branching use `@signal mark`; for repeat-event counting use `@signal int counter +1` then `@if (counter >= N)`.
 
 ### Achievements — `@achievement`
 
@@ -514,51 +532,75 @@ Use `@if` to show different content based on game state. **Parentheses `()` are 
 }
 ```
 
-**Condition types (6 kinds, all compiled to structured AST — the backend receives typed condition objects, not expression strings):**
+**Condition types (5 kinds, all compiled to structured AST — the backend receives typed condition objects, not expression strings):**
 
 | Type | Syntax | Example |
 |------|--------|---------|
-| flag | `SIGNAL_NAME` | `@if (EP01_COMPLETE) { }` |
-| comparison | `<operand> <op> <integer>` | `@if (affection.easton >= 5) { }` or `@if (san <= 20) { }` |
-| compound | `<expr> && <expr>` / `<expr> \|\| <expr>` | `@if (san <= 20 \|\| FAILED_TWICE) { }` |
 | choice | `OPTION.result` | `@if (A.fail) { }` — result: `success` / `fail` / `any`. Use from outside the option |
-| influence | `influence "desc"` or `"desc"` | `@if (influence "player showed empathy") { }` or `@if ("player showed empathy") { }` — both forms accepted |
+| flag | `SIGNAL_NAME` | `@if (EP01_COMPLETE) { }` |
+| comparison | `<operand> <op> <operand>` | `@if (affection.easton >= 5) { }`, `@if (rejections >= 3) { }`, `@if (affection.easton > affection.diego) { }` |
+| compound | `<expr> && <expr>` / `<expr> \|\| <expr>` | `@if (san <= 20 \|\| FAILED_TWICE) { }` |
 | check | `check.success` / `check.fail` | `@if (check.success) { }` — context-local, only valid inside a brave option body |
-
-**Comparison operand** on the left of `>=` / `<=` / etc. must be either `affection.<char>` (character-specific affection) or a bare `<name>` (engine-managed value like `san`, `CHA`). The right side **must be an integer literal** — expressions like `a >= b` or `affection.easton >= (5 + 3)` are rejected.
 
 **`check` vs `choice`** — both touch D20 outcomes but answer different questions. `check.success` inside a brave option body asks "did *this* option's roll just succeed?" It's the idiom for writing `@if (check.success) { } @else { }` immediately after `check { }`. `A.success` from anywhere asks "at some earlier point, did the player pick option A and pass its check?" — retrospective, not context-local. Use `check.*` inside the option body it describes; use `A.*` / `B.*` everywhere else.
 
 **Operators:** `>=` `<=` `>` `<` `==` `!=`
 **Logic:** `&&` (and, binds tighter), `||` (or, binds looser). Use `( )` for explicit grouping.
 
-### Labels and goto (advanced, avoid if possible)
+### Comparison operands (5 kinds)
+
+Both sides of a comparison are *operands*. The validator enforces that both sides have the same integer type, but **either side can be any operand kind** — variable-to-variable comparisons are fully supported, as are aggregate-to-literal, literal-to-aggregate, etc.
+
+| Operand form | AST `kind` | Notes |
+|--------------|-----------|-------|
+| `5` / `-2` | `literal` | Integer literal |
+| `affection.<char>` | `affection` | Character affection score |
+| `<name>` | `value` | Bare identifier — resolves either to an engine value (`san`, `cha`, `hp`, `xp`...) or to your `@signal int` variable. Same namespace |
+| `MAX(<op>, <op>, ...)` | `max` | Aggregate of args. `args >= 2`, no upper bound. args may be any operand kind, including nested `MAX`/`MIN` |
+| `MIN(<op>, <op>, ...)` | `min` | Same shape as `MAX`, returns the minimum |
+
+`MAX` / `MIN` are **reserved words** and **must be uppercase**. Lowercase `max` / `min` are still legal as ordinary value names (no collision).
+
+**Examples:**
 
 ```
-@if (SKIP_FIGHT) {
-  @goto AFTER_FIGHT
-}
-// ... fight content ...
-@label AFTER_FIGHT
-NARRATOR: The dust settled.
+@if (affection.easton >= 5)                                        // value-to-literal
+@if (rejections >= 3)                                              // signal int read
+@if (affection.easton > affection.diego)                           // value-to-value
+@if (5 < affection.easton)                                         // literal-to-value (mirror form)
+@if (MAX(affection.easton, affection.diego) >= 5)                  // 2-arg aggregate
+@if (MIN(affection.easton, affection.diego, affection.mauricio) >= 3)   // 3-arg aggregate
+@if (MAX(affection.easton, affection.diego, affection.mauricio, affection.elias) >= 8)
+@if (affection.easton > MAX(affection.diego, affection.mauricio))  // aggregate-to-value
+@if (MAX(affection.easton, MIN(affection.diego, affection.mauricio)) >= 4)   // nested
 ```
 
-Only use `@goto`/`@label` when structured nesting can't express the flow. Prefer `@if`/`@else` for conditional content.
+**Constraint:** `MAX` and `MIN` require at least 2 args. A single-arg aggregate is a parse error (it would degenerate to the arg itself — write the arg directly).
 
 ## Routing (Gate)
 
 The `@gate` block at the end of every episode declares where the player goes next. Use `@if` → `@else @if` → `@else` chains. First match wins. `@else` is the fallback.
 
+**Gate leaves come in two flavours, and a single gate may mix them freely:**
+
+- **`@next <branch_key>`** — route to another episode
+- **`@end <type>`** — terminate the story, `type ∈ complete | to_be_continued | bad_ending`
+
 ```
 @gate {
-  // Choice-based: route based on the player's choice (dot notation)
-  @if (A.fail): @next main/bad/001:01
+  // Choice-based route to a bad ending
+  @if (A.fail): @end bad_ending
 
-  // Influence-based: route based on accumulated butterfly effects (LLM evaluates)
-  // Both forms accepted: influence "desc" or bare "desc"
-  @else @if (influence "Player has repeatedly shown empathy toward Easton"): @next main/route/001:01
+  // Counter-based terminal
+  @else @if (rejections >= 3): @end bad_ending
 
-  // Fallback
+  // Mark-based hidden route
+  @else @if (HEROIC_END_REACHED): @end complete
+
+  // Affection-based good route
+  @else @if (affection.easton >= 5): @next main/route/001:01
+
+  // Fallback to main line
   @else: @next main:02
 }
 ```
@@ -568,29 +610,23 @@ The `@gate` block at the end of every episode declares where the player goes nex
 - result: `success` | `fail` | `any` (`any` = regardless of check outcome)
 - Example: `A.fail`, `B.success`, `C.any`
 
-**All 5 condition types work in gate:**
-- Choice: `@if (A.fail): @next ...`
-- Flag: `@if (EP01_COMPLETE): @next ...`
-- Comparison: `@if (affection.easton >= 5): @next ...`
-- Influence: `@if (influence "player showed empathy"): @next ...` or `@if ("player showed empathy"): @next ...`
-- Compound: `@if (san <= 20 || FAILED_TWICE): @next ...`
+**4 condition kinds work inside gate** — `choice`, `flag`, `comparison`, `compound`. The fifth kind, `check`, is context-local to a brave option body and is **never** legal inside `@gate`. Routing relies entirely on deterministic state — there is no `influence` condition; butterfly accumulation feeds downstream content generators, not gate evaluation.
 
-**Influence condition:** A natural language description. Two syntax forms: `@if (influence "description")` or `@if ("description")` (bare string). At runtime, the engine feeds all accumulated `@butterfly` records to an LLM and asks whether the condition is satisfied.
+**Coverage:** every gate must be exhaustive. Either a single unconditional leaf (`@gate { @next main:02 }` or `@gate { @end bad_ending }`), or an `@if/@else @if/.../@else` chain with a mandatory `@else` fallback.
 
-**`@else` is mandatory.** Every episode with `@gate` must have a fallback route.
+### Terminal Episodes
 
-## Ending (Terminal Episodes)
-
-Not every episode routes onward. Some episodes **end the story** — reach the credits, land on a cliffhanger, or terminate on a bad path. Use `@ending <type>` at episode-body level instead of `@gate`:
+To terminate the story rather than route onward, write a gate whose leaves include `@end <type>`. The cleanest single-leaf form:
 
 ```
 @episode main:15 "The End" {
   NARRATOR: The sun rose over a changed city.
-  @ending complete
+
+  @gate { @end complete }
 }
 ```
 
-Three ending types:
+Three end types:
 
 | Type | Meaning | Typical placement |
 |------|---------|-------------------|
@@ -598,56 +634,54 @@ Three ending types:
 | `to_be_continued` | Cliffhanger — next chapter not written yet | Last episode of the current release |
 | `bad_ending` | Bad path terminus — player failed / died / broke the relationship | Episodes under `main/bad/...` |
 
-**Rules:**
-
-- **`@ending` and `@gate` are mutually exclusive.** An episode that ends with `@ending` cannot also have a `@gate` — the story has terminated.
-- **Every episode still needs exactly one terminal.** Missing both is a validator error.
-- Only the listed three types are accepted; anything else is a parse error.
-
-Example bad-path terminal:
+You can also mix `@next` and `@end` leaves in one gate, e.g. a chapter finale that routes most paths into the next chapter but ends on `bad_ending` for the worst route:
 
 ```
-@episode main/bad/001:02 "She Never Came Home" {
-  @bg set malias_bedroom_night fade
-  NARRATOR: The door never opened again.
-  @ending bad_ending
+@gate {
+  @if (rejections >= 3): @end bad_ending
+  @else @if (HEROIC_END_REACHED): @end complete
+  @else: @next main:02
 }
 ```
 
+Only the three end types listed above are accepted; anything else is a parse error.
+
 ## Common Mistakes
 
-1. **Missing terminal** — Every episode must end with exactly one of `@gate { ... }` or `@ending <type>`. Neither = `MISSING_TERMINAL` validator error.
-2. **Both `@gate` and `@ending`** — The two are mutually exclusive: a routing block cannot coexist with a terminal ending. Pick one.
-3. **Missing `@else`** — Gate block without fallback = interpreter error.
+1. **Missing `@gate`** — Every episode must end with exactly one `@gate { ... }` block. No gate = `MISSING_TERMINAL` validator error.
+2. **Multiple `@gate` blocks** — Exactly one per episode, at the end.
+3. **Missing `@else`** — Gate `@if/@else @if` chain without a fallback `@else` = interpreter error. Single unconditional `@gate { @next ... }` or `@gate { @end ... }` is fine (no chain, no fallback needed).
 4. **Brave option without `check { }`** — Brave means D20 check. No check block = error.
-5. **Brave option with `@on` blocks** — `@on` is not part of MSS. Use `@if (check.success) { } @else { }`. A missing `@else` is allowed (the validator does not force both branches), but it's usually still what you want.
-6. **`@goto` without matching `@label`** — The target label must exist in the same episode.
-7. **Putting `@gate` anywhere except the end** — Gate must be the last thing in `@episode`.
-8. **Using character names inconsistently** — `@mauricio show ...` and `MAURICIO:` must use the same name (case-insensitive).
-9. **Forgetting `@butterfly` in choice outcomes** — Every choice outcome should record what happened for the influence system.
-10. **Writing asset paths instead of semantic names** — Scripts use names like `classroom_morning`, not URLs or file paths. The interpreter handles mapping.
-11. **Nested `@choice` blocks** — Only one `@choice` per episode. Multiple choices in one episode is not supported.
-12. **Using `&` on block structures** — `&choice`, `&cg show`, `&phone show`, `&if`, `&gate` are all errors. Block structures always use `@`. (`@trick` / `@minigame` are leaves and technically permit `&`, but bundling them into a scene-setup group obscures the beat — keep on `@`.)
-13. **Forgetting to use `&` for scene setup** — When a scene starts with bg + music + character entrances, the first directive uses `@` and the rest should use `&` so they execute together. Writing all of them with `@` makes them sequential, which looks choppy.
-14. **Trying to set engine values from scripts** — `@xp`, `@san` are not valid directives. The engine manages these values internally. Scripts can only check them in `@if` conditions (e.g., `@if (san <= 20) { }`), not modify them.
-15. **`@if` without parentheses** — `@if condition { }` is a syntax error. Must be `@if (condition) { }`. Parentheses are mandatory for both body `@if` and gate `@if`.
-16. **Using `choice.A.fail` in gate conditions** — The `choice.` prefix is dropped. Use `A.fail`, not `choice.A.fail`. Use dot notation: `A.fail`, not `A fail`.
-17. **Invalid `@ending` type** — Only `complete`, `to_be_continued`, `bad_ending` are accepted. Any other identifier is a parse error.
-18. **`@signal` without a kind** — `@signal <kind> <event>` requires a kind token. Currently only `mark` is implemented. `@signal achievement ...` is no longer valid — use the dedicated `@achievement <id>` trigger instead.
-19. **`@minigame` with extra positional / body** — the form is `@minigame <name> "<description>"`, one line. No ATTR positional, no `{ }` body, no rating branches. Rewards are engine-owned. If you want a story branch off the minigame, promote it to a `@choice`.
-20. **`@cg show` without `duration:` / `content:` fields** — Both are required at the top of the block, before any body nodes. `duration` must be `low` / `medium` / `high`; `content` is a quoted English narrative for the video-generation pipeline.
-21. **Orphan marks** — `@signal mark X` with no reader. If no `@if (X)` and no `@if (X && ...) { @achievement ... }` references `X`, delete the mark. Marks that no one reads are noise: they dilute the flag store and mislead downstream tools. Never emit marks for "episode completed", "chose option A", "affection raised", or anything else the engine already tracks.
-22. **Using non-English names** — All `event` identifiers, `@achievement` ids, achievement `name`, and `description` strings must be English. Mixed-language ids cause grep/search failures and ambiguous meaning across the pipeline.
-23. **Using `common` rarity on `@achievement`** — banned. Rarity must be one of `uncommon` / `rare` / `epic` / `legendary`. If every player gets it, it's not an achievement.
-24. **Writing a `when:` field on `@achievement`** — `when` is not part of the grammar. Achievements carry only `name` / `rarity` / `description`; trigger logic lives in the outer `@if (...)` that wraps the `@achievement` directive.
-25. **Duplicate `@achievement` ids in one episode** — validator error. If the same achievement spans multiple episodes, declare it once in whichever one most naturally owns it.
-26. **Triggering an achievement that was never declared** — `@achievement <id>` inline without a matching `@achievement <id> { ... }` declaration is a runtime dead letter. The runtime registry must have seen the declaration first. (Cross-episode is fine; the engine loads all declarations.)
-27. **Using `check.success` outside a brave option body** — a context-local pseudo-identifier. Outside its scope the runtime always returns false — that's a narrative bug, not a syntax error.
-28. **Inventing character positions** — only `left`, `right`, `center` are valid. `at front` / `at corner` / `at top` / `at back` etc. fail the asset pipeline or render incorrectly.
-29. **Orphan branches and dead `@next` targets** — every `@next <branch_key>` in a `@gate` must point at an episode file that exists in the repo, and every side episode (`main/route/...`, `main/bad/...`) you write needs an upstream `@gate` that routes into it. In single-file `mss compile` cross-file references aren't checked; in batch `mss compile <dir>` the validator does verify branch_key resolution.
-30. **Essay-length option text** — `@option <ID> <mode> "<text>"` text is the player's UI button label. Keep under ~12 words. Long narrative goes inside the option block as body nodes.
+5. **Brave option outcome branching with anything other than `@if (check.success) { } @else { }`** — that is the idiom. A missing `@else` is allowed (validator does not force both branches), but is usually still what you want.
+6. **Putting `@gate` anywhere except the end** — Gate must be the last thing in `@episode`.
+7. **Using character names inconsistently** — `@mauricio neutral_smirk` and `MAURICIO:` must use the same name (case-insensitive).
+8. **Writing asset paths instead of semantic names** — Scripts use names like `classroom_morning`, not URLs or file paths. The interpreter handles mapping.
+9. **Nested `@choice` blocks** — Only one `@choice` per episode. Multiple choices in one episode is not supported.
+10. **Using `&` on block structures** — `&choice`, `&phone`, `&if`, `&gate` are all errors. Block structures always use `@`. (`@trick` / `@minigame` / `@cg` are leaves and technically permit `&`, but bundling them into a scene-setup group obscures the beat — keep on `@`.)
+11. **Forgetting to use `&` for scene setup** — When a scene starts with bg + music + character entrance, the first directive uses `@` and the rest should use `&` so they execute together. Writing all of them with `@` makes them sequential, which looks choppy.
+12. **Trying to set engine values from scripts** — `@xp`, `@san` are not valid directives. The engine manages these values internally. Scripts can only check them in `@if` conditions (e.g., `@if (san <= 20) { }`), not modify them.
+13. **`@if` without parentheses** — `@if condition { }` is a syntax error. Must be `@if (condition) { }`. Parentheses are mandatory for both body `@if` and gate `@if`.
+14. **Using `choice.A.fail` in gate conditions** — The `choice.` prefix is dropped. Use `A.fail`, not `choice.A.fail`. Dot notation: `A.fail`, not `A fail`.
+15. **Invalid `@end` type** — Only `complete`, `to_be_continued`, `bad_ending` are accepted. Any other identifier is a parse error.
+16. **`@signal` without a kind** — `@signal <kind> <event>` requires a kind token. Currently `mark` and `int` are implemented. `@signal achievement ...` is not valid — use `@achievement <id>` instead.
+17. **`@minigame` with extra positional / body** — the form is `@minigame <name> "<description>"`, one line. No ATTR positional, no `{ }` body, no rating branches. Rewards are engine-owned. If you want a story branch off the minigame, promote it to a `@choice`.
+18. **`@cg` with a `{ }` body, duration, or transition** — `@cg <name> "<content>"` is a leaf, one line, prose only. The pipeline decides duration and camera from the prose. If you need dialogue around the CG, write it on the lines before and after the `@cg` directive — not inside it.
+19. **Orphan marks** — `@signal mark X` with no reader. If no `@if (X)` and no `@if (X && ...) { @achievement ... }` references `X`, delete the mark. Marks that no one reads are noise: they dilute the flag store and mislead downstream tools. Never emit marks for "episode completed", "chose option A", "affection raised", or anything else the engine already tracks.
+20. **Using non-English names** — All `event` identifiers, `@achievement` ids, achievement `name`, and `description` strings must be English. Mixed-language ids cause grep/search failures and ambiguous meaning across the pipeline.
+21. **Using `common` rarity on `@achievement`** — banned. Rarity must be one of `uncommon` / `rare` / `epic` / `legendary`. If every player gets it, it's not an achievement.
+22. **Writing a `when:` field on `@achievement`** — `when` is not part of the grammar. Achievements carry only `name` / `rarity` / `description`; trigger logic lives in the outer `@if (...)` that wraps the `@achievement` directive.
+23. **Duplicate `@achievement` ids in one episode** — validator error. If the same achievement spans multiple episodes, declare it once in whichever one most naturally owns it.
+24. **Triggering an achievement that was never declared** — `@achievement <id>` inline without a matching `@achievement <id> { ... }` declaration is a runtime dead letter. The runtime registry must have seen the declaration first. (Cross-episode is fine; the engine loads all declarations.)
+25. **Using `check.success` outside a brave option body** — a context-local pseudo-identifier. Outside its scope the runtime always returns false — that's a narrative bug, not a syntax error.
+26. **Routing on butterfly / "influence"** — there is no `influence` condition. Butterflies feed Remix Executor and Dream, not gate routing. Routing uses `choice`, `flag`, `comparison`, and `compound` conditions.
+27. **Single-arg `MAX(x)` or `MIN(x)`** — aggregate operators require `args >= 2`. A 1-arg aggregate is a parse error; write the arg directly instead.
+28. **Lowercase `max(...)` / `min(...)` used as the aggregate operator** — `MAX` and `MIN` are reserved words and must be UPPERCASE. Lowercase `max` / `min` are legal as ordinary `@signal int` variable names; they will not parse as the aggregate.
+29. **Bundle of `@phone` block with non-`@text` content** — only `@text from/to` lines may appear inside `@phone { ... }`. No narration, no SFX, no `@if`, no state changes. Move those outside the phone block.
+30. **Inventing character positions** — there is no syntax for `at left` / `at right` / `at center`. The engine positions characters from `gamestate.MC` (MC pinned left, others pinned right). Anything you'd want to convey about staging — pose, bubble, transition — uses pose names and transitions, not position keywords.
+31. **Orphan branches and dead `@next` targets** — every `@next <branch_key>` in a `@gate` must point at an episode file that exists in the repo, and every side episode (`main/route/...`, `main/bad/...`) you write needs an upstream `@gate` that routes into it. In single-file `mss compile` cross-file references aren't checked; in batch `mss compile <dir>` the validator does verify branch_key resolution.
+32. **Essay-length option text** — `@option <ID> <mode> "<text>"` text is the player's UI button label. Keep under ~12 words. Long narrative goes inside the option block as body nodes.
 
-**Auto-repair:** The interpreter includes a fixer (`mss fix <file>`) that auto-repairs many of these mistakes: missing `@if` parentheses, `&` on block structures, `@check` → `check`, uppercase character names in `@affection`, trailing whitespace, unclosed blocks, and BOM/CRLF encoding issues. The fixer also flags `@on` usage with a hint pointing at `@if (check.success)`. Always run the fixer before compiling if the script was generated by an LLM.
+**Auto-repair:** The interpreter includes a fixer (`mss fix <file>`) that auto-repairs many of these mistakes: missing `@if` parentheses, `&` on block structures, `@check` → `check`, uppercase character names in `@affection`, trailing whitespace, unclosed blocks, and BOM/CRLF encoding issues. Always run the fixer before compiling if the script was generated by an LLM.
 
 ## Remix Scripts
 
@@ -659,14 +693,14 @@ Remix scripts use the exact same format. The only differences:
 
 ```
 @episode remix/abc123:01 "Mark's Casserole Incident" {
-  @mark show grin_mischief at right
+  @mark grin_mischief
   MARK: FOOD FIGHT!
-  @sfx play crowd_noise
+  @sfx crowd_noise
   NARRATOR: The cafeteria descended into chaos.
   @butterfly "Mark started a food fight in the cafeteria"
 
   @gate {
-    @else: @next main:02
+    @next main:02
   }
 }
 ```
@@ -677,13 +711,13 @@ These aren't enforced by the interpreter, but they make for a good player experi
 
 - **Expand, don't compress.** LLMs default to terse summarization; resist that. A scene with one dialogue exchange is too thin — the player needs the inner monologue, the silent beat, the second look at the photograph. Token pressure pushes you toward compression; the player paid for the moments, not the plot summary.
 - **Scene changes**: Use `@bg set ... fade` between locations. Don't change backgrounds mid-dialogue without a beat.
-- **Character entrances**: Show one character at a time. Let the player tap once to see who appeared before they speak.
+- **Character entrances**: Show one character at a time (the engine enforces this anyway). Let the player tap once after a `@<char> <pose>` directive before the character speaks.
 - **Inner monologue**: Use `YOU:` liberally — it keeps the player in the protagonist's head and builds emotional investment.
 - **Phone messages**: Keep them short (under 20 words per message). They're in chat bubbles.
 - **Bubbles**: Use sparingly for emotional punctuation, not on every line.
-- **Music transitions**: `crossfade` between scenes, `fadeout` before silence or big moments.
+- **Music transitions**: A new `@music <name>` between scenes feels like a fresh chapter; `@music stop` before silence or big moments lets the room breathe.
 - **One choice per episode**: This is a design constraint. The whole episode builds toward one decision point.
-- **Use `@pause for 1` after scene setup** to let the player absorb the new scene before dialogue starts. A scene that jumps straight from setup to narration feels rushed.
+- **Use `@pause` after scene setup** to let the player absorb the new scene before dialogue starts. A scene that jumps straight from setup to narration feels rushed.
 
 ## References
 

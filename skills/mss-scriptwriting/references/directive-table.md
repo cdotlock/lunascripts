@@ -1,169 +1,191 @@
 # MSS Directive Quick Reference
 
+> Authoritative spec: `MSS-SPEC.md`. JSON shape: `docs/JSON-OUTPUT.md`. Engine contract: `docs/ENGINE-INTEGRATION.md`. This page is a cheat sheet, not a substitute.
+
 ## Structure Control
 
 | Directive | Example |
 |-----------|---------|
-| `@episode <key> <title> { }` | `@episode main:01 "Butterfly" { }` |
-| `@gate { }` | Routing block — mutually exclusive with `@ending` |
-| `@ending <type>` | Terminal marker — `complete` / `to_be_continued` / `bad_ending` (mutually exclusive with `@gate`) |
-| `@if (<cond>): @next <key>` | `@if (A.fail): @next main/bad/001:01` — parens required, dot notation |
-| `@else @if (<cond>): @next <key>` | `@else @if ("player showed empathy"): @next main/route/001:01` |
-| `@else: @next <key>` | `@else: @next main:02` |
-| `@label <name>` | `@label AFTER_FIGHT` |
-| `@goto <name>` | `@goto AFTER_FIGHT` |
-| `@pause for <N>` | `@pause for 1` — Wait for N player clicks before advancing |
+| `@episode <branch_key>:<seq> "<title>" { }` | `@episode main:01 "Butterfly" { }` — root block; branch_key must match the path-derived value |
+| `@gate { }` | Terminal block — **every episode has exactly one**. Leaves are `@next` and/or `@end` (see Gate Leaves below) |
+| `@if (<cond>) { } [@else if/@else]` | Conditional branching — `@if (affection.easton >= 5) { ... } @else if (FLAG) { ... } @else { ... }`. Parens required around `<cond>`. Inside a gate, the body is a single leaf (`@next` / `@end`); in body scope, blocks may hold any steps. |
+| `@choice { @option ... }` | Player choice menu; body holds 2+ `@option` blocks |
+| `@option <ID> <safe\|brave> "<text>" { }` | Single option. `ID` is `A` / `B` / `C`…; mode `safe` runs body straight, `brave` body must contain a `check` block and use `@if (check.success) { } @else { }` for outcome branching |
+| `@pause` | Click-wait. **No arguments** — for longer beats, write multiple `@pause` lines in sequence |
 
-## Concurrency
+**Removed in this revision:** `@ending` (top-level), `@label`, `@goto`, `@pause for N`. Replacement: terminal state moves into `@gate { @end <type> }`; flow control uses `@if`/`@else` only (no jump-by-label).
 
-| Prefix | Meaning | Example |
-|--------|---------|---------|
-| `@` | Sequential (new group) | `@bg set classroom fade` |
-| `&` | Concurrent (join group) | `&music play calm_morning` |
-
-`&` cannot be used on: `choice`, `cg show`, `phone show`, `if`, `gate`, `episode` (these are block structures). `@trick` and `@minigame` are leaves and technically permit `&`, but bundling them into a scene-setup group hides the beat — keep them on `@`.
-
-## Visual (object-action)
+## Visual
 
 | Directive | Example |
 |-----------|---------|
-| `@<char> show <look> at <pos>` | `@mauricio show neutral_smirk at right` |
-| `@<char> hide [trans]` | `@mauricio hide fade` |
-| `@<char> look <look> [trans]` | `@mauricio look angry dissolve` |
-| `@<char> move to <pos>` | `@mauricio move to left` |
-| `@<char> bubble <type>` | `@josie bubble heart` |
-| `@bg set <name> [trans]` | `@bg set classroom fade` |
-| `@cg show <name> [trans] { duration: ... content: "..." ... }` | See CG section below — `duration` and `content` fields are required |
+| `@bg set <name> [transition]` | `@bg set school_hallway fade` — set background |
+| `@<char> <pose> [transition]` | `@mauricio neutral_smirk` / `@malia worried dissolve` — show character or change pose. **Implicitly hides the previously displayed character** (one-on-screen rule) |
+| `@<char> bubble <type>` | `@josie bubble heart` — emotion bubble over the current speaker |
+| `@cg <name> "<content>"` | `@cg window_stare "The camera opens on Malia's silhouette…"` — **leaf** directive, no `{ }` body. `<content>` is a continuous English prose paragraph consumed by the video-generation pipeline |
 
-Positions: `left` `right` `center`（绝大多数场景只用 L/R，独白/特写才用 C）
-Transitions: (none)=dissolve, `fade`, `cut`, `slow`
-Bubbles: `anger` `sweat` `heart` `question` `exclaim` `idea` `music` `doom` `ellipsis`
+**Positions:** none. The engine derives placement from `gamestate.MC`: the MC is rendered left, every other character right. At most one character is on screen at a time — switching speakers replaces the previous portrait. `NARRATOR` and `YOU` lines clear the stage.
 
-### CG block fields (required)
+**Transitions:** (none) = dissolve · `fade` · `cut` · `slow`. Applies to `@bg set` and the optional slot on `@<char> <pose>`.
 
-```
-@cg show window_stare fade {
-  duration: medium
-  content: "The camera opens on Malia's silhouette against the rain-streaked window, slow push-in as one tear tracks down."
-  YOU: The city lights blurred through my tears.
-}
-```
+**Bubble types (9, fixed list):** `anger` · `sweat` · `heart` · `question` · `exclaim` · `idea` · `music` · `doom` · `ellipsis`. `bubble` is a reserved word — no pose may be named `bubble`.
 
-- `duration` — one of `low` / `medium` / `high`. Length tier consumed by the video-generation pipeline (agent-forge) — scripts don't emit seconds.
-- `content` — continuous English narrative describing camera + story beats during the CG. Plain, no purple prose.
-- Body nodes after the two fields play during the CG, same as before.
+**Removed in this revision:** `@<char> show <look> at <pos>`, `@<char> hide`, `@<char> look <look>`, `@<char> move to <pos>`. There is no `position` parameter anywhere; the position list (`left` / `right` / `center`) is gone. CG `{ duration / content / body }` blocks are also removed — CG is now a single-line leaf.
 
 ## Dialogue
 
 | Format | Example |
 |--------|---------|
 | `CHARACTER: text` | `MAURICIO: Hey, Butterfly.` |
-| `NARRATOR: text` | `NARRATOR: Senior year. Day one.` |
-| `YOU: text` | `YOU: He hasn't called me that in eight years.` |
-| `CHARACTER [look]: text` | `MAURICIO [arms_crossed_angry]: Your call, Butterfly.` — dialogue + look change (syntax sugar) |
+| `NARRATOR: text` | `NARRATOR: Senior year. Day one.` — clears stage |
+| `YOU: text` | `YOU: He hasn't called me that in eight years.` — MC inner monologue; clears stage |
+| `CHARACTER [pose]: text` | `MAURICIO [arms_crossed_angry]: Your call, Butterfly.` — sugar for `@mauricio arms_crossed_angry` + dialogue |
 
-## Phone
-
-| Directive | Example |
-|-----------|---------|
-| `@phone show { }` | Overlay appears |
-| `@phone hide` | Overlay removed |
-| `@text from <char>: content` | `@text from EASTON: I miss you.` |
-| `@text to <char>: content` | `@text to MAURICIO: Leave me alone.` |
+JSON normalizes `character` to lowercase (`MAURICIO:` → `"mauricio"`).
 
 ## Audio
 
 | Directive | Example |
 |-----------|---------|
-| `@music play <name>` | `@music play calm_morning` |
-| `@music crossfade <name>` | `@music crossfade tense_strings` |
-| `@music fadeout` | Stop with fade |
-| `@sfx play <name>` | `@sfx play door_slam` |
+| `@music <name>` | `@music calm_morning` — set BGM. Engine picks from-silence vs crossfade automatically based on current state |
+| `@music stop` | Stop BGM (engine applies fadeout) |
+| `@sfx <name>` | `@sfx door_slam` — one-shot sound effect |
 
-## Interaction Primitives
+**Removed in this revision:** `@music play`, `@music crossfade`, `@music fadeout`, `@sfx play`. The four-form audio surface collapses to the three above — engine owns the silence/crossfade decision.
 
-| Directive | Example |
-|-----------|---------|
-| `@trick <type> "<prompt>"` | `@trick hold "Hold your breath until he walks past."` — mandatory body-interaction beat; leaf; `<type>` ∈ `tap` / `hold` / `swipe` / `shake` / `swing` / `tilt` (touch + motion only) |
-| `@minigame <name> "<description>"` | `@minigame casino_showdown "Mauricio drags Malia into..."` — optional embedded mini-game; leaf; `description` is one prose paragraph that scenes the moment AND defines the simple gameplay; downstream vibe-coding agent generates the H5 |
-| `@choice { }` | Contains @option blocks |
-| `@option <ID> brave <text> { }` | Body must contain `check { }`; outcome branching via `@if (check.success) { } @else { }` |
-| `@option <ID> safe <text> { }` | `@option B safe "Run" { ... }` |
-| `check { attr: X  dc: N }` | Inside brave option |
-
-Check-outcome branching inside a brave option uses `@if (check.success) { } @else { }`. The `check.success` / `check.fail` pseudo-identifier is valid only inside a brave option body.
-
-**D20 formula** (engine-internal): `D20(1-20) + attribute modifier ≥ DC → success`. `@minigame` does not couple to D20 checks — it has no attribute binding.
-
-**No rating branching.** `@minigame` is a leaf — no body, no `@if (rating.X)` tree. Rewards are entirely engine-owned (anti-cheat). If you need a story branch off a minigame outcome, promote it to a `@choice`.
-
-## State Changes
+## Phone
 
 | Directive | Example |
 |-----------|---------|
-| `@affection <char> <+/-N>` | `@affection easton +2` |
-| `@signal mark <event>` | `@signal mark EP01_COMPLETE` — persistent boolean flag. Use sparingly; every mark must have a later reader. |
-| `@signal int <name> <op> <value>` | `@signal int rejections +1` / `= 0` / `-2` — persistent integer counter. Free to mutate. Read via `@if (name >= N)` comparison. |
-| `@butterfly <desc>` | `@butterfly "Accepted Easton's approach"` |
-| `@achievement <id> { name / rarity / description }` | Achievement unlock (block carries metadata; reaching this node fires it). Wrap in `@if (...) { ... }` for conditional triggers |
+| `@phone { @text from/to <CHAR>: "<text>" }` | Phone block. **No `@phone show` / `@phone hide`** — the block delimits the entire overlay lifetime |
+| `@text from <CHAR>: text` | `@text from EASTON: I miss you.` — incoming (grey, left) |
+| `@text to <CHAR>: text` | `@text to MAURICIO: Leave me alone.` — outgoing (blue, right) |
 
-## Flow Control
+Whitelist: **only `@text from/to` is allowed inside `@phone { }`.** No dialogue, no `@sfx`, no `@affection`, no `@signal`, nothing else. Push state changes or audio outside the block.
+
+## Interaction
 
 | Directive | Example |
 |-----------|---------|
-| `@if (<cond>) { }` | `@if (affection.easton >= 5 && CHA >= 14) { }` — parens required |
-| `@else @if (<cond>) { }` | `} @else @if (affection.easton >= 3) { }` — chained condition |
-| `@else { }` | `} @else { }` |
+| `@trick <type> "<prompt>"` | `@trick hold "Hold your breath until he walks past."` — mandatory body-interaction beat; **leaf**. `<type>` ∈ `tap` / `hold` / `swipe` / `shake` / `swing` / `tilt` (touch + motion only, hard-locked). Thresholds live in the engine — scripts do not tune them |
+| `@minigame <name> "<description>"` | `@minigame casino_showdown "Mauricio drags Malia into a backroom blackjack game…"` — optional embedded H5; **leaf**. `<description>` is one prose paragraph that both scenes the moment AND defines simple gameplay. Skippable = whole step is a no-op. Rewards live in the engine (anti-cheat); no rating branches |
+| `check <attr> <DC>` | `check { attr: CHA  dc: 12 }` — required inside a `brave` option body. Engine runs `D20 + <attr> modifier >= dc → success` and exposes the result via `check.success` / `check.fail` inside that option only |
 
-Conditions (6 types, all fully parsed into structured AST — no raw expression strings in JSON output):
+Brave-option outcome branching: `@if (check.success) { } @else { }`. The `@else` branch is optional — omitting it means "nothing happens on fail" (valid by design). `@trick` and `@minigame` are not D20-bound and do not produce branch state — if you need a story split off an action, use `@choice`.
 
-- choice: `A.fail` / `B.success` / `C.any`
-- flag: `SIGNAL_NAME`
-- comparison: `affection.<char> <op> <N>` or `<name> <op> <N>` (right side must be integer)
-- influence: `"description"` or `influence "description"`
-- compound: `<cond> && <cond>` / `<cond> || <cond>` (parens for grouping; `&&` binds tighter than `||`)
-- check: `check.success` / `check.fail` — context-local, only valid inside a brave option body
+## State
 
-Operators: `>=` `<=` `>` `<` `==` `!=`
-Logic: `&&` (and), `||` (or)
+| Directive | Example |
+|-----------|---------|
+| `@affection <char> <±N>` | `@affection easton +2` / `@affection mauricio -1` — adjust per-character affection (persistent across episodes) |
+| `@signal mark <NAME>` | `@signal mark HIGH_HEEL_EP05` — persistent boolean flag. Use sparingly; every mark must have a later reader (an `@if` branch or an achievement guard) |
+| `@signal int <name> <=\|+\|-> <N>` | `@signal int rejections +1` / `@signal int rejections -2` / `@signal int rejections = 0` — persistent integer counter. `+N` / `-N` require N >= 0; `= N` is unconditional assignment (N may be negative). First read defaults to 0 |
+| `@butterfly "<description>"` | `@butterfly "Accepted Easton's approach openly"` — content-generator hint. **Does NOT participate in gate routing** — only feeds Remix Executor / Dream so generators understand the player's personality |
+| `@achievement <id> { name / rarity / description }` | Inline achievement. The block carries metadata; reaching the node fires the unlock. Wrap in `@if (...)` for conditional triggers. `rarity` ∈ `uncommon` / `rare` / `epic` / `legendary` (no `common`); all three fields are required; bare `@achievement <id>` without a block is a parse error |
 
-## Episode Termination
+Engine-managed numerics (e.g. `san`, `cha`, `hp`, `xp`) are read-only to scripts — you may reference them inside `@if`, but cannot mutate them. Author-defined integers via `@signal int` share the same bare-name read namespace.
 
-Every episode must end with exactly one of:
+## Conditions (5 kinds)
 
-- `@gate { ... }` — route to another episode based on conditions
-- `@ending <type>` — terminal state (no next episode)
+All conditions parse into structured AST — there are no raw expression strings in the JSON. Operators: `==` `!=` `>` `<` `>=` `<=`. Logic: `&&` (binds tighter) and `||`. Parens for grouping.
 
-The two are mutually exclusive. Missing both is a validator error.
+| Kind | Source syntax | Scope |
+|------|--------------|-------|
+| choice | `<ID>.<success\|fail\|any>` — e.g. `A.fail`, `B.success`, `C.any` | Anywhere (historical lookup of past option outcomes) |
+| flag | `<MARK_NAME>` — bare identifier matching a `@signal mark` name | Anywhere |
+| comparison | `<operand> <op> <operand>` — both sides are operands, so variable-vs-variable is legal | Anywhere |
+| compound | `<cond> && <cond>` / `<cond> \|\| <cond>` — nests recursively, parens for grouping | Anywhere |
+| check | `check.success` / `check.fail` | **Brave option body only** — refers to the just-rolled D20 result for that option |
 
-## Achievements
+**Removed in this revision:** the `influence` condition kind. There is no `"description"` literal or `influence "description"` form anymore — narrative coloring is captured via `@butterfly` (for content generators) and concrete state via `@signal mark` / `@signal int`.
 
-One form: `@achievement <id> { name / rarity / description }`. The block carries the full metadata and reaching this node in execution fires the achievement. Conditional triggering is just standard `@if` wrapping.
+## Operands (5 kinds, comparison only)
 
+Both sides of a comparison are operands. Operands are integer-typed; the validator rejects mixed types.
+
+| Kind | Source syntax | AST |
+|------|--------------|-----|
+| literal | `5` / `-3` | `{kind:"literal", value:N}` |
+| affection | `affection.<char>` | `{kind:"affection", char:"easton"}` |
+| value | `<bare_name>` | `{kind:"value", name:"san"}` — engine numeric (`san`, `cha`, `hp`, `xp`, …) **or** an author `@signal int` variable; both share the same bare-name lookup namespace |
+| max | `MAX(<op>, <op>, ...)` | `{kind:"max", args:[...]}` — **args >= 2** (1-arg MAX is a parse error). Args may be any operand kind, including nested `MAX` / `MIN` |
+| min | `MIN(<op>, <op>, ...)` | `{kind:"min", args:[...]}` — same rules as MAX |
+
+`MAX` and `MIN` are **reserved words** (uppercase only) — they are not valid signal names. **Lowercase** `max` / `min` are still legal identifiers (signal int names, engine values, etc.) and do not collide.
+
+Examples:
+- `@if (affection.easton > affection.diego): @next main/route/easton:01` — variable-vs-variable
+- `@if (MAX(affection.easton, affection.diego, affection.elias) >= 5) { ... }` — N-way aggregate
+- `@if (affection.easton > MAX(affection.diego, affection.mauricio)) { ... }` — operand vs aggregate
+- `@if (5 < affection.easton) { ... }` — literal-first form is fine
+
+## Gate Leaves
+
+`@gate { }` contents are `@if` / `@else if` / `@else` chains whose innermost bodies are **leaves**. `@next` and `@end` leaves can mix freely within the same gate.
+
+| Leaf | Example |
+|------|---------|
+| `@next <branch_key>:<seq>` | `@next main:02` / `@next main/bad/001:01` — route to the addressed episode |
+| `@end <type>` | `@end complete` — terminal. `<type>` ∈ `complete` (full run finished) / `to_be_continued` (chapter end, sequel pending) / `bad_ending` (bad route terminus) |
+
+Minimal forms (no conditionals):
 ```
-@if (HIGH_HEEL_EP05 && HIGH_HEEL_EP24) {
-  @achievement HIGH_HEEL_DOUBLE_KILL {
-    name: "Heel Twice Over"
-    rarity: epic
-    description: "Once is improvisation. Twice is a signature move."
-  }
+@gate { @next main:02 }
+@gate { @end bad_ending }
+```
+
+Mixed conditional form (next / end side-by-side):
+```
+@gate {
+  @if (rejections >= 3) { @end bad_ending }
+  @else if (HEROIC_END) { @end complete }
+  @else { @next main:02 }
 }
 ```
 
-- `rarity` must be one of `uncommon` / `rare` / `epic` / `legendary` (no `common`)
-- All three fields are required; bare `@achievement <id>` without a block is a parse error
-- Same id triggered from multiple places is fine — the engine dedupes by id at unlock time
+Coverage rule: a gate is valid only when every execution path produces exactly one leaf — i.e. either a single unconditional `@next`/`@end`, or an `@if`/`@else if`/`@else` chain whose final clause is `@else`. Missing fallback → `MISSING_TERMINAL`.
 
-## Signals
+## Step ID Tags
 
-`@signal <kind> <...>` — kind is mandatory. Two kinds are implemented:
+Each compiled step gets an `id` of the form `<seq>_<tag>` (frozen contract, see JSON-OUTPUT.md §4.0). The tags directives compile to:
 
-- `@signal mark <event>` — persistent boolean flag. Engine stores forever; `@if (NAME)` queries the store. Use only for key story points with a reader (a later `@if` branch or achievement trigger).
-- `@signal int <name> <op> <value>` — persistent integer counter. Three forms:
-  - `= <int>` — unconditional assignment (value may be negative)
-  - `+<N>` — increment by N (N is non-negative)
-  - `-<N>` — decrement by N (N is non-negative)
+| Directive | Step type(s) | Tag |
+|-----------|--------------|-----|
+| `@<char> <pose>` | `char_show` | `char` |
+| `@<char> bubble <type>` | `bubble` | `char` (shared with char_show) |
+| `@music <name>` | `music` | `mus` |
+| `@music stop` | `music_stop` | `mus` (shared) |
 
-  Read via `@if (name <cmp> N)` bare-name comparison. First-time reads default to 0. Names must be `snake_case` and must not collide with engine-reserved names (`san`, `cha`, `hp`, `xp`, etc.).
+Other step types have their own tags — these two collisions are the load-bearing ones to remember when reading IDs.
 
-Achievements are **not** a signal kind — use the dedicated `@achievement <id>` trigger instead.
+## Concurrency
+
+| Prefix | Meaning | Notes |
+|--------|---------|-------|
+| `@` | Sequential — opens a new step group | Leader |
+| `&` | Concurrent — joins the previous `@` group | Follower; first line of a group cannot be `&` |
+| (none) | Dialogue line | Always independent — waits for player click |
+
+`&` is **not** allowed on block-structure directives: `@choice`, `@phone`, `@if`, `@gate`, `@episode`. Leaves (`@trick`, `@minigame`, `@cg`) technically permit `&`, but bundling them with scene setup hides the beat — keep them on `@`.
+
+Typical concurrent group:
+```
+@bg set school_hallway fade
+&music tense_strings
+&mauricio neutral_smirk
+```
+Three side effects (background swap + music swap + character entry) play together; the next dialogue line then runs in isolation.
+
+## Reserved Words
+
+These identifiers are unavailable as signal mark names, signal int names, or pose names:
+
+- Directive verbs: `set`, `bubble`, `from`, `to`, `stop`
+- Flow keywords: `if`, `else`, `next`, `end`, `gate`, `episode`, `choice`, `option`, `check`, `pause`
+- Option modes: `brave`, `safe`
+- Ending types: `complete`, `to_be_continued`, `bad_ending`
+- Aggregate functions: `MAX`, `MIN` (uppercase only — lowercase `max` / `min` are fine as identifiers)
+- Check namespace: `check`
+- D20 result tokens: `success`, `fail`, `any`
+
+The validator owns the canonical list — defer to it on edge cases.

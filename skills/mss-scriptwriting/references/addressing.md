@@ -49,6 +49,7 @@ The session ID is a unique identifier for the remix session.
 
 1. Directory structure IS the branch_key — the interpreter derives the ID from the file path
 2. Seq numbers are zero-padded to 2 digits: `01`, `02`, ... `60`
-3. Bad endings and minor branches always originate from a `@gate` block in a main-line episode
-4. Remix branches use the same format but live under `remix/` instead of `main/`
-5. `@if`/`@else` targets inside `@gate` use the full `branch_key:seq` format
+3. The `@episode <branch_key>:<seq> ...` header value must match the path-derived branch_key (redundant by design — kept as a sanity check; validator rejects mismatches)
+4. Bad endings and minor branches always originate from a `@gate` block in a main-line episode
+5. Remix branches use the same format but live under `remix/` instead of `main/`
+6. `@if`/`@else` targets inside `@gate` use the full `branch_key:seq` format on `@next` leaves

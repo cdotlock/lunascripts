@@ -105,7 +105,8 @@ curl -s -X POST http://localhost:8080/compile \
     {"id":"0002_nar","type":"narrator","text":"Hello world."},
     {"id":"0003_you","type":"you","text":"Thinking deeply."}
   ],
-  "gate": {"next": "main:02"}
+  "gate": {"next": "main:02"},
+  "ending": null
 }
 ```
 
