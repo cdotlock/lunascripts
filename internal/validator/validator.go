@@ -1,10 +1,10 @@
-// Package validator checks semantic correctness of a parsed MSS AST.
+// Package validator checks semantic correctness of a parsed LS AST.
 package validator
 
 import (
 	"fmt"
 
-	"github.com/cdotlock/moonshort-script/internal/ast"
+	"github.com/cdotlock/lunascripts/internal/ast"
 )
 
 // Error codes for validation failures.
@@ -48,9 +48,9 @@ var validSignalKinds = map[string]bool{
 	ast.SignalKindInt:  true,
 }
 
-// reservedKeywords are identifiers reserved by the MSS language. They
+// reservedKeywords are identifiers reserved by the LS language. They
 // may not be used as signal mark names, signal int names, or character
-// pose names. The list mirrors MSS-SPEC.md §保留字 (Appendix B) plus the
+// pose names. The list mirrors LS-SPEC.md §保留字 (Appendix B) plus the
 // `bubble` character-directive verb and the `MAX` / `MIN` aggregate
 // function names.
 var reservedKeywords = map[string]bool{

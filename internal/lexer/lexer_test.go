@@ -3,7 +3,7 @@ package lexer
 import (
 	"testing"
 
-	"github.com/cdotlock/moonshort-script/internal/token"
+	"github.com/cdotlock/lunascripts/internal/token"
 )
 
 // helper: tokenize src and return all non-NEWLINE, non-EOF tokens.
@@ -359,7 +359,7 @@ func TestLexComma(t *testing.T) {
 
 // TestLexCommaInGateRoute: the route header `route 1, "First option"` should
 // tokenize as IDENT NUMBER COMMA STRING. This is the form gate routes use in
-// the new MSS spec (numeric route key followed by a quoted label).
+// the new LS spec (numeric route key followed by a quoted label).
 func TestLexCommaInGateRoute(t *testing.T) {
 	src := `route 1, "First option"`
 	got := toks(src)

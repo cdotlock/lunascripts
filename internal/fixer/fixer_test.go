@@ -367,7 +367,7 @@ NARRATOR: Lose
 
 	foundOnHint := false
 	for _, e := range r.Errors {
-		if strings.Contains(e, "@on") && strings.Contains(e, "not part of MSS syntax") {
+		if strings.Contains(e, "@on") && strings.Contains(e, "not part of LS syntax") {
 			foundOnHint = true
 		}
 	}

@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cdotlock/moonshort-script/internal/ast"
-	"github.com/cdotlock/moonshort-script/internal/lexer"
-	"github.com/cdotlock/moonshort-script/internal/parser"
+	"github.com/cdotlock/lunascripts/internal/ast"
+	"github.com/cdotlock/lunascripts/internal/lexer"
+	"github.com/cdotlock/lunascripts/internal/parser"
 )
 
 // mockResolver implements AssetResolver for testing.

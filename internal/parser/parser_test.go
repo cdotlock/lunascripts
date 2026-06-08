@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cdotlock/moonshort-script/internal/ast"
-	"github.com/cdotlock/moonshort-script/internal/lexer"
+	"github.com/cdotlock/lunascripts/internal/ast"
+	"github.com/cdotlock/lunascripts/internal/lexer"
 )
 
 // helper parses src and returns the Episode or fails the test.

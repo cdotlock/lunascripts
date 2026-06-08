@@ -1,4 +1,4 @@
-// Package emitter converts an MSS AST into player-ready JSON with resolved asset URLs.
+// Package emitter converts an LS AST into player-ready JSON with resolved asset URLs.
 package emitter
 
 import (
@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cdotlock/moonshort-script/internal/ast"
+	"github.com/cdotlock/lunascripts/internal/ast"
 )
 
 // AssetResolver maps semantic asset names to full URLs.
@@ -259,7 +259,7 @@ func (e *Emitter) emitNode(n ast.Node) map[string]interface{} {
 		return map[string]interface{}{"type": "butterfly", "description": v.Description}
 	case *ast.AchievementNode:
 		// The JSON `achievement_id` field carries the semantic id from
-		// MSS source `@achievement <id> { ... }` (e.g. "RARE_COURAGE"),
+		// LS source `@achievement <id> { ... }` (e.g. "RARE_COURAGE"),
 		// distinct from the universal `id` field (the cursor stable-step
 		// id, format `<seq>_<tag>`) stamped by assignStepID. Keeping the
 		// semantic id under a domain-specific key avoids collision.

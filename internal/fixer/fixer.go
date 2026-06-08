@@ -1,4 +1,4 @@
-// Package fixer applies text-level auto-repairs to MoonShort Script files.
+// Package fixer applies text-level auto-repairs to Lunascripts files.
 // It works on raw lines (not the AST) so it can fix scripts that won't parse.
 package fixer
 
@@ -514,9 +514,9 @@ func fixAffectionCharCase(line string, lineNum int, r *FixResult) string {
 }
 
 // oldFormatKeywords are keywords the fixer detects and rejects with a hint
-// pointing at the correct MSS syntax. These catch common LLM mistakes
+// pointing at the correct LS syntax. These catch common LLM mistakes
 // where the generator produces a directive name drawn from an adjacent
-// dialect rather than MSS itself.
+// dialect rather than LS itself.
 //
 // Char visual directives (@show / @hide / @expr / @look / @move / @at) are
 // rejected here because the new AST collapses character visuals into a
@@ -544,7 +544,7 @@ var oldFormatKeywords = map[string]string{
 	"@wait":      "use @pause for N",
 	"@timeskip":  "removed — use @bg set with transition",
 	"@group":     "use & prefix for concurrent directives",
-	"@on":        "not part of MSS syntax — use @if (check.success) / @else inside brave options",
+	"@on":        "not part of LS syntax — use @if (check.success) / @else inside brave options",
 }
 
 // charLegacySuffixRe matches `@<char> show|hide|look|move ...` and `@<char> at ...`.

@@ -7,13 +7,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/cdotlock/moonshort-script/internal/decompiler"
-	"github.com/cdotlock/moonshort-script/internal/emitter"
-	"github.com/cdotlock/moonshort-script/internal/fixer"
-	"github.com/cdotlock/moonshort-script/internal/lexer"
-	"github.com/cdotlock/moonshort-script/internal/parser"
-	"github.com/cdotlock/moonshort-script/internal/resolver"
-	"github.com/cdotlock/moonshort-script/internal/validator"
+	"github.com/cdotlock/lunascripts/internal/decompiler"
+	"github.com/cdotlock/lunascripts/internal/emitter"
+	"github.com/cdotlock/lunascripts/internal/fixer"
+	"github.com/cdotlock/lunascripts/internal/lexer"
+	"github.com/cdotlock/lunascripts/internal/parser"
+	"github.com/cdotlock/lunascripts/internal/resolver"
+	"github.com/cdotlock/lunascripts/internal/validator"
 )
 
 func main() {
@@ -36,14 +36,14 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "mss - MoonShort Script interpreter")
+	fmt.Fprintln(os.Stderr, "lsc - Lunascripts interpreter")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Usage:")
-	fmt.Fprintln(os.Stderr, "  mss compile <file.md|dir/> [--assets mapping.json] [-o output.json]")
-	fmt.Fprintln(os.Stderr, "  mss decompile <output.json> [-o output-dir]  Rebuild mss.md + assets_mapping.json")
-	fmt.Fprintln(os.Stderr, "  mss validate <file.md> [--assets mapping.json]")
-	fmt.Fprintln(os.Stderr, "  mss fix <file.md> [-o output.md]     Fix and write (in-place if no -o)")
-	fmt.Fprintln(os.Stderr, "  mss fix <file.md> --check            Dry run: report issues, don't write")
+	fmt.Fprintln(os.Stderr, "  lsc compile <file.ls|dir/> [--assets mapping.json] [-o output.json]")
+	fmt.Fprintln(os.Stderr, "  lsc decompile <output.json> [-o output-dir]  Rebuild .ls + assets_mapping.json")
+	fmt.Fprintln(os.Stderr, "  lsc validate <file.ls> [--assets mapping.json]")
+	fmt.Fprintln(os.Stderr, "  lsc fix <file.ls> [-o output.ls]     Fix and write (in-place if no -o)")
+	fmt.Fprintln(os.Stderr, "  lsc fix <file.ls> --check            Dry run: report issues, don't write")
 	os.Exit(1)
 }
 
@@ -159,7 +159,7 @@ func cmdDecompile(args []string) {
 	for _, ep := range result.Episodes {
 		name := ep.Name
 		if len(result.Episodes) == 1 {
-			name = "mss.md"
+			name = "episode.ls"
 		}
 		path := filepath.Join(outputDir, name)
 		if err := os.WriteFile(path, ep.Source, 0644); err != nil {
@@ -189,7 +189,7 @@ func defaultDecompileDir(target string) string {
 		base = strings.TrimSuffix(base, ext)
 	}
 	if base == "" || base == "." {
-		base = "mss"
+		base = "ls"
 	}
 	return filepath.Join(dir, base+"_decompiled")
 }
@@ -207,13 +207,13 @@ func compileFile(path string, res emitter.AssetResolver) ([]byte, error) {
 		return nil, fmt.Errorf("parse %s: %w", path, err)
 	}
 
-	// Validate -- fail if there are errors; suggest mss fix.
+	// Validate -- fail if there are errors; suggest lsc fix.
 	errs := validator.Validate(ep)
 	if len(errs) > 0 {
 		for _, e := range errs {
 			fmt.Fprintf(os.Stderr, "error: %s: %s\n", path, e.Error())
 		}
-		return nil, fmt.Errorf("compile %s: validation errors — run `mss fix %s` to attempt auto-repair", path, path)
+		return nil, fmt.Errorf("compile %s: validation errors — run `lsc fix %s` to attempt auto-repair", path, path)
 	}
 
 	em := emitter.New(res)
@@ -230,6 +230,10 @@ func compileFile(path string, res emitter.AssetResolver) ([]byte, error) {
 	return data, nil
 }
 
+func isLsSourcePath(path string) bool {
+	return strings.HasSuffix(path, ".ls") || strings.HasSuffix(path, ".ls.md")
+}
+
 func compileDir(dir string, res emitter.AssetResolver) ([]byte, error) {
 	var results []json.RawMessage
 
@@ -240,7 +244,7 @@ func compileDir(dir string, res emitter.AssetResolver) ([]byte, error) {
 		if info.IsDir() {
 			return nil
 		}
-		if !strings.HasSuffix(path, ".md") {
+		if !isLsSourcePath(path) {
 			return nil
 		}
 		data, err := compileFile(path, res)

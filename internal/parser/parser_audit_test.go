@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cdotlock/moonshort-script/internal/ast"
+	"github.com/cdotlock/lunascripts/internal/ast"
 )
 
 // =============================================================================

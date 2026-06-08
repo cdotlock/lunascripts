@@ -1,4 +1,4 @@
-// Package ast defines all AST node types for the MSS (MoonShort Script) format.
+// Package ast defines all AST node types for the LS (Lunascripts) format.
 // This file contains only type definitions — no parsing logic.
 package ast
 
@@ -31,7 +31,7 @@ func (c *ConcurrentFlag) SetConcurrent(v bool) { c.Concurrent = v }
 // Root
 // ----------------------------------------------------------------------------
 
-// Episode is the root node of every MSS script file.
+// Episode is the root node of every LS script file.
 //
 // Every episode MUST terminate with exactly one @gate block in the source.
 // The gate is then lowered by the emitter into one of two top-level shapes:

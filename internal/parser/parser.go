@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cdotlock/moonshort-script/internal/ast"
-	"github.com/cdotlock/moonshort-script/internal/lexer"
-	"github.com/cdotlock/moonshort-script/internal/token"
+	"github.com/cdotlock/lunascripts/internal/ast"
+	"github.com/cdotlock/lunascripts/internal/lexer"
+	"github.com/cdotlock/lunascripts/internal/token"
 )
 
 // knownKeywords are @-directive keywords that are NOT character names.
@@ -428,7 +428,7 @@ func (p *Parser) parseDirective() (ast.Node, error) {
 	case "achievement":
 		return p.parseAchievement()
 	case "on":
-		return nil, fmt.Errorf("line %d col %d: @on is not a MSS directive — use @if (check.success) / @else inside brave options", p.cur.Line, p.cur.Col)
+		return nil, fmt.Errorf("line %d col %d: @on is not a LS directive — use @if (check.success) / @else inside brave options", p.cur.Line, p.cur.Col)
 	default:
 		// Not a known keyword — treat as character directive.
 		return p.parseCharDirective(keyword)
@@ -712,10 +712,10 @@ func (p *Parser) parseOption() (*ast.OptionNode, error) {
 // parseBraveOptionBody parses a brave option body:
 //
 //	check { attr: X  dc: N }
-//	<any MSS body statements — typically @if (check.success) { ... } @else { ... }>
+//	<any LS body statements — typically @if (check.success) { ... } @else { ... }>
 //
 // The check block must appear somewhere in the body (validator enforces
-// its presence). Beyond that, body statements are plain MSS — authors
+// its presence). Beyond that, body statements are plain LS — authors
 // use @if with the CheckCondition (check.success / check.fail) to route
 // on the resolved check outcome.
 func (p *Parser) parseBraveOptionBody(opt *ast.OptionNode) error {

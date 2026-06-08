@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cdotlock/moonshort-script/internal/ast"
+	"github.com/cdotlock/lunascripts/internal/ast"
 )
 
 // unconditionalGate returns a minimal valid @gate with a single @next leaf.

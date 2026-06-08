@@ -26,12 +26,12 @@
 | `internal/parser/parser_test.go` | `@signal int` parse happy/error paths |
 | `internal/validator/validator_test.go` | Reserved-name collision test |
 | `internal/emitter/emitter_test.go` | Emit-shape tests for `int` signals |
-| `testdata/feature_parade/stress.md` | Add `@signal int` usage (writes + `@if` read) |
+| `testdata/feature_parade/stress.ls` | Add `@signal int` usage (writes + `@if` read) |
 | `testdata/feature_parade/stress_output.json` | Regenerated golden |
-| `MSS-SPEC.md` | Spec doc update |
-| `skills/mss-scriptwriting/references/MSS-SPEC.md` | Mirror of above |
-| `skills/mss-scriptwriting/SKILL.md` | Usage guidance update |
-| `skills/mss-scriptwriting/references/directive-table.md` | Directive table update |
+| `LS-SPEC.md` | Spec doc update |
+| `skills/ls-scriptwriting/references/LS-SPEC.md` | Mirror of above |
+| `skills/ls-scriptwriting/SKILL.md` | Usage guidance update |
+| `skills/ls-scriptwriting/references/directive-table.md` | Directive table update |
 
 ---
 
@@ -92,7 +92,7 @@ func TestLexDoubleEqualsStillEQ(t *testing.T) {
 }
 ```
 
-Ensure imports include `"github.com/cdotlock/moonshort-script/internal/token"`.
+Ensure imports include `"github.com/cdotlock/lunascripts/internal/token"`.
 
 - [ ] **Step 2: Run test to verify it fails**
 
@@ -278,7 +278,7 @@ func TestParseSignalIntAssignZero(t *testing.T) {
 }
 ```
 
-Make sure the test file already imports `"github.com/cdotlock/moonshort-script/internal/ast"`, `"github.com/cdotlock/moonshort-script/internal/lexer"`, `"github.com/cdotlock/moonshort-script/internal/parser"`. If not, add them. (Check first line / existing tests.)
+Make sure the test file already imports `"github.com/cdotlock/lunascripts/internal/ast"`, `"github.com/cdotlock/lunascripts/internal/lexer"`, `"github.com/cdotlock/lunascripts/internal/parser"`. If not, add them. (Check first line / existing tests.)
 
 - [ ] **Step 2: Run and verify it fails**
 
@@ -654,7 +654,7 @@ func TestValidateSignalIntOK(t *testing.T) {
 }
 ```
 
-Ensure the test file imports `"github.com/cdotlock/moonshort-script/internal/validator"`.
+Ensure the test file imports `"github.com/cdotlock/lunascripts/internal/validator"`.
 
 - [ ] **Step 2: Run and verify failure**
 
@@ -1012,20 +1012,20 @@ git commit -m "test(emitter): verify @if reads @signal int variables via existin
 ## Task 10: Feature-parade fixture — add `@signal int` usage and regenerate golden
 
 **Files:**
-- Modify: `testdata/feature_parade/stress.md`
+- Modify: `testdata/feature_parade/stress.ls`
 - Modify: `testdata/feature_parade/stress_output.json` (regenerate)
 
-- [ ] **Step 1: Inspect current `stress.md`**
+- [ ] **Step 1: Inspect current `stress.ls`**
 
 ```bash
-cat testdata/feature_parade/stress.md
+cat testdata/feature_parade/stress.ls
 ```
 
 Identify a natural insertion point. The goal is to exercise all three `int` write forms (`=`, `+`, `-`) and at least one comparison read in an `@if`. Keep the narrative insertion minimal and consistent with the existing tone.
 
 - [ ] **Step 2: Add `@signal int` usage**
 
-Edit `stress.md` to introduce a counter (suggested name: `stress_count`), writing:
+Edit `stress.ls` to introduce a counter (suggested name: `stress_count`), writing:
 
 ```
 @signal int stress_count = 0
@@ -1055,7 +1055,7 @@ ls cmd/
 Typically:
 
 ```bash
-go run ./cmd/mss compile testdata/feature_parade/stress.md --assets testdata/feature_parade/mapping.json -o testdata/feature_parade/stress_output.json
+go run ./cmd/lscc compile testdata/feature_parade/stress.ls --assets testdata/feature_parade/mapping.json -o testdata/feature_parade/stress_output.json
 ```
 
 Adjust path/flags to what the binary actually expects. Then diff-review:
@@ -1085,20 +1085,20 @@ Expected: everything PASS.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add testdata/feature_parade/stress.md testdata/feature_parade/stress_output.json
+git add testdata/feature_parade/stress.ls testdata/feature_parade/stress_output.json
 git commit -m "test(fixtures): add @signal int usage to feature_parade stress fixture"
 ```
 
 ---
 
-## Task 11: Update `MSS-SPEC.md` — §4.7 signal section
+## Task 11: Update `LS-SPEC.md` — §4.7 signal section
 
 **Files:**
-- Modify: `MSS-SPEC.md` (around lines 508-560)
+- Modify: `LS-SPEC.md` (around lines 508-560)
 
 - [ ] **Step 1: Replace the `@signal <kind> <event>` subsection**
 
-Read lines 508-560 of `MSS-SPEC.md` first to preserve neighboring prose and markers. Then replace the subsection with:
+Read lines 508-560 of `LS-SPEC.md` first to preserve neighboring prose and markers. Then replace the subsection with:
 
 ```markdown
 #### `@signal <kind> <...>`
@@ -1255,22 +1255,22 @@ Find the `@signal` row (around line 1232) and replace with **two rows**:
 - [ ] **Step 6: Commit**
 
 ```bash
-git add MSS-SPEC.md
-git commit -m "docs(spec): document @signal int in MSS-SPEC.md"
+git add LS-SPEC.md
+git commit -m "docs(spec): document @signal int in LS-SPEC.md"
 ```
 
 ---
 
-## Task 12: Mirror spec update into `skills/mss-scriptwriting/references/MSS-SPEC.md`
+## Task 12: Mirror spec update into `skills/ls-scriptwriting/references/LS-SPEC.md`
 
 **Files:**
-- Modify: `skills/mss-scriptwriting/references/MSS-SPEC.md`
+- Modify: `skills/ls-scriptwriting/references/LS-SPEC.md`
 
-- [ ] **Step 1: Copy the updated root MSS-SPEC.md into the skill mirror**
+- [ ] **Step 1: Copy the updated root LS-SPEC.md into the skill mirror**
 
 ```bash
-cp MSS-SPEC.md skills/mss-scriptwriting/references/MSS-SPEC.md
-diff -q MSS-SPEC.md skills/mss-scriptwriting/references/MSS-SPEC.md
+cp LS-SPEC.md skills/ls-scriptwriting/references/LS-SPEC.md
+diff -q LS-SPEC.md skills/ls-scriptwriting/references/LS-SPEC.md
 ```
 
 Expected: no diff (files identical).
@@ -1278,16 +1278,16 @@ Expected: no diff (files identical).
 - [ ] **Step 2: Commit**
 
 ```bash
-git add skills/mss-scriptwriting/references/MSS-SPEC.md
-git commit -m "docs(skill): mirror MSS-SPEC.md for @signal int"
+git add skills/ls-scriptwriting/references/LS-SPEC.md
+git commit -m "docs(skill): mirror LS-SPEC.md for @signal int"
 ```
 
 ---
 
-## Task 13: Update `skills/mss-scriptwriting/SKILL.md`
+## Task 13: Update `skills/ls-scriptwriting/SKILL.md`
 
 **Files:**
-- Modify: `skills/mss-scriptwriting/SKILL.md` (around lines 300-355)
+- Modify: `skills/ls-scriptwriting/SKILL.md` (around lines 300-355)
 
 - [ ] **Step 1: Update the state-changes summary**
 
@@ -1340,16 +1340,16 @@ The list currently warns against overuse of `@signal mark`. Add one item:
 - [ ] **Step 5: Commit**
 
 ```bash
-git add skills/mss-scriptwriting/SKILL.md
+git add skills/ls-scriptwriting/SKILL.md
 git commit -m "docs(skill): add @signal int usage guidance"
 ```
 
 ---
 
-## Task 14: Update `skills/mss-scriptwriting/references/directive-table.md`
+## Task 14: Update `skills/ls-scriptwriting/references/directive-table.md`
 
 **Files:**
-- Modify: `skills/mss-scriptwriting/references/directive-table.md`
+- Modify: `skills/ls-scriptwriting/references/directive-table.md`
 
 - [ ] **Step 1: Update the directive-table rows**
 
@@ -1383,7 +1383,7 @@ Achievements are **not** a signal kind — use the dedicated `@achievement <id>`
 - [ ] **Step 3: Commit**
 
 ```bash
-git add skills/mss-scriptwriting/references/directive-table.md
+git add skills/ls-scriptwriting/references/directive-table.md
 git commit -m "docs(skill): document @signal int in directive table"
 ```
 
@@ -1404,7 +1404,7 @@ Expected: PASS across all packages.
 - [ ] **Step 2: Compile and run CLI smoke**
 
 ```bash
-go build ./... && go run ./cmd/mss validate testdata/feature_parade/stress.md --assets testdata/feature_parade/mapping.json
+go build ./... && go run ./cmd/lscc validate testdata/feature_parade/stress.ls --assets testdata/feature_parade/mapping.json
 ```
 
 Expected: validator reports no errors.
@@ -1412,7 +1412,7 @@ Expected: validator reports no errors.
 - [ ] **Step 3: Re-compile the stress fixture and confirm byte-identical output**
 
 ```bash
-go run ./cmd/mss compile testdata/feature_parade/stress.md --assets testdata/feature_parade/mapping.json -o /tmp/stress_out.json
+go run ./cmd/lscc compile testdata/feature_parade/stress.ls --assets testdata/feature_parade/mapping.json -o /tmp/stress_out.json
 diff testdata/feature_parade/stress_output.json /tmp/stress_out.json
 ```
 
@@ -1427,7 +1427,7 @@ cat > /tmp/bad_signal_int.md <<'EOF'
   @ending complete
 }
 EOF
-go run ./cmd/mss validate /tmp/bad_signal_int.md --assets testdata/feature_parade/mapping.json
+go run ./cmd/lscc validate /tmp/bad_signal_int.md --assets testdata/feature_parade/mapping.json
 ```
 
 Expected: validator exits non-zero with a `RESERVED_INT_NAME` error message.

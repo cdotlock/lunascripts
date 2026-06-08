@@ -1,6 +1,6 @@
 package emitter
 
-// Deep audit tests for MSS emitter JSON output correctness.
+// Deep audit tests for LS emitter JSON output correctness.
 // Each test constructs an AST directly, emits JSON, and verifies exact structure.
 
 import (
@@ -8,13 +8,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cdotlock/moonshort-script/internal/ast"
+	"github.com/cdotlock/lunascripts/internal/ast"
 )
 
 // ---------- Audit A: Concurrent grouping correctness ----------
 
 func TestAuditA_ConcurrentGrouping(t *testing.T) {
-	// MSS-equivalent:
+	// LS-equivalent:
 	//   @bg set school_classroom
 	//   &music calm_morning
 	//   &malia neutral_phone

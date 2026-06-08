@@ -1,16 +1,16 @@
 ---
-name: mss-scriptwriting
+name: ls-scriptwriting
 description: >
-  How to write correct MoonShort Script (MSS) for MobAI interactive visual novels.
+  How to write correct Lunascripts (LS) for MobAI interactive visual novels.
   Use this skill whenever generating, editing, or reviewing .md script files for
   the MobAI game engine — including Dramatizer output, Remix Executor output,
-  or manual script authoring. Triggers on: MSS scripts, episode scripts,
+  or manual script authoring. Triggers on: LS scripts, episode scripts,
   visual novel scripts, game scripts, Dramatizer output formatting,
   Remix script generation, "@episode", "@choice", "@gate", or any mention
   of the MobAI script format.
 ---
 
-# Writing MoonShort Scripts
+# Writing Lunascriptss
 
 You are generating scripts for a mobile interactive visual novel player. The genre is **TRPG mechanics + Galgame presentation**: players read through dialogue-driven scenes with character sprites and backgrounds (Galgame), and at key beats make choices that resolve via D20 attribute checks against a difficulty class (TRPG). Body-interaction beats (`@trick`) and optional embedded games (`@minigame`) punctuate the reading. Each `.md` script file is one episode — a self-contained narrative unit with dialogue, visual staging, game mechanics, and routing to the next episode.
 
@@ -60,7 +60,7 @@ The `branch_key` follows a strict addressing format. Read `references/addressing
 
 ## The Three Syntaxes in One File
 
-MSS has three syntaxes that alternate freely:
+LS has three syntaxes that alternate freely:
 
 **1. Directive lines** start with `@` — these control visuals, audio, game mechanics, and flow. Each `@` starts a new sequential step:
 ```
@@ -106,7 +106,7 @@ Read this before writing. LLMs reliably fall into specific traps that pass the p
 6. **Don't compress when you should breathe.** LLMs default to terse summarization; Galgame pacing is the opposite. Let scenes land — an `@pause` after scene setup, an internal `YOU:` line between two pieces of dialogue, an extra silent beat after a confession. Token pressure pushes you toward "compress"; resist it. Players paid to live the moments, not skim a plot summary.
 7. **Don't write side branches with no entry, or gate routes with no destination.** Every side episode (`main/route/...`, `main/bad/...`) you imagine needs a `@gate` somewhere upstream that routes into it via `@next`. Conversely, every `@next <branch_key>` in a `@gate` must point at an episode file you actually wrote. A beautiful unreachable bad-end is dead content; a `@next main/route/001:01` with no file is a broken link.
 8. **Respect the concurrency rules.** `&` follows `@` and runs *together* with the previous step — it's for scene-setup bundles (bg + music + character entrance). `&` cannot lead a sequence, cannot be used on block structures (`choice`, `phone`, `if`, `gate`), and cannot be used on dialogue (`CHARACTER:` lines are always their own sequential step). `@trick`, `@minigame`, and `@cg` are leaf directives, so `&` is technically permitted on them, but you almost never want one of those bundled into a scene-setup group — keep them on `@` for narrative clarity. When in doubt, use `@`.
-9. **Run the fixer before compiling.** The interpreter ships `mss fix <file>` that auto-repairs common LLM mistakes (missing `@if` parens, `&` on blocks, character-name casing in `@affection`, BOM/CRLF, unclosed blocks). **If the script was LLM-generated, run `mss fix` first, then `mss validate`, then `mss compile`.** This is the single highest-ROI habit when iterating with LLMs.
+9. **Run the fixer before compiling.** The interpreter ships `lsc fix <file>` that auto-repairs common LLM mistakes (missing `@if` parens, `&` on blocks, character-name casing in `@affection`, BOM/CRLF, unclosed blocks). **If the script was LLM-generated, run `lsc fix` first, then `lsc validate`, then `lsc compile`.** This is the single highest-ROI habit when iterating with LLMs.
 
 The directive table (`references/directive-table.md`) is the authoritative quick reference — when unsure of syntax, check it instead of inventing.
 
@@ -678,10 +678,10 @@ Only the three end types listed above are accepted; anything else is a parse err
 28. **Lowercase `max(...)` / `min(...)` used as the aggregate operator** — `MAX` and `MIN` are reserved words and must be UPPERCASE. Lowercase `max` / `min` are legal as ordinary `@signal int` variable names; they will not parse as the aggregate.
 29. **Bundle of `@phone` block with non-`@text` content** — only `@text from/to` lines may appear inside `@phone { ... }`. No narration, no SFX, no `@if`, no state changes. Move those outside the phone block.
 30. **Inventing character positions** — there is no syntax for `at left` / `at right` / `at center`. The engine positions characters from `gamestate.MC` (MC pinned left, others pinned right). Anything you'd want to convey about staging — pose, bubble, transition — uses pose names and transitions, not position keywords.
-31. **Orphan branches and dead `@next` targets** — every `@next <branch_key>` in a `@gate` must point at an episode file that exists in the repo, and every side episode (`main/route/...`, `main/bad/...`) you write needs an upstream `@gate` that routes into it. In single-file `mss compile` cross-file references aren't checked; in batch `mss compile <dir>` the validator does verify branch_key resolution.
+31. **Orphan branches and dead `@next` targets** — every `@next <branch_key>` in a `@gate` must point at an episode file that exists in the repo, and every side episode (`main/route/...`, `main/bad/...`) you write needs an upstream `@gate` that routes into it. In single-file `lsc compile` cross-file references aren't checked; in batch `lsc compile <dir>` the validator does verify branch_key resolution.
 32. **Essay-length option text** — `@option <ID> <mode> "<text>"` text is the player's UI button label. Keep under ~12 words. Long narrative goes inside the option block as body nodes.
 
-**Auto-repair:** The interpreter includes a fixer (`mss fix <file>`) that auto-repairs many of these mistakes: missing `@if` parentheses, `&` on block structures, `@check` → `check`, uppercase character names in `@affection`, trailing whitespace, unclosed blocks, and BOM/CRLF encoding issues. Always run the fixer before compiling if the script was generated by an LLM.
+**Auto-repair:** The interpreter includes a fixer (`lsc fix <file>`) that auto-repairs many of these mistakes: missing `@if` parentheses, `&` on block structures, `@check` → `check`, uppercase character names in `@affection`, trailing whitespace, unclosed blocks, and BOM/CRLF encoding issues. Always run the fixer before compiling if the script was generated by an LLM.
 
 ## Remix Scripts
 
@@ -723,4 +723,4 @@ These aren't enforced by the interpreter, but they make for a good player experi
 
 - `references/directive-table.md` — directive cheat sheet, quick lookup when writing scripts
 - `references/addressing.md` — episode ID addressing rules for branch_key and file naming
-- `references/MSS-SPEC.md` — **complete format specification** with JSON output structure, asset mapping schema, interpreter behavior, and Remix compatibility details. Read this when you need to understand how the interpreter processes scripts, what JSON the frontend receives, or how the asset mapping JSON works.
+- `references/LS-SPEC.md` — **complete format specification** with JSON output structure, asset mapping schema, interpreter behavior, and Remix compatibility details. Read this when you need to understand how the interpreter processes scripts, what JSON the frontend receives, or how the asset mapping JSON works.

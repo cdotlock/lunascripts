@@ -1,4 +1,4 @@
-// Package decompiler reconstructs MSS source and asset mappings from compiled
+// Package decompiler reconstructs LS source and asset mappings from compiled
 // player JSON.
 package decompiler
 
@@ -11,7 +11,7 @@ import (
 	"unicode"
 )
 
-// EpisodeFile is one reconstructed MSS source file.
+// EpisodeFile is one reconstructed LS source file.
 type EpisodeFile struct {
 	Name   string
 	Source []byte
@@ -56,7 +56,7 @@ type assetGroups struct {
 	Minigames  map[string]string            `json:"minigames"`
 }
 
-// Decompile converts compiled MSS JSON into MSS source files and a recovered
+// Decompile converts compiled LS JSON into LS source files and a recovered
 // asset mapping. The input may be a single episode object, an array of episode
 // objects, or an object with an "episodes" array.
 func Decompile(data []byte) (*Result, error) {
@@ -106,7 +106,7 @@ func extractEpisodes(root interface{}) ([]map[string]interface{}, error) {
 			return episodeArray(raw)
 		}
 	}
-	return nil, fmt.Errorf("json does not look like compiled MSS output")
+	return nil, fmt.Errorf("json does not look like compiled LS output")
 }
 
 func episodeArray(raw []interface{}) ([]map[string]interface{}, error) {
@@ -129,7 +129,7 @@ func episodeFileName(ep map[string]interface{}, idx int) string {
 	if id == "" {
 		id = fmt.Sprintf("episode_%02d", idx+1)
 	}
-	return sanitizeFileName(id) + ".mss.md"
+	return sanitizeFileName(id) + ".ls"
 }
 
 func uniqueEpisodeFileName(name string, used map[string]int) string {
@@ -137,7 +137,7 @@ func uniqueEpisodeFileName(name string, used map[string]int) string {
 	if used[name] == 1 {
 		return name
 	}
-	return strings.TrimSuffix(name, ".mss.md") + fmt.Sprintf("_%d.mss.md", used[name])
+	return strings.TrimSuffix(name, ".ls") + fmt.Sprintf("_%d.ls", used[name])
 }
 
 func sanitizeFileName(s string) string {
@@ -580,7 +580,7 @@ func conditionSource(raw interface{}) (string, error) {
 	}
 }
 
-// operandSource renders a ComparisonOperand JSON object as MSS source text.
+// operandSource renders a ComparisonOperand JSON object as LS source text.
 // The five kinds — literal, affection, value, max, min — map to the surface
 // forms `N`, `affection.<char>`, `<name>`, `MAX(a, b, ...)`, `MIN(a, b, ...)`.
 // max / min args are rendered recursively so nested aggregates round-trip.
@@ -764,7 +764,7 @@ func suffix(prefix, value string) string {
 func quote(s string) string {
 	s = strings.ReplaceAll(s, "\r\n", " ")
 	s = strings.ReplaceAll(s, "\n", " ")
-	// The current MSS lexer does not implement string escapes; a raw double
+	// The current LS lexer does not implement string escapes; a raw double
 	// quote would terminate the token. Preserve a valid source file by
 	// normalising embedded quotes to apostrophes.
 	s = strings.ReplaceAll(s, `"`, `'`)

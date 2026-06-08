@@ -1,4 +1,4 @@
-# Feature Parade — MSS 全功能压测集
+# Feature Parade — LS 全功能压测集
 
 极简剧情 × 全功能覆盖 × 对白即测试清单。每个剧本里的旁白/对白都用 `[T##]` 标注当前测试点，播放时对照本文件勾选即可知进度。
 
@@ -38,12 +38,12 @@ feature_parade/
 make build
 
 # 单文件
-bin/mss validate testdata/feature_parade/ep01.md --assets testdata/feature_parade/mapping.json
-bin/mss compile  testdata/feature_parade/ep01.md --assets testdata/feature_parade/mapping.json -o /tmp/ep01.json
+bin/lsc validate testdata/feature_parade/ep01.ls --assets testdata/feature_parade/mapping.json
+bin/lsc compile  testdata/feature_parade/ep01.ls --assets testdata/feature_parade/mapping.json -o /tmp/ep01.json
 
 # 全部重生成 golden
 for f in ep01 ep02 bad01 cont01 stress; do
-  bin/mss compile testdata/feature_parade/$f.md \
+  bin/lsc compile testdata/feature_parade/$f.md \
     --assets testdata/feature_parade/mapping.json \
     -o testdata/feature_parade/${f}_output.json
 done
@@ -286,7 +286,7 @@ Episode, GateBlock, NextLeaf, EndLeaf, EndingNode, PauseNode, BgSetNode, CharSho
 1. **对白即清单** —— 每个 `[T##]` 编号直接写进旁白/独白，测试者播放到哪就知道测到哪
 2. **Gate 路由封闭** —— 所有 `@next` 指向本测试集内实际存在的 .md 文件；`@end` 当场终态
 3. **剧情极简** —— 无情节铺陈，只承载功能点
-4. **一次跑通** —— 5 个文件 + 一次 compile 就能回归整个 MSS 表面
+4. **一次跑通** —— 5 个文件 + 一次 compile 就能回归整个 LS 表面
 5. **真实素材** —— 所有 URL 由 OSS mapping 拼接，可在前端播放器直接播出
 
 ## 维护

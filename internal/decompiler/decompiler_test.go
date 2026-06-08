@@ -8,17 +8,17 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/cdotlock/moonshort-script/internal/emitter"
-	"github.com/cdotlock/moonshort-script/internal/lexer"
-	"github.com/cdotlock/moonshort-script/internal/parser"
-	"github.com/cdotlock/moonshort-script/internal/resolver"
-	"github.com/cdotlock/moonshort-script/internal/validator"
+	"github.com/cdotlock/lunascripts/internal/emitter"
+	"github.com/cdotlock/lunascripts/internal/lexer"
+	"github.com/cdotlock/lunascripts/internal/parser"
+	"github.com/cdotlock/lunascripts/internal/resolver"
+	"github.com/cdotlock/lunascripts/internal/validator"
 )
 
 // fixedResolver is an in-memory emitter.AssetResolver wired with the asset
-// table for the inline MSS sources used in these tests. Returning a stable
+// table for the inline LS sources used in these tests. Returning a stable
 // URL for every name lets the decompiler reconstruct the mapping; the
-// decompiler in turn must surface those names in the recovered MSS source.
+// decompiler in turn must surface those names in the recovered LS source.
 type fixedResolver struct {
 	baseURL    string
 	bg         map[string]string
@@ -87,11 +87,11 @@ func (r *fixedResolver) ResolveMinigame(name string) (string, error) {
 	return r.baseURL + "/" + r.minigames[name], nil
 }
 
-// compileMSS parses, validates and emits an MSS source through the live
+// compileLS parses, validates and emits an LS source through the live
 // pipeline. It is the inverse of Decompile and the test bedrock: the only
 // way we know the decompiler produced legal source is to send it back
 // through the same parser/emitter and compare the JSON byte-for-byte.
-func compileMSS(t *testing.T, source string) []byte {
+func compileLS(t *testing.T, source string) []byte {
 	t.Helper()
 	l := lexer.New(source)
 	p := parser.New(l)
@@ -109,8 +109,8 @@ func compileMSS(t *testing.T, source string) []byte {
 	return out
 }
 
-// TestDecompileRoundTrip drives a representative MSS source through the full
-// loop: MSS → JSON → MSS' → JSON'. The two JSONs MUST be deep-equal. This is
+// TestDecompileRoundTrip drives a representative LS source through the full
+// loop: LS → JSON → LS' → JSON'. The two JSONs MUST be deep-equal. This is
 // the strongest end-to-end guarantee for the decompiler — every step type,
 // every condition kind, every gate leaf must round-trip without semantic loss.
 func TestDecompileRoundTrip(t *testing.T) {
@@ -195,7 +195,7 @@ func TestDecompileRoundTrip(t *testing.T) {
 }
 `
 
-	original := compileMSS(t, source)
+	original := compileLS(t, source)
 
 	result, err := Decompile(original)
 	if err != nil {
@@ -208,7 +208,7 @@ func TestDecompileRoundTrip(t *testing.T) {
 		t.Fatalf("decompiled source missing episode header:\n%s", result.Episodes[0].Source)
 	}
 
-	recompiled := compileMSSWithMapping(t, result.Episodes[0].Source, result.Mapping)
+	recompiled := compileLSWithMapping(t, result.Episodes[0].Source, result.Mapping)
 	assertJSONEqual(t, original, recompiled)
 }
 
@@ -226,7 +226,7 @@ func TestDecompileCharShowNoPosition(t *testing.T) {
   }
 }
 `
-	original := compileMSS(t, source)
+	original := compileLS(t, source)
 	result, err := Decompile(original)
 	if err != nil {
 		t.Fatalf("decompile: %v", err)
@@ -256,7 +256,7 @@ func TestDecompileBubble(t *testing.T) {
   }
 }
 `
-	original := compileMSS(t, source)
+	original := compileLS(t, source)
 	result, err := Decompile(original)
 	if err != nil {
 		t.Fatalf("decompile: %v", err)
@@ -285,7 +285,7 @@ func TestDecompileMusicAndStop(t *testing.T) {
   }
 }
 `
-	original := compileMSS(t, source)
+	original := compileLS(t, source)
 	result, err := Decompile(original)
 	if err != nil {
 		t.Fatalf("decompile: %v", err)
@@ -318,7 +318,7 @@ func TestDecompileSfx(t *testing.T) {
   }
 }
 `
-	original := compileMSS(t, source)
+	original := compileLS(t, source)
 	result, err := Decompile(original)
 	if err != nil {
 		t.Fatalf("decompile: %v", err)
@@ -344,7 +344,7 @@ func TestDecompileCgLeaf(t *testing.T) {
   }
 }
 `
-	original := compileMSS(t, source)
+	original := compileLS(t, source)
 	result, err := Decompile(original)
 	if err != nil {
 		t.Fatalf("decompile: %v", err)
@@ -377,7 +377,7 @@ func TestDecompileGateWithEndLeaves(t *testing.T) {
   }
 }
 `
-	original := compileMSS(t, source)
+	original := compileLS(t, source)
 	result, err := Decompile(original)
 	if err != nil {
 		t.Fatalf("decompile: %v", err)
@@ -412,7 +412,7 @@ func TestDecompileGateSchemeBEnding(t *testing.T) {
   }
 }
 `
-	original := compileMSS(t, source)
+	original := compileLS(t, source)
 
 	// Sanity-check Scheme B fired in the emitter output.
 	var raw map[string]interface{}
@@ -435,7 +435,7 @@ func TestDecompileGateSchemeBEnding(t *testing.T) {
 		t.Fatalf("decompiled source missing @end to_be_continued:\n%s", src)
 	}
 
-	recompiled := compileMSSWithMapping(t, result.Episodes[0].Source, result.Mapping)
+	recompiled := compileLSWithMapping(t, result.Episodes[0].Source, result.Mapping)
 	assertJSONEqual(t, original, recompiled)
 }
 
@@ -479,7 +479,7 @@ func TestDecompileComparisonOperandKinds(t *testing.T) {
   }
 }
 `
-	original := compileMSS(t, source)
+	original := compileLS(t, source)
 	result, err := Decompile(original)
 	if err != nil {
 		t.Fatalf("decompile: %v", err)
@@ -501,7 +501,7 @@ func TestDecompileComparisonOperandKinds(t *testing.T) {
 	}
 
 	// And the whole thing must round-trip back to identical JSON.
-	recompiled := compileMSSWithMapping(t, result.Episodes[0].Source, result.Mapping)
+	recompiled := compileLSWithMapping(t, result.Episodes[0].Source, result.Mapping)
 	assertJSONEqual(t, original, recompiled)
 }
 
@@ -511,7 +511,7 @@ func TestDecompileComparisonOperandKinds(t *testing.T) {
 //   - names them uniquely
 //   - merges every episode's assets into the same mapping output.
 func TestDecompileArrayNamesEpisodes(t *testing.T) {
-	ep1 := compileMSS(t, `@episode main:01 "First" {
+	ep1 := compileLS(t, `@episode main:01 "First" {
   @bg set classroom
   @malia neutral
   @gate {
@@ -519,7 +519,7 @@ func TestDecompileArrayNamesEpisodes(t *testing.T) {
   }
 }
 `)
-	ep2 := compileMSS(t, `@episode main:02 "Second" {
+	ep2 := compileLS(t, `@episode main:02 "Second" {
   @bg set school_yard
   @easton hopeful
   @gate {
@@ -555,14 +555,14 @@ func TestDecompileArrayNamesEpisodes(t *testing.T) {
 	}
 }
 
-// compileMSSWithMapping is the helper used by round-trip tests. It writes
+// compileLSWithMapping is the helper used by round-trip tests. It writes
 // the recovered mapping JSON to a tempfile, loads it into the real
-// resolver, then compiles the recovered MSS source against it — proving
+// resolver, then compiles the recovered LS source against it — proving
 // the asset table the decompiler emitted is consistent with the source it
 // emitted in the same pass. Going through resolver.LoadMapping (rather
 // than reusing newFixedResolver) ensures the mapping JSON shape itself is
 // part of the contract under test.
-func compileMSSWithMapping(t *testing.T, source, mappingJSON []byte) []byte {
+func compileLSWithMapping(t *testing.T, source, mappingJSON []byte) []byte {
 	t.Helper()
 	dir := t.TempDir()
 	mappingPath := filepath.Join(dir, "assets_mapping.json")
@@ -605,7 +605,7 @@ func TestDecompileMappingShape(t *testing.T) {
   }
 }
 `
-	original := compileMSS(t, source)
+	original := compileLS(t, source)
 	result, err := Decompile(original)
 	if err != nil {
 		t.Fatalf("decompile: %v", err)

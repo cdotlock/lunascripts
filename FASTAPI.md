@@ -1,6 +1,6 @@
-# MoonShort Script — FastAPI HTTP API
+# Lunascripts — FastAPI HTTP API
 
-This directory provides a FastAPI HTTP wrapper around the `mss` CLI binary. An LLM (or any HTTP client) can compile, decompile, validate, and fix MSS scripts exactly as it would via the local CLI, with proper error reporting. **Every CLI subcommand has a matching HTTP endpoint.**
+This directory provides a FastAPI HTTP wrapper around the `lsc` CLI binary. An LLM (or any HTTP client) can compile, decompile, validate, and fix LS scripts exactly as it would via the local CLI, with proper error reporting. **Every CLI subcommand has a matching HTTP endpoint.**
 
 ## Public hosted instance
 
@@ -8,7 +8,7 @@ This directory provides a FastAPI HTTP wrapper around the `mss` CLI binary. An L
 >
 > Swagger docs: https://moonshort-script-production.up.railway.app/docs
 >
-> Deployed on Railway from `main`. The Dockerfile in this repo (multi-stage: Go build → Python uvicorn) is the source of truth — every push to `main` that touches `cmd/`, `internal/`, `api_server.py`, `requirements.txt`, or `Dockerfile` should be redeployed via `railway up --service moonshort-script --ci`. Railway's healthcheck hits `/health` and restarts on failure.
+> Deployed on Railway from `main`. The Dockerfile in this repo (multi-stage: Go build → Python uvicorn) is the source of truth — every push to `main` that touches `cmd/`, `internal/`, `api_server.py`, `requirements.txt`, or `Dockerfile` should be redeployed via `railway up --service lunascripts --ci`. Railway's healthcheck hits `/health` and restarts on failure.
 
 Smoke-tested from outside:
 
@@ -18,7 +18,7 @@ BASE=https://moonshort-script-production.up.railway.app
 curl -s "$BASE/health"
 # {"status":"ok"}
 
-curl -s -X POST "$BASE/validate" -F "script=@testdata/minimal.md"
+curl -s -X POST "$BASE/validate" -F "script=@testdata/minimal.ls"
 # {"valid":true,"errors":null,"stdout":"OK"}
 ```
 
@@ -29,7 +29,7 @@ curl -s -X POST "$BASE/validate" -F "script=@testdata/minimal.md"
 ```bash
 # 1. Build the binary (one time)
 cd <repo-root>
-go build -o bin/mss ./cmd/mss
+go build -o bin/lscc ./cmd/lscc
 
 # 2. Install Python dependencies (one time)
 pip install -r requirements.txt
@@ -46,11 +46,11 @@ The server is now listening on `http://localhost:8080`. All endpoints return JSO
 
 | HTTP endpoint      | CLI equivalent                                                   |
 |--------------------|------------------------------------------------------------------|
-| `POST /compile`    | `mss compile file.md [--assets mapping.json] -o output.json`     |
-| `POST /compile-dir`| `mss compile dir/ [--assets mapping.json] -o output.json`        |
-| `POST /decompile`  | `mss decompile input.json [-o output-dir]`                        |
-| `POST /validate`   | `mss validate file.md [--assets mapping.json]`                    |
-| `POST /fix`        | `mss fix file.md [-o output.md]`                                  |
+| `POST /compile`    | `lsc compile file.ls [--assets mapping.json] -o output.json`     |
+| `POST /compile-dir`| `lsc compile dir/ [--assets mapping.json] -o output.json`        |
+| `POST /decompile`  | `lsc decompile input.json [-o output-dir]`                        |
+| `POST /validate`   | `lsc validate file.ls [--assets mapping.json]`                    |
+| `POST /fix`        | `lsc fix file.ls [-o output.ls]`                                  |
 | `GET /health`      | (server health check)                                            |
 
 ---
@@ -59,36 +59,36 @@ The server is now listening on `http://localhost:8080`. All endpoints return JSO
 
 ### `GET /health`
 
-Check whether the server is alive and the `mss` binary is found.
+Check whether the server is alive and the `lsc` binary is found.
 
 ```bash
 curl -s http://localhost:8080/health
 # → {"status":"ok"}
 # or
-# → {"status":"unhealthy","reason":"mss binary not found"}   (HTTP 503)
+# → {"status":"unhealthy","reason":"lsc binary not found"}   (HTTP 503)
 ```
 
 ---
 
 ### `POST /compile`
 
-Compile a single MSS `.md` script into structured JSON.
+Compile a single LS `.md` script into structured JSON.
 
 **Request:** `multipart/form-data`
 
 | Field    | Type     | Required | Description                          |
 |----------|----------|----------|--------------------------------------|
-| `script` | file     | yes      | MSS script file (`.md`), UTF-8 text  |
+| `script` | file     | yes      | LS script file (`.md`), UTF-8 text  |
 | `assets` | file     | no       | Asset mapping JSON (see spec below)  |
 
 ```bash
 # Minimal compile (no assets)
 curl -s -X POST http://localhost:8080/compile \
-  -F "script=@episode.md"
+  -F "script=@episode.ls"
 
 # With asset mapping
 curl -s -X POST http://localhost:8080/compile \
-  -F "script=@episode.md" \
+  -F "script=@episode.ls" \
   -F "assets=@mapping.json"
 ```
 
@@ -122,7 +122,7 @@ curl -s -X POST http://localhost:8080/compile \
 
 ### `POST /compile-dir`
 
-Compile a directory of MSS `.md` files (uploaded as a zip archive) into structured JSON. Equivalent to `mss compile <dir/>`.
+Compile a directory of LS `.ls` files (uploaded as a zip archive) into structured JSON. Equivalent to `lsc compile <dir/>`.
 
 **Request:** `multipart/form-data`
 
@@ -133,7 +133,7 @@ Compile a directory of MSS `.md` files (uploaded as a zip archive) into structur
 
 ```bash
 # Zip up an episode directory and compile
-zip -j episodes.zip 01.md 02.md 03.md
+zip -j episodes.zip 01.ls 02.ls 03.md
 curl -s -X POST http://localhost:8080/compile-dir \
   -F "zipfile=@episodes.zip" \
   -F "assets=@mapping.json"
@@ -154,13 +154,13 @@ curl -s -X POST http://localhost:8080/compile-dir \
 
 ### `POST /decompile`
 
-Decompile compiled MSS JSON back into MSS source text and an asset mapping.
+Decompile compiled LS JSON back into LS source text and an asset mapping.
 
 **Request:** `multipart/form-data`
 
 | Field      | Type | Required | Description                          |
 |------------|------|----------|--------------------------------------|
-| `compiled` | file | yes      | Compiled MSS JSON file, UTF-8 text   |
+| `compiled` | file | yes      | Compiled LS JSON file, UTF-8 text   |
 
 ```bash
 curl -s -X POST http://localhost:8080/decompile \
@@ -172,7 +172,7 @@ curl -s -X POST http://localhost:8080/decompile \
 ```json
 {
   "episodes": {
-    "mss.md": "@episode main:01 \"Test\" {\n\n  @bg set classroom_morning fade\n  ...\n}\n"
+    "episode.ls": "@episode main:01 \"Test\" {\n\n  @bg set classroom_morning fade\n  ...\n}\n"
   },
   "asset_mapping": {
     "base_url": "",
@@ -182,7 +182,7 @@ curl -s -X POST http://localhost:8080/decompile \
 }
 ```
 
-- `episodes`: map of filename → MSS source text. Typically keyed as `"mss.md"`.
+- `episodes`: map of filename → LS source text. Typically keyed as `"episode.ls"`.
 - `asset_mapping`: the recovered asset mapping (may be empty/default if the original input had no assets).
 - `warnings`: non-fatal diagnostics (e.g., `"unable to fully reconstruct gate X"`).
 
@@ -198,18 +198,18 @@ curl -s -X POST http://localhost:8080/decompile \
 
 ### `POST /validate`
 
-Validate an MSS script for syntax errors without producing compiled output. Equivalent to `mss validate`.
+Validate an LS script for syntax errors without producing compiled output. Equivalent to `lsc validate`.
 
 **Request:** `multipart/form-data`
 
 | Field    | Type | Required | Description                          |
 |----------|------|----------|--------------------------------------|
-| `script` | file | yes      | MSS script file (`.md`), UTF-8 text  |
+| `script` | file | yes      | LS script file (`.md`), UTF-8 text  |
 | `assets` | file | no       | Asset mapping JSON (optional)        |
 
 ```bash
 curl -s -X POST http://localhost:8080/validate \
-  -F "script=@episode.md"
+  -F "script=@episode.ls"
 ```
 
 **Success (200) — always returns 200:**
@@ -230,7 +230,7 @@ curl -s -X POST http://localhost:8080/validate \
 
 ### `POST /fix`
 
-Auto-fix common issues in an MSS script. Equivalent to `mss fix`. Two modes:
+Auto-fix common issues in an LS script. Equivalent to `lsc fix`. Two modes:
 
 **Fix mode (default):** Returns the fixed script text.
 
@@ -301,11 +301,11 @@ When a mapping is provided, asset `url` fields in the compiled output are resolv
 BASE=http://localhost:8080
 
 # Validate first
-curl -s -X POST $BASE/validate -F "script=@my_episode.md"
+curl -s -X POST $BASE/validate -F "script=@my_episode.ls"
 
 # Compile a script
 curl -s -X POST $BASE/compile \
-  -F "script=@my_episode.md" \
+  -F "script=@my_episode.ls" \
   -F "assets=@assets.json" \
   -o compiled.json
 
@@ -318,7 +318,7 @@ curl -s -X POST $BASE/decompile \
   -o decompiled.json
 
 # decompiled.json contains:
-#   .episodes["mss.md"]  → reconstructed MSS source
+#   .episodes["episode.ls"]  → reconstructed LS source
 #   .asset_mapping       → recovered asset map
 #   .warnings            → any non-fatal issues
 ```
@@ -331,18 +331,18 @@ curl -s -X POST $BASE/decompile \
 BASE=http://localhost:8080
 
 # 1. Validate
-RESULT=$(curl -s -X POST $BASE/validate -F "script=@episode.md")
+RESULT=$(curl -s -X POST $BASE/validate -F "script=@episode.ls")
 if ! echo "$RESULT" | python3 -c "import sys,json; sys.exit(0 if json.load(sys.stdin)['valid'] else 1)"; then
   echo "Script invalid: $(echo $RESULT | python3 -c "import sys,json; print(json.load(sys.stdin)['errors'])")"
   # 2. Try to auto-fix
-  FIXED=$(curl -s -X POST $BASE/fix -F "script=@episode.md" | python3 -c "import sys,json; print(json.load(sys.stdin)['fixed'])")
-  echo "$FIXED" > episode.md
+  FIXED=$(curl -s -X POST $BASE/fix -F "script=@episode.ls" | python3 -c "import sys,json; print(json.load(sys.stdin)['fixed'])")
+  echo "$FIXED" > episode.ls
   # 3. Re-validate
-  curl -s -X POST $BASE/validate -F "script=@episode.md"
+  curl -s -X POST $BASE/validate -F "script=@episode.ls"
 fi
 
 # 4. Compile
-curl -s -X POST $BASE/compile -F "script=@episode.md" -F "assets=@mapping.json" -o compiled.json
+curl -s -X POST $BASE/compile -F "script=@episode.ls" -F "assets=@mapping.json" -o compiled.json
 
 # 5. Round-trip test
 curl -s -X POST $BASE/decompile -F "compiled=@compiled.json" | python3 -m json.tool

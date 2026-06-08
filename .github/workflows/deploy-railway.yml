@@ -1,6 +1,6 @@
 name: Deploy to Railway
 
-# Auto-deploys the mss FastAPI service to Railway whenever main is pushed
+# Auto-deploys the ls FastAPI service to Railway whenever main is pushed
 # with changes that affect the runtime (Go source, Python wrapper, Docker,
 # runtime config). Docs-only commits skip the build.
 #
@@ -46,6 +46,6 @@ jobs:
           railway link \
             --project 64a837fc-1712-492f-b571-e1fec8090cd7 \
             --environment production \
-            --service moonshort-script
-          railway up --service moonshort-script --ci
+            --service lunascripts
+          railway up --service lunascripts --ci
         shell: bash

@@ -1,4 +1,4 @@
-# ─── Stage 1: build the mss Go binary ──────────────────────────────────
+# ─── Stage 1: build the lsc Go binary ──────────────────────────────────
 FROM golang:1.23-alpine AS gobuild
 
 WORKDIR /src
@@ -7,7 +7,7 @@ RUN go mod download || true
 
 COPY cmd ./cmd
 COPY internal ./internal
-RUN CGO_ENABLED=0 go build -o /out/mss ./cmd/mss
+RUN CGO_ENABLED=0 go build -o /out/lscc ./cmd/lscc
 
 # ─── Stage 2: Python runtime serving FastAPI ───────────────────────────
 FROM python:3.12-slim
@@ -18,7 +18,7 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY api_server.py ./
-COPY --from=gobuild /out/mss /app/bin/mss
+COPY --from=gobuild /out/lsc /app/bin/lscc
 
 ENV PORT=8080
 EXPOSE 8080

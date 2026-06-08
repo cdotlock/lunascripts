@@ -1,4 +1,4 @@
-# MSS `@signal int` — 作者自定义的跨集持久整数变量
+# LS `@signal int` — 作者自定义的跨集持久整数变量
 
 > 扩展 `@signal` 指令，新增 `int` kind，作为作者可自由声明、跨集持久的整数计数器。与 `@affection` 并列，但命名自由、不绑定角色。
 
@@ -8,7 +8,7 @@
 
 ### 1.1 当前格局
 
-MSS 目前有三类持久数值/状态：
+LS 目前有三类持久数值/状态：
 
 | 机制 | 写入 | 读取 | 命名 |
 |------|------|------|------|
@@ -202,7 +202,7 @@ san, cha, atk, hp, xp, dex, int, str, wis, con
 
 ## 6. 文档更新点
 
-按现有 `MSS-SPEC.md` 结构：
+按现有 `LS-SPEC.md` 结构：
 
 1. **4.7 状态变更** — 重写 `@signal` 小节：
    - 增加 kind 对比表：`mark` vs `int`
@@ -251,13 +251,13 @@ san, cha, atk, hp, xp, dex, int, str, wis, con
 
 ### 7.4 集成 / fixture
 
-- 在 `testdata/` 的 MSS 全功能测试脚本里加一段 `@signal int` 用例（赋值 + 增减 + 条件读取），证明端到端 pipeline 正常
+- 在 `testdata/` 的 LS 全功能测试脚本里加一段 `@signal int` 用例（赋值 + 增减 + 条件读取），证明端到端 pipeline 正常
 
 ---
 
 ## 8. 验收标准
 
-- [ ] `MSS-SPEC.md` 按 §6 更新
+- [ ] `LS-SPEC.md` 按 §6 更新
 - [ ] Parser 支持三种写入形态 + 错误诊断
 - [ ] Validator 拦截引擎保留名冲突
 - [ ] Emitter 输出 `signal kind=int` JSON step

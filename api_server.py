@@ -10,17 +10,17 @@ from typing import Optional
 from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.responses import JSONResponse, PlainTextResponse
 
-MSS_BIN = Path(__file__).resolve().parent / "bin" / "mss"
+LS_BIN = Path(__file__).resolve().parent / "bin" / "lsc"
 
 app = FastAPI(
-    title="MoonShort Script API",
-    description="Compile, decompile, validate, and fix MoonShort Script (MSS) files via HTTP.",
+    title="Lunascripts API",
+    description="Compile, decompile, validate, and fix Lunascripts (LS) files via HTTP.",
     version="1.2.0",
 )
 
 
-def _run_mss(*args: str, workdir: Optional[str] = None, timeout: int = 30) -> subprocess.CompletedProcess:
-    cmd = [str(MSS_BIN), *args]
+def _run_ls(*args: str, workdir: Optional[str] = None, timeout: int = 30) -> subprocess.CompletedProcess:
+    cmd = [str(LS_BIN), *args]
     return subprocess.run(
         cmd,
         capture_output=True,
@@ -34,20 +34,20 @@ def _run_mss(*args: str, workdir: Optional[str] = None, timeout: int = 30) -> su
 
 @app.post("/compile")
 async def compile_script(
-    script: UploadFile = File(..., description="MSS script file (.md)"),
+    script: UploadFile = File(..., description="LS script file (.ls)"),
     assets: Optional[UploadFile] = File(default=None, description="Optional assets mapping JSON file"),
 ):
     """
-    Compile a single MSS script (.md) into structured JSON.
+    Compile a single LS script (.ls) into structured JSON.
 
     Returns the compiled episode JSON. If an assets mapping is provided,
     asset semantic names are resolved to full URLs.
     """
-    tmpdir = tempfile.mkdtemp(prefix="mss_compile_")
+    tmpdir = tempfile.mkdtemp(prefix="ls_compile_")
     try:
         script_bytes = await script.read()
         script_text = script_bytes.decode("utf-8")
-        script_path = os.path.join(tmpdir, "script.md")
+        script_path = os.path.join(tmpdir, "script.ls")
         with open(script_path, "w", encoding="utf-8") as f:
             f.write(script_text)
 
@@ -62,7 +62,7 @@ async def compile_script(
             args.insert(2, "--assets")
             args.insert(3, assets_path)
 
-        proc = _run_mss(*args, timeout=30)
+        proc = _run_ls(*args, timeout=30)
 
         if proc.returncode != 0:
             raise HTTPException(status_code=422, detail={"error": proc.stderr.strip()})
@@ -87,19 +87,19 @@ async def compile_script(
 
 @app.post("/compile-dir")
 async def compile_directory(
-    zipfile_upload: UploadFile = File(..., alias="zipfile", description="Zip archive of an MSS episode directory"),
+    zipfile_upload: UploadFile = File(..., alias="zipfile", description="Zip archive of an LS episode directory"),
     assets: Optional[UploadFile] = File(default=None, description="Optional assets mapping JSON file"),
 ):
     """
     Compile an entire episode directory (uploaded as a zip) into structured JSON.
 
-    The zip should contain one or more `.md` files (e.g. 01.md, 02.md, …).
-    Directory structure inside the zip is flattened — all `.md` files are
+    The zip should contain one or more `.ls` files (e.g. 01.ls, 02.ls, …).
+    Directory structure inside the zip is flattened — all `.ls` / `.episode.ls` files are
     discovered recursively and compiled together.
 
     Returns the compiled novel JSON (keyed by episode_id).
     """
-    tmpdir = tempfile.mkdtemp(prefix="mss_compiledir_")
+    tmpdir = tempfile.mkdtemp(prefix="ls_compiledir_")
     try:
         zip_bytes = await zipfile_upload.read()
         zip_path = os.path.join(tmpdir, "input.zip")
@@ -122,7 +122,7 @@ async def compile_directory(
             args.insert(2, "--assets")
             args.insert(3, assets_path)
 
-        proc = _run_mss(*args, timeout=60)
+        proc = _run_ls(*args, timeout=60)
 
         if proc.returncode != 0:
             raise HTTPException(status_code=422, detail={"error": proc.stderr.strip()})
@@ -147,14 +147,14 @@ async def compile_directory(
 
 @app.post("/decompile")
 async def decompile_json(
-    compiled: UploadFile = File(..., description="Compiled MSS JSON file"),
+    compiled: UploadFile = File(..., description="Compiled LS JSON file"),
 ):
     """
-    Decompile compiled MSS JSON back into MSS script and asset mapping.
+    Decompile compiled LS JSON back into LS script and asset mapping.
 
-    Returns the reconstructed MSS source (.md) and the recovered asset mapping.
+    Returns the reconstructed LS source (.ls) and the recovered asset mapping.
     """
-    tmpdir = tempfile.mkdtemp(prefix="mss_decompile_")
+    tmpdir = tempfile.mkdtemp(prefix="ls_decompile_")
     try:
         compiled_bytes = await compiled.read()
         compiled_text = compiled_bytes.decode("utf-8")
@@ -164,7 +164,7 @@ async def decompile_json(
 
         output_dir = os.path.join(tmpdir, "decompiled")
 
-        proc = _run_mss("decompile", input_path, "-o", output_dir, timeout=30)
+        proc = _run_ls("decompile", input_path, "-o", output_dir, timeout=30)
 
         warnings = []
         if proc.stderr.strip():
@@ -183,20 +183,20 @@ async def decompile_json(
                 detail={"error": proc.stderr.strip() or "Decompilation produced no output"},
             )
 
-        mss_files = {}
+        ls_files = {}
         mapping = None
         for fname in os.listdir(output_dir):
             fpath = os.path.join(output_dir, fname)
-            if fname.endswith(".md") or fname.endswith(".mss.md"):
+            if fname.endswith(".ls") or fname.endswith(".episode.ls"):
                 with open(fpath, "r", encoding="utf-8") as f:
-                    mss_files[fname] = f.read()
+                    ls_files[fname] = f.read()
             elif fname.endswith(".json"):
                 with open(fpath, "r", encoding="utf-8") as f:
                     mapping = json.load(f)
 
         return JSONResponse(
             content={
-                "episodes": mss_files,
+                "episodes": ls_files,
                 "asset_mapping": mapping,
                 "warnings": warnings,
             }
@@ -216,19 +216,19 @@ async def decompile_json(
 
 @app.post("/validate")
 async def validate_script(
-    script: UploadFile = File(..., description="MSS script file (.md) to validate"),
+    script: UploadFile = File(..., description="LS script file (.ls) to validate"),
     assets: Optional[UploadFile] = File(default=None, description="Optional assets mapping JSON file"),
 ):
     """
-    Validate an MSS script for syntax errors without compiling.
+    Validate an LS script for syntax errors without compiling.
 
     Returns a validation report: valid (true/false) and any error messages.
     """
-    tmpdir = tempfile.mkdtemp(prefix="mss_validate_")
+    tmpdir = tempfile.mkdtemp(prefix="ls_validate_")
     try:
         script_bytes = await script.read()
         script_text = script_bytes.decode("utf-8")
-        script_path = os.path.join(tmpdir, "script.md")
+        script_path = os.path.join(tmpdir, "script.ls")
         with open(script_path, "w", encoding="utf-8") as f:
             f.write(script_text)
 
@@ -243,7 +243,7 @@ async def validate_script(
             args.append("--assets")
             args.append(assets_path)
 
-        proc = _run_mss(*args, timeout=30)
+        proc = _run_ls(*args, timeout=30)
 
         return JSONResponse(
             content={
@@ -267,28 +267,28 @@ async def validate_script(
 
 @app.post("/fix")
 async def fix_script(
-    script: UploadFile = File(..., description="MSS script file (.md) to fix"),
+    script: UploadFile = File(..., description="LS script file (.ls) to fix"),
     check: bool = Query(default=False, description="Dry-run: report issues without writing changes"),
 ):
     """
-    Auto-fix common issues in an MSS script.
+    Auto-fix common issues in an LS script.
 
     In fix mode (default): returns the fixed script text and a list of
     fixes applied.
 
     In check mode (?check=true): returns a list of issues found without
-    modifying the script (like `mss fix --check`).
+    modifying the script (like `lsc fix --check`).
     """
-    tmpdir = tempfile.mkdtemp(prefix="mss_fix_")
+    tmpdir = tempfile.mkdtemp(prefix="ls_fix_")
     try:
         script_bytes = await script.read()
         script_text = script_bytes.decode("utf-8")
-        script_path = os.path.join(tmpdir, "script.md")
+        script_path = os.path.join(tmpdir, "script.ls")
         with open(script_path, "w", encoding="utf-8") as f:
             f.write(script_text)
 
         if check:
-            proc = _run_mss("fix", script_path, "--check", timeout=30)
+            proc = _run_ls("fix", script_path, "--check", timeout=30)
             return JSONResponse(
                 content={
                     "check": True,
@@ -297,8 +297,8 @@ async def fix_script(
                 }
             )
         else:
-            output_path = os.path.join(tmpdir, "fixed.md")
-            proc = _run_mss("fix", script_path, "-o", output_path, timeout=30)
+            output_path = os.path.join(tmpdir, "fixed.ls")
+            proc = _run_ls("fix", script_path, "-o", output_path, timeout=30)
 
             if proc.returncode != 0 and not os.path.exists(output_path):
                 raise HTTPException(status_code=422, detail={"error": proc.stderr.strip()})
@@ -335,7 +335,7 @@ async def root():
     """Root redirect to docs."""
     return JSONResponse(
         content={
-            "service": "MoonShort Script API",
+            "service": "Lunascripts API",
             "version": "1.2.0",
             "endpoints": {
                 "health": "GET /health",
@@ -355,9 +355,9 @@ async def root():
 @app.get("/health")
 async def health():
     """Health check endpoint."""
-    if not MSS_BIN.exists():
+    if not LS_BIN.exists():
         return JSONResponse(
             status_code=503,
-            content={"status": "unhealthy", "reason": "mss binary not found"},
+            content={"status": "unhealthy", "reason": "lsc binary not found"},
         )
     return {"status": "ok"}

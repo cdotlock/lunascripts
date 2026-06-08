@@ -1,6 +1,6 @@
-# MSS Directive Quick Reference
+# LS Directive Quick Reference
 
-> Authoritative spec: `MSS-SPEC.md`. JSON shape: `docs/JSON-OUTPUT.md`. Engine contract: `docs/ENGINE-INTEGRATION.md`. This page is a cheat sheet, not a substitute.
+> Authoritative spec: `LS-SPEC.md`. JSON shape: `docs/JSON-OUTPUT.md`. Engine contract: `docs/ENGINE-INTEGRATION.md`. This page is a cheat sheet, not a substitute.
 
 ## Structure Control
 
