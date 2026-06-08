@@ -14,17 +14,17 @@ go build -o bin/lscc ./cmd/lscc
 
 ```bash
 # Compile a single episode
-lsc compile episode.ls --assets mapping.json -o output.json
+lsc compile episode.ls.md --assets mapping.json -o output.json
 
 # Compile an entire novel directory
 lsc compile novel_001/main/ --assets mapping.json -o novel.json
 
 # Decompile compiled JSON back to LS + recovered asset mapping
 lsc decompile output.json
-# writes output_decompiled/episode.ls and output_decompiled/assets_mapping.json
+# writes output_decompiled/episode.ls.md and output_decompiled/assets_mapping.json
 
 # Validate syntax only
-lsc validate episode.ls
+lsc validate episode.ls.md
 ```
 
 ## Script Format

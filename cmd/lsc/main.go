@@ -39,11 +39,11 @@ func usage() {
 	fmt.Fprintln(os.Stderr, "lsc - Lunascripts interpreter")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Usage:")
-	fmt.Fprintln(os.Stderr, "  lsc compile <file.ls|dir/> [--assets mapping.json] [-o output.json]")
-	fmt.Fprintln(os.Stderr, "  lsc decompile <output.json> [-o output-dir]  Rebuild .ls + assets_mapping.json")
-	fmt.Fprintln(os.Stderr, "  lsc validate <file.ls> [--assets mapping.json]")
-	fmt.Fprintln(os.Stderr, "  lsc fix <file.ls> [-o output.ls]     Fix and write (in-place if no -o)")
-	fmt.Fprintln(os.Stderr, "  lsc fix <file.ls> --check            Dry run: report issues, don't write")
+	fmt.Fprintln(os.Stderr, "  lsc compile <file.ls|file.ls.md|dir/> [--assets mapping.json] [-o output.json]")
+	fmt.Fprintln(os.Stderr, "  lsc decompile <output.json> [-o output-dir]  Rebuild .ls.md + assets_mapping.json")
+	fmt.Fprintln(os.Stderr, "  lsc validate <file.ls|file.ls.md> [--assets mapping.json]")
+	fmt.Fprintln(os.Stderr, "  lsc fix <file.ls|file.ls.md> [-o output.ls.md]     Fix and write (in-place if no -o)")
+	fmt.Fprintln(os.Stderr, "  lsc fix <file.ls|file.ls.md> --check            Dry run: report issues, don't write")
 	os.Exit(1)
 }
 
@@ -159,7 +159,7 @@ func cmdDecompile(args []string) {
 	for _, ep := range result.Episodes {
 		name := ep.Name
 		if len(result.Episodes) == 1 {
-			name = "episode.ls"
+			name = "episode.ls.md"
 		}
 		path := filepath.Join(outputDir, name)
 		if err := os.WriteFile(path, ep.Source, 0644); err != nil {
@@ -231,7 +231,7 @@ func compileFile(path string, res emitter.AssetResolver) ([]byte, error) {
 }
 
 func isLsSourcePath(path string) bool {
-	return strings.HasSuffix(path, ".ls") || strings.HasSuffix(path, ".ls.md")
+	return strings.HasSuffix(path, ".ls.md") || strings.HasSuffix(path, ".ls")
 }
 
 func compileDir(dir string, res emitter.AssetResolver) ([]byte, error) {

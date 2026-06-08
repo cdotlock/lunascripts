@@ -34,11 +34,11 @@ def _run_ls(*args: str, workdir: Optional[str] = None, timeout: int = 30) -> sub
 
 @app.post("/compile")
 async def compile_script(
-    script: UploadFile = File(..., description="LS script file (.ls)"),
+    script: UploadFile = File(..., description="LS script file (.ls or .ls.md)"),
     assets: Optional[UploadFile] = File(default=None, description="Optional assets mapping JSON file"),
 ):
     """
-    Compile a single LS script (.ls) into structured JSON.
+    Compile a single LS script (.ls or .ls.md) into structured JSON.
 
     Returns the compiled episode JSON. If an assets mapping is provided,
     asset semantic names are resolved to full URLs.
@@ -47,7 +47,7 @@ async def compile_script(
     try:
         script_bytes = await script.read()
         script_text = script_bytes.decode("utf-8")
-        script_path = os.path.join(tmpdir, "script.ls")
+        script_path = os.path.join(tmpdir, "script.ls.md")
         with open(script_path, "w", encoding="utf-8") as f:
             f.write(script_text)
 
@@ -93,8 +93,8 @@ async def compile_directory(
     """
     Compile an entire episode directory (uploaded as a zip) into structured JSON.
 
-    The zip should contain one or more `.ls` files (e.g. 01.ls, 02.ls, …).
-    Directory structure inside the zip is flattened — all `.ls` / `.episode.ls` files are
+    The zip should contain one or more `.ls` / `.ls.md` files (e.g. 01.ls.md, 02.ls.md, …).
+    Directory structure inside the zip is flattened — all `.ls` / `.ls.md` / `.episode.ls` / `.episode.ls.md` files are
     discovered recursively and compiled together.
 
     Returns the compiled novel JSON (keyed by episode_id).
@@ -152,7 +152,7 @@ async def decompile_json(
     """
     Decompile compiled LS JSON back into LS script and asset mapping.
 
-    Returns the reconstructed LS source (.ls) and the recovered asset mapping.
+    Returns the reconstructed LS source (.ls.md) and the recovered asset mapping.
     """
     tmpdir = tempfile.mkdtemp(prefix="ls_decompile_")
     try:
@@ -187,7 +187,12 @@ async def decompile_json(
         mapping = None
         for fname in os.listdir(output_dir):
             fpath = os.path.join(output_dir, fname)
-            if fname.endswith(".ls") or fname.endswith(".episode.ls"):
+            if (
+                fname.endswith(".ls")
+                or fname.endswith(".ls.md")
+                or fname.endswith(".episode.ls")
+                or fname.endswith(".episode.ls.md")
+            ):
                 with open(fpath, "r", encoding="utf-8") as f:
                     ls_files[fname] = f.read()
             elif fname.endswith(".json"):
@@ -216,7 +221,7 @@ async def decompile_json(
 
 @app.post("/validate")
 async def validate_script(
-    script: UploadFile = File(..., description="LS script file (.ls) to validate"),
+    script: UploadFile = File(..., description="LS script file (.ls or .ls.md) to validate"),
     assets: Optional[UploadFile] = File(default=None, description="Optional assets mapping JSON file"),
 ):
     """
@@ -228,7 +233,7 @@ async def validate_script(
     try:
         script_bytes = await script.read()
         script_text = script_bytes.decode("utf-8")
-        script_path = os.path.join(tmpdir, "script.ls")
+        script_path = os.path.join(tmpdir, "script.ls.md")
         with open(script_path, "w", encoding="utf-8") as f:
             f.write(script_text)
 
@@ -267,7 +272,7 @@ async def validate_script(
 
 @app.post("/fix")
 async def fix_script(
-    script: UploadFile = File(..., description="LS script file (.ls) to fix"),
+    script: UploadFile = File(..., description="LS script file (.ls or .ls.md) to fix"),
     check: bool = Query(default=False, description="Dry-run: report issues without writing changes"),
 ):
     """
@@ -283,7 +288,7 @@ async def fix_script(
     try:
         script_bytes = await script.read()
         script_text = script_bytes.decode("utf-8")
-        script_path = os.path.join(tmpdir, "script.ls")
+        script_path = os.path.join(tmpdir, "script.ls.md")
         with open(script_path, "w", encoding="utf-8") as f:
             f.write(script_text)
 
@@ -297,7 +302,7 @@ async def fix_script(
                 }
             )
         else:
-            output_path = os.path.join(tmpdir, "fixed.ls")
+            output_path = os.path.join(tmpdir, "fixed.ls.md")
             proc = _run_ls("fix", script_path, "-o", output_path, timeout=30)
 
             if proc.returncode != 0 and not os.path.exists(output_path):

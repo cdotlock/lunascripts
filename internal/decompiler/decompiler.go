@@ -129,7 +129,7 @@ func episodeFileName(ep map[string]interface{}, idx int) string {
 	if id == "" {
 		id = fmt.Sprintf("episode_%02d", idx+1)
 	}
-	return sanitizeFileName(id) + ".ls"
+	return sanitizeFileName(id) + ".ls.md"
 }
 
 func uniqueEpisodeFileName(name string, used map[string]int) string {
@@ -137,7 +137,7 @@ func uniqueEpisodeFileName(name string, used map[string]int) string {
 	if used[name] == 1 {
 		return name
 	}
-	return strings.TrimSuffix(name, ".ls") + fmt.Sprintf("_%d.ls", used[name])
+	return strings.TrimSuffix(name, ".ls.md") + fmt.Sprintf("_%d.ls.md", used[name])
 }
 
 func sanitizeFileName(s string) string {
