@@ -7,7 +7,7 @@ GOARCH ?= $(shell $(GO) env GOARCH)
 .PHONY: build test package clean
 
 build:
-	$(GO) build -o bin/lsc ./cmd/lscc
+	$(GO) build -o bin/lsc ./cmd/lsc
 
 test:
 	$(GO) test ./... -v
