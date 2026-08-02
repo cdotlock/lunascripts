@@ -42,6 +42,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Configure Git authentication
+        run: gh auth setup-git
       - name: Resolve the unique merged upstream PR
         id: source
         run: |
