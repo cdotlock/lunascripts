@@ -9,11 +9,12 @@
   "seq": 1,
   "steps": [
     {
-      "event": "first_meeting",
-      "id": "0001_sig",
-      "kind": "mark",
-      "type": "signal"
+      "character": "alice",
+      "id": "0001_char",
+      "look": "bob__casual__neutral_calm",
+      "type": "char_show",
+      "url": ""
     }
   ],
-  "title": "Invalid lowercase mark signal"
+  "title": "Legacy three-field owner mismatch"
 }

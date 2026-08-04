@@ -11,6 +11,25 @@ behavior fixtures. A release whose declaration understates that bound is
 rejected. Stored production content is always audited read-only; repairs and
 all integration or production actions remain explicit human workflows.
 
+## 2.1.0
+
+Backward-compatible authoring contract:
+
+- New producer-authored content standardizes character looks as
+  `<char>__<outfit>__<demeanor>[-<action>]`; Episode Writer and IDE producer
+  tooling own strict shape and owner-equality enforcement.
+- The parser, compiler, validator, and runtime keep every legacy opaque look
+  key compatible and emit it unchanged, including bare keys, existing
+  four-field stateful keys, malformed keys, and three-field canonical-looking
+  keys whose owner differs from the staged character.
+- Standalone unary `!` remains illegal in every condition position; no unary
+  AST form is introduced.
+- The comparison operator `!=` remains legal and continues to emit as `!=`.
+- Compiled Episode JSON now includes `ls_contract_version: "2.1.0"`.
+
+Migration: none. Existing content remains valid; producer tooling adopts and
+enforces the canonical look form only for newly authored content.
+
 ## 2.0.0
 
 Breaking authoring contract:
