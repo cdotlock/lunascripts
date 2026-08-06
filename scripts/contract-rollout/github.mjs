@@ -144,7 +144,7 @@ export function createGitHubClient(runner) {
       return paged(["api", `repos/${repository}/pulls/${number}/files?per_page=100`], "GitHub pull request files").map((row) => ({
         path: row.filename,
         previousPath: row.previous_filename ?? null,
-        status: row.status,
+        status: row.status === "removed" ? "deleted" : row.status,
         headBlobSha: row.sha,
       }));
     },

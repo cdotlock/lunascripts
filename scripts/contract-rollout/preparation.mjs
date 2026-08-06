@@ -261,6 +261,11 @@ function manualBody(contractVersion, pinSha, upstreamUrl, evidence) {
   ].join("\n");
 }
 
+export function remoteFileMatches(local, remote) {
+  const expectedRemoteBlobSha = local.status === "deleted" ? local.baseBlobSha : local.headBlobSha;
+  return Boolean(remote) && !remote.previousPath && remote.status === local.status && remote.headBlobSha === expectedRemoteBlobSha;
+}
+
 function completeRemoteEvidence(github, consumer, pr, local) {
   const before = github.getPullRequest(consumer.repository, pr.number);
   if (before.state !== "OPEN" || before.baseBranch !== "main" || before.headSha !== local.headSha || before.baseSha !== local.baseSha) throw new Error(`${consumer.repository} PR identity changed before diff pagination`);
@@ -270,7 +275,7 @@ function completeRemoteEvidence(github, consumer, pr, local) {
   if (remoteFiles.length !== local.files.length) throw new Error(`${consumer.repository} paginated file count does not match local full diff`);
   for (const file of local.files) {
     const remote = remoteFiles.find((item) => item.path === file.path);
-    if (!remote || remote.previousPath || remote.status !== file.status || remote.headBlobSha !== file.headBlobSha) throw new Error(`${consumer.repository} remote diff metadata does not match ${file.path}`);
+    if (!remoteFileMatches(file, remote)) throw new Error(`${consumer.repository} remote diff metadata does not match ${file.path}`);
   }
   const evidence = { ...local, remoteFiles, remoteFilesDigest: contentDigest(remoteFiles) };
   delete evidence.digest;

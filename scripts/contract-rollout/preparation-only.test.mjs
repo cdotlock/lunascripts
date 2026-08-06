@@ -5,6 +5,7 @@ import test from "node:test";
 import {
   applyAuditReport,
   buildDiffEvidence,
+  remoteFileMatches,
   validateDiffEvidence,
   validatePreparationReport,
 } from "./preparation.mjs";
@@ -91,6 +92,12 @@ test("deletion is allowed only inside an updater-owned exact mirror tree", () =>
     expectedTreeSha: TREE, expectedPatchSha256: PATCH_DIGEST,
   });
   assert.equal(evidence.files[0].status, "deleted");
+  assert.equal(remoteFileMatches(evidence.files[0], {
+    path: evidence.files[0].path, previousPath: null, status: "deleted", headBlobSha: OLD_BLOB,
+  }), true);
+  assert.equal(remoteFileMatches(evidence.files[0], {
+    path: evidence.files[0].path, previousPath: null, status: "deleted", headBlobSha: "0".repeat(40),
+  }), false);
   assert.doesNotThrow(() => validateDiffEvidence(evidence, ["vendor/lunascripts"], ["vendor/lunascripts"]));
   assert.throws(() => validateDiffEvidence(evidence, ["vendor/lunascripts"]), /delete/i);
 });
