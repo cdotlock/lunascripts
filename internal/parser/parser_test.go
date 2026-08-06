@@ -37,7 +37,7 @@ func parseSource(src string) (*ast.Episode, error) {
 // terminal gate.
 func TestParseMinimal(t *testing.T) {
 	src := `@episode main:01 "Test" {
-	@bg set classroom fade
+	@bg classroom fade
 	NARRATOR: Hello.
 	YOU: Thinking.
 	@gate {
@@ -109,6 +109,17 @@ func TestParseMinimal(t *testing.T) {
 	// never sets Episode.Ending.
 	if ep.Ending != nil {
 		t.Errorf("Ending: got %+v, want nil (parser never sets Ending)", ep.Ending)
+	}
+}
+
+func TestParseBgLegacySetCompatibility(t *testing.T) {
+	ep := parseOrFail(t, `@episode main:01 "Test" {
+	@bg set classroom fade
+	@gate { @next main:02 }
+}`)
+	bg := ep.Body[0].(*ast.BgSetNode)
+	if bg.Name != "classroom" || bg.Transition != "fade" {
+		t.Fatalf("legacy @bg: got name=%q transition=%q", bg.Name, bg.Transition)
 	}
 }
 
@@ -656,6 +667,9 @@ func TestParseBraveOptionWithTrailingBody(t *testing.T) {
 					NARRATOR: You lose.
 				}
 				NARRATOR: The dust settles.
+			}
+			@option B safe "Wait" {
+				NARRATOR: You wait.
 			}
 		}
 		@gate { @next main:02 }
@@ -2054,6 +2068,40 @@ func TestParseError_EmptyChoice(t *testing.T) {
 	_, err := parseSource(src)
 	if err == nil {
 		t.Fatal("expected error for empty choice")
+	}
+}
+
+func TestParseError_ChoiceRequiresTwoOptions(t *testing.T) {
+	src := `@episode main:01 "T" {
+	@choice {
+		@option A safe "Only" {
+			NARRATOR: One.
+		}
+	}
+	@gate { @next main:02 }
+}`
+	_, err := parseSource(src)
+	if err == nil || !strings.Contains(err.Error(), "requires at least 2 @option") {
+		t.Fatalf("expected minimum option count error, got %v", err)
+	}
+}
+
+func TestParseError_ChoiceRejectsNonOptionContent(t *testing.T) {
+	src := `@episode main:01 "T" {
+	@choice {
+		NARRATOR: This must not disappear.
+		@option A safe "One" {
+			NARRATOR: One.
+		}
+		@option B safe "Two" {
+			NARRATOR: Two.
+		}
+	}
+	@gate { @next main:02 }
+}`
+	_, err := parseSource(src)
+	if err == nil || !strings.Contains(err.Error(), "may only contain @option") {
+		t.Fatalf("expected non-option content error, got %v", err)
 	}
 }
 

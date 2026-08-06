@@ -1,7 +1,7 @@
 {
   "$schema": "./contract-manifest.schema.json",
-  "contract_version": "2.1.0",
-  "change_class": "minor",
+  "contract_version": "3.0.0",
+  "change_class": "major",
   "episode_schema": "episode.schema.json",
   "source_spec": "../LS-SPEC.md",
   "json_output_spec": "../docs/JSON-OUTPUT.md",
@@ -12,9 +12,9 @@
   "valid_fixtures": "fixtures/valid",
   "invalid_fixtures": "fixtures/invalid",
   "compatibility": {
-    "breaking": false,
-    "legacy_unversioned_episode_json": "consumer migration concern; v2 compiler output is always versioned",
-    "migration": "none; producer tooling standardizes new look ids while the compiler preserves every legacy opaque look id unchanged, standalone unary ! remains invalid, and != remains valid"
+    "breaking": true,
+    "legacy_unversioned_episode_json": "consumer migration concern; compiler output is always versioned",
+    "migration": "Adopt the grammar-only spec: @text participants are character ids; multiplayer cross-role guidance is removed; brave checks require a non-empty attr and positive integer dc; achievement ids must match ^[A-Z][A-Z0-9_]*$; @choice directly contains at least two @option entries. Author new backgrounds as @bg <name> [transition]; the compiler continues to accept legacy @bg set <name> [transition]."
   },
   "rollout": {
     "consumer_repositories": [

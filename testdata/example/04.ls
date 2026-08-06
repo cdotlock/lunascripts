@@ -2,7 +2,7 @@
 
   // ===== Party, night =====
 
-  @bg set party_night fade
+  @bg party_night fade
   &music party_beat
 
   &josie neutral_entering
@@ -34,7 +34,7 @@
 
   // ===== Party hallway — Mauricio vs Easton =====
 
-  @bg set party_hallway_night
+  @bg party_hallway_night
 
   @mauricio neutral_angry
 
@@ -66,7 +66,7 @@
 
   // ===== Party backyard — Elias =====
 
-  @bg set party_backyard_night fade
+  @bg party_backyard_night fade
 
   @malia neutral_sitting
   &elias sitting_reading
@@ -111,7 +111,7 @@
 
   // ===== Party kitchen — Easton + Mauricio =====
 
-  @bg set party_kitchen_night fade
+  @bg party_kitchen_night fade
 
   @malia neutral_getting_water
   &easton neutral_hopeful
@@ -148,7 +148,7 @@
 
   // ===== Front yard — the choice =====
 
-  @bg set party_front_yard_night fade
+  @bg party_front_yard_night fade
 
   @malia sitting_car_hood
 
@@ -206,7 +206,7 @@
 
       YOU: I chose him once before. Maybe I owe it to both of us to see if this time can be different.
 
-      @bg set coffee_shop_morning fade
+      @bg coffee_shop_morning fade
 
       NARRATOR: Tuesday morning, 7:40 AM.
       NARRATOR: I walk into the coffee shop. He's already there.
@@ -241,7 +241,7 @@
       YOU: Or I'm projecting.
       YOU: But eight seconds.
 
-      @bg set malias_bedroom_night fade
+      @bg malias_bedroom_night fade
       @malia neutral_looking_out
 
       NARRATOR: I put the phone down and look out my window.
@@ -276,7 +276,7 @@
       YOU: He sends a heart emoji to everyone.
       YOU: ...right?
 
-      @bg set malias_house_morning fade
+      @bg malias_house_morning fade
 
       NARRATOR: Sunday morning.
 
@@ -319,7 +319,7 @@
 
       YOU: Periods. Both of us. I'm going to think about that longer than I should.
 
-      @bg set classroom_morning fade
+      @bg classroom_morning fade
 
       NARRATOR: Monday morning. AP English.
 
@@ -340,7 +340,7 @@
 
   // ===== Closing narration =====
 
-  @bg set black slow
+  @bg black slow
 
   NARRATOR: Senior year. Week one. Four boys. Four open doors.
   NARRATOR: I know I can't keep all of them open.

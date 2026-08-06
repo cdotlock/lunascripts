@@ -207,6 +207,9 @@ func TestDecompileRoundTrip(t *testing.T) {
 	if !bytes.Contains(result.Episodes[0].Source, []byte("@episode main:01 \"Round Trip\"")) {
 		t.Fatalf("decompiled source missing episode header:\n%s", result.Episodes[0].Source)
 	}
+	if !bytes.Contains(result.Episodes[0].Source, []byte("@bg classroom")) || bytes.Contains(result.Episodes[0].Source, []byte("@bg set ")) {
+		t.Fatalf("decompiler must emit canonical @bg syntax:\n%s", result.Episodes[0].Source)
+	}
 
 	recompiled := compileLSWithMapping(t, result.Episodes[0].Source, result.Mapping)
 	assertJSONEqual(t, original, recompiled)

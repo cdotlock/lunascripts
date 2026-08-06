@@ -88,7 +88,7 @@
       "type": "comparison"
     }
   },
-  "ls_contract_version": "2.1.0",
+  "ls_contract_version": "3.0.0",
   "seq": 1,
   "steps": [
     [
@@ -197,7 +197,7 @@
     ],
     {
       "id": "0017_nar",
-      "text": "[T9] bg transition=fade + music (auto-crossfade) + char_show (concurrent).",
+      "text": "[T9] bg transition=fade + music + char_show (concurrent).",
       "type": "narrator"
     },
     {

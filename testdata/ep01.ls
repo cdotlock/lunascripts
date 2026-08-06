@@ -2,7 +2,7 @@
 
   // ===== Scene 1: Malia's bedroom, morning =====
 
-  @bg set malias_bedroom_morning
+  @bg malias_bedroom_morning
   &music calm_morning
   &malia neutral_phone
 
@@ -19,7 +19,7 @@
 
   // ===== Scene 2: School entrance =====
 
-  @bg set school_front fade
+  @bg school_front fade
   &music upbeat_school
   &malia neutral_flat
   &josie cheerful_wave
@@ -32,7 +32,7 @@
 
   // ===== Scene 3: Hallway =====
 
-  @bg set school_hallway fade
+  @bg school_hallway fade
   &josie nervous_whisper
   JOSIE: Don't look. Three o'clock.
 
@@ -45,7 +45,7 @@
 
   // ===== Scene 4: Classroom + minigame =====
 
-  @bg set school_classroom fade
+  @bg school_classroom fade
   &music tense_strings
   &malia neutral_flat
 
@@ -55,7 +55,7 @@
 
   // ===== Scene 5: Cafeteria + core choice =====
 
-  @bg set school_cafeteria fade
+  @bg school_cafeteria fade
   &music casual_lunch
   &mark grin_confident
   &malia neutral_flat
@@ -103,7 +103,7 @@
 
   // ===== Scene 6: Gymnasium =====
 
-  @bg set school_gymnasium fade
+  @bg school_gymnasium fade
   &music ambient_gym
   &malia neutral_flat
   &josie excited
@@ -118,7 +118,7 @@
 
   // ===== Scene 7: Night bedroom =====
 
-  @bg set malias_bedroom_night fade
+  @bg malias_bedroom_night fade
   &music night_piano
   &malia neutral_phone
 

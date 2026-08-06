@@ -1,32 +1,32 @@
 # LS Directive Quick Reference
 
-> Authoritative spec: `LS-SPEC.md`. JSON shape: `docs/JSON-OUTPUT.md`. Engine contract: `docs/ENGINE-INTEGRATION.md`. This page is a cheat sheet, not a substitute.
+> Authoritative spec: `LS-SPEC.md`. JSON shape: `docs/JSON-OUTPUT.md`. This page is a cheat sheet, not a substitute.
 
 ## Structure Control
 
 | Directive | Example |
 |-----------|---------|
-| `@episode <branch_key>:<seq> "<title>" { }` | `@episode main:01 "Butterfly" { }` — root block; branch_key must match the path-derived value |
+| `@episode <branch_key>:<seq> "<title>" { }` | `@episode main:01 "Butterfly" { }` — root block; header defines the episode ID |
 | `@gate { }` | Terminal block — **every episode has exactly one**. Leaves are `@next` and/or `@end` (see Gate Leaves below) |
 | `@if (<cond>) { } [@else if/@else]` | Conditional branching — `@if (affection.easton >= 5) { ... } @else if (FLAG) { ... } @else { ... }`. Parens required around `<cond>`. Inside a gate, the body is a single leaf (`@next` / `@end`); in body scope, blocks may hold any steps. |
 | `@choice { @option ... }` | Player choice menu; body holds 2+ `@option` blocks |
-| `@option <ID> <safe\|brave> "<text>" { }` | Single option. `ID` is `A` / `B` / `C`…; mode `safe` runs body straight, `brave` body must contain a `check` block and use `@if (check.success) { } @else { }` for outcome branching |
-| `@pause` | Click-wait. **No arguments** — for longer beats, write multiple `@pause` lines in sequence |
+| `@option <ID> <safe\|brave> "<text>" { }` | Single option. `ID` is `A` / `B` / `C`…; mode `safe` runs body straight, `brave` body must contain a `check` block; use `@if (check.success) { } @else { }` when branching on the result |
+| `@pause` | Wait for one player click; no arguments |
 
-**Removed in this revision:** `@ending` (top-level), `@label`, `@goto`, `@pause for N`. Replacement: terminal state moves into `@gate { @end <type> }`; flow control uses `@if`/`@else` only (no jump-by-label).
+**Removed in this revision:** `@ending` (top-level), `@label`, `@goto`. Replacement: terminal state moves into `@gate { @end <type> }`; flow control uses `@if`/`@else` only.
 
 ## Visual
 
 | Directive | Example |
 |-----------|---------|
-| `@bg set <name> [transition]` | `@bg set school_hallway fade` — set background |
+| `@bg <name> [transition]` | `@bg school_hallway fade` — set background |
 | `@<char> <pose> [transition]` | `@mauricio neutral_smirk` / `@malia worried dissolve` — show character or change pose. **Implicitly hides the previously displayed character** (one-on-screen rule) |
 | `@<char> bubble <type>` | `@josie bubble heart` — emotion bubble over the current speaker |
 | `@cg <name> "<content>"` | `@cg window_stare "The camera opens on Malia's silhouette…"` — **leaf** directive, no `{ }` body. `<content>` is a continuous English prose paragraph consumed by the video-generation pipeline |
 
-**Positions:** none. The engine derives placement from `gamestate.MC`: the MC is rendered left, every other character right. At most one character is on screen at a time — switching speakers replaces the previous portrait. `NARRATOR` and `YOU` lines clear the stage.
+**Positions:** none. The frontend derives placement from MC identity. `@<char> <pose>` immediately shows or switches that character; dialogue uses the most recently declared pose. `YOU` displays the MC. Only `NARRATOR` clears the stage.
 
-**Transitions:** (none) = dissolve · `fade` · `cut` · `slow`. Applies to `@bg set` and the optional slot on `@<char> <pose>`.
+**Transitions:** `dissolve` · `fade` · `cut` · `slow`. Applies to `@bg` and the optional slot on `@<char> <pose>`.
 
 **Bubble types (9, fixed list):** `anger` · `sweat` · `heart` · `question` · `exclaim` · `idea` · `music` · `doom` · `ellipsis`. `bubble` is a reserved word — no pose may be named `bubble`.
 
@@ -38,7 +38,7 @@
 |--------|---------|
 | `CHARACTER: text` | `MAURICIO: Hey, Butterfly.` |
 | `NARRATOR: text` | `NARRATOR: Senior year. Day one.` — clears stage |
-| `YOU: text` | `YOU: He hasn't called me that in eight years.` — MC inner monologue; clears stage |
+| `YOU: text` | `YOU: He hasn't called me that in eight years.` — MC inner monologue; displays MC |
 | `CHARACTER [pose]: text` | `MAURICIO [arms_crossed_angry]: Your call, Butterfly.` — sugar for `@mauricio arms_crossed_angry` + dialogue |
 
 JSON normalizes `character` to lowercase (`MAURICIO:` → `"mauricio"`).
@@ -47,19 +47,17 @@ JSON normalizes `character` to lowercase (`MAURICIO:` → `"mauricio"`).
 
 | Directive | Example |
 |-----------|---------|
-| `@music <name>` | `@music calm_morning` — set BGM. Engine picks from-silence vs crossfade automatically based on current state |
-| `@music stop` | Stop BGM (engine applies fadeout) |
+| `@music <name>` | `@music calm_morning` — set BGM |
+| `@music stop` | Stop BGM |
 | `@sfx <name>` | `@sfx door_slam` — one-shot sound effect |
-
-**Removed in this revision:** `@music play`, `@music crossfade`, `@music fadeout`, `@sfx play`. The four-form audio surface collapses to the three above — engine owns the silence/crossfade decision.
 
 ## Phone
 
 | Directive | Example |
 |-----------|---------|
 | `@phone {`<br>`  @text from/to <CHAR>: <text>`<br>`}` | Multiline phone block. Phone messages are silent UI text and never request voice audio. **No `@phone show` / `@phone hide`** — the block delimits the entire overlay lifetime |
-| `@text from <CHAR>: text` | `@text from EASTON: I miss you.` — incoming (grey, left) |
-| `@text to <CHAR>: text` | `@text to MAURICIO: Leave me alone.` — outgoing (blue, right) |
+| `@text from <CHAR>: text` | `@text from EASTON: I miss you.` — `<CHAR>` is the sender character ID |
+| `@text to <CHAR>: text` | `@text to MAURICIO: Leave me alone.` — `<CHAR>` is the recipient character ID |
 
 Whitelist: **only `@text from/to` is allowed inside a multiline `@phone { }` block.** The opening brace, messages, and closing brace cannot share one line. Phone messages are silent UI text. No dialogue, no `@sfx`, no `@affection`, no `@signal`, nothing else. Push state changes or audio outside the block.
 
@@ -69,7 +67,7 @@ Whitelist: **only `@text from/to` is allowed inside a multiline `@phone { }` blo
 |-----------|---------|
 | `@trick <type> "<prompt>"` | `@trick hold "Hold your breath until he walks past."` — mandatory body-interaction beat; **leaf**. `<type>` ∈ `tap` / `hold` / `swipe` / `shake` / `swing` / `tilt` (touch + motion only, hard-locked). Thresholds live in the engine — scripts do not tune them |
 | `@minigame <name> "<description>"` | `@minigame casino_showdown "Mauricio drags Malia into a backroom blackjack game…"` — optional embedded H5; **leaf**. `<description>` is one prose paragraph that both scenes the moment AND defines simple gameplay. Skippable = whole step is a no-op. Rewards live in the engine (anti-cheat); no rating branches |
-| `check <attr> <DC>` | `check { attr: CHA  dc: 12 }` — required inside a `brave` option body. Engine runs `D20 + <attr> modifier >= dc → success` and exposes the result via `check.success` / `check.fail` inside that option only |
+| `check <attr> <DC>` | `check { attr: CHA  dc: 12 }` — required inside a `brave` option body; `attr` is non-empty and `dc` is a positive integer |
 
 Brave-option outcome branching: `@if (check.success) { } @else { }`. The `@else` branch is optional — omitting it means "nothing happens on fail" (valid by design). `@trick` and `@minigame` are not D20-bound and do not produce branch state — if you need a story split off an action, use `@choice`.
 
@@ -80,8 +78,8 @@ Brave-option outcome branching: `@if (check.success) { } @else { }`. The `@else`
 | `@affection <char> <±N>` | `@affection easton +2` / `@affection mauricio -1` — adjust per-character affection (persistent across episodes) |
 | `@signal mark <NAME>` | `@signal mark HIGH_HEEL_EP05` — persistent boolean flag. Use sparingly; every mark must have a later reader (an `@if` branch or an achievement guard) |
 | `@signal int <NAME> <=\|+\|-> <N>` | `@signal int REJECTIONS +1` / `@signal int REJECTIONS -2` / `@signal int REJECTIONS = 0` — persistent integer counter. Every author signal name matches `^[A-Z][A-Z0-9_]*$`; `+N` / `-N` require N >= 0; `= N` may be negative. First read defaults to 0 |
-| `@butterfly "<description>"` | `@butterfly "Accepted Easton's approach openly"` — content-generator hint. **Does NOT participate in gate routing** — only feeds Remix Executor / Dream so generators understand the player's personality |
-| `@achievement <id> { name / rarity / description }` | Inline achievement. The block carries metadata; reaching the node fires the unlock. Wrap in `@if (...)` for conditional triggers. `rarity` ∈ `uncommon` / `rare` / `epic` / `legendary` (no `common`); all three fields are required; bare `@achievement <id>` without a block is a parse error |
+| `@butterfly "<description>"` | `@butterfly "Accepted Easton's approach openly"` — downstream content-generation hint; does not participate in gate routing |
+| `@achievement <id> { name / rarity / description }` | Inline achievement. ID matches `^[A-Z][A-Z0-9_]*$`; `rarity` ∈ `uncommon` / `rare` / `epic` / `legendary`; all three fields are required |
 
 Engine-managed numerics (e.g. `san`, `cha`, `hp`, `xp`) are read-only to scripts — you may reference them inside `@if`, but cannot mutate them. Author-defined integers share the bare-name read namespace but use `SCREAMING_SNAKE_CASE`, while runtime-declared engine names retain their own casing.
 
@@ -101,7 +99,7 @@ All conditions parse into structured AST — there are no raw expression strings
 
 ## Operands (5 kinds, comparison only)
 
-Both sides of a comparison are operands. Operands are integer-typed; the validator rejects mixed types.
+Both sides of a comparison are operands.
 
 | Kind | Source syntax | AST |
 |------|--------------|-----|
@@ -143,7 +141,7 @@ Mixed conditional form (next / end side-by-side):
 }
 ```
 
-Coverage rule: a gate is valid only when every execution path produces exactly one leaf — i.e. either a single unconditional `@next`/`@end`, or an `@if`/`@else if`/`@else` chain whose final clause is `@else`. Missing fallback → `MISSING_TERMINAL`.
+Coverage rule: a gate is valid only when every execution path produces exactly one leaf — i.e. either a single unconditional `@next`/`@end`, or an `@if`/`@else if`/`@else` chain whose final clause is `@else`. Missing fallback → `INCOMPLETE_GATE`.
 
 ## Step ID Tags
 
@@ -166,11 +164,11 @@ Other step types have their own tags — these two collisions are the load-beari
 | `&` | Concurrent — joins the previous `@` group | Follower; first line of a group cannot be `&` |
 | (none) | Dialogue line | Always independent — waits for player click |
 
-`&` is **not** allowed on block-structure directives: `@choice`, `@phone`, `@if`, `@gate`, `@episode`. Leaves (`@trick`, `@minigame`, `@cg`) technically permit `&`, but bundling them with scene setup hides the beat — keep them on `@`.
+`&` only joins a single-line directive to the preceding `@` group. Block structures such as `@choice`, `@phone`, `@if`, `@gate`, and `@episode` use `@`.
 
 Typical concurrent group:
 ```
-@bg set school_hallway fade
+@bg school_hallway fade
 &music tense_strings
 &mauricio neutral_smirk
 ```
@@ -178,14 +176,7 @@ Three side effects (background swap + music swap + character entry) play togethe
 
 ## Reserved Words
 
-These identifiers are unavailable as signal mark names, signal int names, or pose names:
-
-- Directive verbs: `set`, `bubble`, `from`, `to`, `stop`
-- Flow keywords: `if`, `else`, `next`, `end`, `gate`, `episode`, `choice`, `option`, `check`, `pause`
-- Option modes: `brave`, `safe`
-- Ending types: `complete`, `to_be_continued`, `bad_ending`
-- Aggregate functions: `MAX`, `MIN` (uppercase only; lowercase variants are not valid author signal names)
-- Check namespace: `check`
-- D20 result tokens: `success`, `fail`, `any`
-
-The validator owns the canonical list — defer to it on edge cases.
+| Identifier type | Reserved words |
+|---|---|
+| signal mark / signal int | `MAX`, `MIN` |
+| pose/look | `bubble` |

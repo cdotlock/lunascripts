@@ -79,7 +79,7 @@ mapping.json 的 `base_url` 指向 OSS 根路径；minigame key 为下划线风�
 | T6 | 发出消息 | `@text to` |
 | T7 | 手机块多条消息 | `@phone { ... }` |
 | T8 | 立绘语法糖（第 1 次） | `CHARACTER [pose]:` |
-| T9 | bg transition=fade + 隐式 music 切换 | `@bg set ... fade` + `&music <name>`（与前一首 music 自动 crossfade） |
+| T9 | bg transition=fade + 并发 music 切换 | `@bg ... fade` + `&music <name>` |
 | T10 | 气泡全 9 种 | `@<char> bubble`：heart/anger/sweat/question/exclaim/idea/music/doom/ellipsis |
 | T11 | 连续 2 个 `@pause` | `@pause` ×2（重复表达长 pause） |
 | T12 | bg transition=cut + 同屏一人换角色 + sfx | `@bg ... cut` + `&<char> <pose>` 覆盖 + `&sfx <name>` |
@@ -140,7 +140,7 @@ T29a 的叶子是 `@end bad_ending`（非 `@next`），其余分支是 `@next`�
 
 | # | 测试点 | 指令/特性 |
 |---|---|---|
-| T30 | char_show 新语法（无 position） | `@<char> <pose>`（位置由引擎从 gamestate.MC 派生） |
+| T30 | char_show 新语法（无 position） | `@<char> <pose>`（位置由前端按 MC 身份派生） |
 | T31 | char_show transition=dissolve（换 pose） | `@<char> <pose> dissolve` |
 | T32 | 比较运算符 ==/!= | `@if (x == N)` / `@if (x != N)` |
 | T33 | 比较运算符 >/< | `@if (san > N)` / `@if (san < N)` |
@@ -254,7 +254,7 @@ Episode, GateBlock, NextLeaf, EndLeaf, EndingNode, PauseNode, BgSetNode, CharSho
 | signal int op | `=`（T58b 初始化）/ `+`（T20 / T58b）/ `-`（T58b） |
 | trick_type（6 种） | T16t ep01 (tap) / T55t stress（tap/hold/swipe/shake/swing/tilt 全连发） |
 
-> 位置（left/center/right）已从 spec 删除；引擎运行时从 `gamestate.MC` 派生（MC 左、其他角色右、同屏一人）——本测试集不再有 position 枚举表。
+> 位置（left/center/right）已从 spec 删除；前端按 MC 身份派生（MC 左、其他角色右、同屏一人）——本测试集不再有 position 枚举表。
 
 ### Step ID tag（覆盖核心 tag）
 

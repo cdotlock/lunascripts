@@ -110,6 +110,42 @@ func TestValidBraveOptionPass(t *testing.T) {
 	}
 }
 
+func TestBraveCheckRequiresMetadata(t *testing.T) {
+	tests := []struct {
+		name    string
+		check   *ast.CheckBlock
+		message string
+	}{
+		{name: "missing attr", check: &ast.CheckBlock{DC: 12}, message: "missing required attr"},
+		{name: "missing dc", check: &ast.CheckBlock{Attr: "BOLD"}, message: "dc must be greater than zero"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ep := &ast.Episode{
+				BranchKey: "main:01",
+				Title:     "T",
+				Body: []ast.Node{&ast.ChoiceNode{Options: []*ast.OptionNode{{
+					ID: "A", Mode: "brave", Text: "Try",
+					Check: tt.check,
+				}}}},
+				Gate: unconditionalGate("main:02"),
+			}
+
+			errs := Validate(ep)
+			found := false
+			for _, err := range errs {
+				if err.Code == CheckMissingField && strings.Contains(err.Message, tt.message) {
+					found = true
+				}
+			}
+			if !found {
+				t.Fatalf("expected %s containing %q, got %v", CheckMissingField, tt.message, errs)
+			}
+		})
+	}
+}
+
 func TestCheckConditionScope(t *testing.T) {
 	tests := []struct {
 		name string
@@ -735,6 +771,28 @@ func TestAchievementIdDuplicationAllowed(t *testing.T) {
 	errs := Validate(ep)
 	if len(errs) != 0 {
 		t.Errorf("duplicate ids should validate cleanly, got %v", errs)
+	}
+}
+
+func TestInvalidAchievementIDValidation(t *testing.T) {
+	ep := &ast.Episode{
+		BranchKey: "main:01",
+		Title:     "T",
+		Body: []ast.Node{
+			&ast.AchievementNode{ID: "lowercase-id", Name: "n", Rarity: ast.RarityRare, Description: "d"},
+		},
+		Gate: unconditionalGate("main:02"),
+	}
+
+	errs := Validate(ep)
+	found := false
+	for _, err := range errs {
+		if err.Code == InvalidAchievementID {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("expected %s, got %v", InvalidAchievementID, errs)
 	}
 }
 

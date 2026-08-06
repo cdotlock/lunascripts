@@ -31,6 +31,15 @@ test("IDE preparation never stages its ignored local validation binary", () => {
   assert.equal(ide.allowed.includes(".bin/lsc"), false);
 });
 
+test("only exact updater-owned mirror trees permit source-driven deletions", () => {
+  const backend = CONSUMERS.find((consumer) => consumer.key === "backend");
+  const ide = CONSUMERS.find((consumer) => consumer.key === "ide");
+  assert.deepEqual(backend.removable, ["contracts/lunascripts"]);
+  assert.deepEqual(ide.removable, ["vendor/lunascripts"]);
+  assert.equal(backend.removable.includes("contracts/lunascripts.lock.json"), false);
+  assert.equal(ide.removable.includes("vendor/README.md"), false);
+});
+
 test("changed files preserve NUL-safe rename source paths", () => {
   const runner = { capture: () => `R  new name\0old name\0 M plain\0` };
   assert.deepEqual(changedFiles(runner, "/tmp/repo"), ["new name", "old name", "plain"]);

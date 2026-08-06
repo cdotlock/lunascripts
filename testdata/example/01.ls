@@ -2,7 +2,7 @@
 
   // ===== Malia's bedroom, morning =====
 
-  @bg set malias_bedroom_morning fade
+  @bg malias_bedroom_morning fade
   &malia neutral_phone
 
   NARRATOR: There are two types of people in this world.
@@ -40,7 +40,7 @@
 
   // ===== School front, morning =====
 
-  @bg set school_front_morning fade
+  @bg school_front_morning fade
   &malia neutral_walking
 
   NARRATOR: Morhills High. Senior year. Same building. Same hallways. Same boy at the basketball court who pretends he doesn't see me while making sure I see him.
@@ -63,7 +63,7 @@
 
   // ===== School hallway, morning =====
 
-  @bg set school_hallway_morning fade
+  @bg school_hallway_morning fade
   &malia neutral_walking
   &josie neutral_walking
 
@@ -93,7 +93,7 @@
 
   // ===== Classroom, morning =====
 
-  @bg set classroom_morning fade
+  @bg classroom_morning fade
 
   @mrs_williams neutral_teacher
   &malia sitting_neutral
@@ -112,7 +112,7 @@
 
   // ===== Cafeteria, noon =====
 
-  @bg set cafeteria_noon fade
+  @bg cafeteria_noon fade
 
   @malia sitting_neutral
   &josie sitting_neutral
@@ -174,7 +174,7 @@
 
       @sfx crowd_chaos
 
-      @bg set school_hallway_afternoon
+      @bg school_hallway_afternoon
 
       @malia neutral_exhale
 
@@ -189,7 +189,7 @@
 
   // ===== Gymnasium, afternoon =====
 
-  @bg set gymnasium_afternoon fade
+  @bg gymnasium_afternoon fade
 
   NARRATOR: Afternoon. Basketball tryouts and soccer practice share the gym on the first day because someone in administration hates us personally.
 
@@ -219,7 +219,7 @@
 
   // ===== Malia's house, evening =====
 
-  @bg set malias_house_evening fade
+  @bg malias_house_evening fade
 
   NARRATOR: The thing about having Mauricio Reyes as your next-door neighbor is that your bedroom windows face each other.
   NARRATOR: I've had blackout curtains since freshman year.

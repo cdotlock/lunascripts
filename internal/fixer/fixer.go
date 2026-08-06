@@ -106,6 +106,9 @@ func Fix(input string) *FixResult {
 		// 8. Lowercase character name in @affection/@affection directives
 		line = fixAffectionCharCase(line, lineNum, r)
 
+		// 9. Normalize legacy @bg set syntax to canonical @bg syntax.
+		line = fixLegacyBgSet(line, lineNum, r)
+
 		lines[i] = line
 	}
 
@@ -121,6 +124,22 @@ func Fix(input string) *FixResult {
 	checkErrors(r)
 
 	return r
+}
+
+func fixLegacyBgSet(line string, lineNum int, r *FixResult) string {
+	trimmed := strings.TrimSpace(line)
+	for _, directive := range []string{"@bg", "&bg"} {
+		legacy := directive + " set"
+		if trimmed != legacy && !strings.HasPrefix(trimmed, legacy+" ") && !strings.HasPrefix(trimmed, legacy+"\t") {
+			continue
+		}
+
+		start := strings.Index(line, legacy)
+		fixed := line[:start] + directive + line[start+len(legacy):]
+		r.Fixes = append(r.Fixes, fmt.Sprintf("line %d: normalized legacy %s syntax", lineNum, legacy))
+		return fixed
+	}
+	return line
 }
 
 // fixDirectiveCasing lowercases the word after @/& if it's not a known keyword.
@@ -541,8 +560,8 @@ var oldFormatKeywords = map[string]string{
 	"@endgroup":  "use & prefix for concurrent directives",
 	"@branch":    "use @option inside @choice block",
 	"@gain":      "use @affection",
-	"@wait":      "use @pause for N",
-	"@timeskip":  "removed — use @bg set with transition",
+	"@wait":      "use @pause",
+	"@timeskip":  "removed — use @bg with transition",
 	"@group":     "use & prefix for concurrent directives",
 	"@on":        "not part of LS syntax — use @if (check.success) / @else inside brave options",
 }
@@ -615,7 +634,7 @@ func checkOldFormatSyntax(lines []string, r *FixResult) {
 
 		// Legacy `@music play <name>` / `@music crossfade <name>`.
 		if musicLegacyPlayRe.MatchString(line) {
-			r.Errors = append(r.Errors, fmt.Sprintf("line %d: use @music <name> — the engine decides whether to fade in or cross-fade", lineNum))
+			r.Errors = append(r.Errors, fmt.Sprintf("line %d: use @music <name>", lineNum))
 			continue
 		}
 
@@ -633,7 +652,7 @@ func checkOldFormatSyntax(lines []string, r *FixResult) {
 
 		// Legacy `@pause for <N>`.
 		if pauseLegacyForRe.MatchString(line) {
-			r.Errors = append(r.Errors, fmt.Sprintf("line %d: @pause is single-click only — repeat the directive for longer pauses", lineNum))
+			r.Errors = append(r.Errors, fmt.Sprintf("line %d: use @pause with no arguments", lineNum))
 			continue
 		}
 

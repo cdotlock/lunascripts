@@ -11,6 +11,16 @@ import { createCommandRunner } from "./contract-rollout/command.mjs";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
+// Pin the temp root's declared change class so these tests do not depend on
+// what the live manifest happens to declare (it was "minor" when they were
+// written and is "major" as of contract 3.0.0).
+function declareChangeClass(root, changeClass) {
+  const manifestPath = join(root, "contract/contract.json");
+  const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+  manifest.change_class = changeClass;
+  writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+}
+
 function releaseRoot() {
   const root = mkdtempSync(join(tmpdir(), "lunascripts-contractctl-"));
   for (const path of ["cmd", "contract", "docs", "internal"]) {
@@ -125,6 +135,7 @@ test("rollout validation rejects a valid fixture whose committed JSON is stale",
 test("rollout validation rejects minor when the Episode schema tightens", async (t) => {
   const root = releaseRoot();
   t.after(() => rmSync(root, { recursive: true, force: true }));
+  declareChangeClass(root, "minor");
   const schemaPath = join(root, "contract/episode.schema.json");
   const schema = JSON.parse(readFileSync(schemaPath, "utf8"));
   schema.properties.title.minLength = 999;
@@ -139,6 +150,7 @@ test("rollout validation rejects minor when the Episode schema tightens", async 
 test("rollout validation rejects minor when a base valid fixture fails under the HEAD compiler", async (t) => {
   const root = releaseRoot();
   t.after(() => rmSync(root, { recursive: true, force: true }));
+  declareChangeClass(root, "minor");
   const normal = validationRunner(root);
   const runner = {
     capture(command, args, options = {}) {

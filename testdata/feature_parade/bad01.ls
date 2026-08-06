@@ -3,7 +3,7 @@
 
 @episode main/bad/001:01 "Bad Ending — Regret" {
 
-  @bg set bedroom
+  @bg bedroom
   &music night
 
   NARRATOR: [T37] The door closed. You never opened it again.

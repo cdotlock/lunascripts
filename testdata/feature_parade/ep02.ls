@@ -7,11 +7,11 @@
   // SCENE 1 — char_show (单角色出场)
   // ================================================================
 
-  @bg set cafeteria
+  @bg cafeteria
   &music lunch
   &mark grin
 
-  NARRATOR: [T30] char_show 新语法 — 单角色出场，引擎从 gamestate.MC 派生位置。
+  NARRATOR: [T30] char_show 新语法 — 单角色出场，前端按 MC 身份派生位置。
 
   // ================================================================
   // SCENE 2 — char_look transition=dissolve
@@ -78,7 +78,7 @@
   // ENDING — complete (via @gate { @end complete })
   // ================================================================
 
-  @bg set gym fade
+  @bg gym fade
   &music night
   YOU: [T35] Final @gate { @end complete } — story wraps, credits roll.
   @signal mark EP02_DONE

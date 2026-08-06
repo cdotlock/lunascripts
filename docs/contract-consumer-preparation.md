@@ -39,9 +39,13 @@ Each consumer report binds:
   regenerated patch SHA-256;
 - all paginated GitHub file records, their digest, and a before/after head check.
 
-Before push or PR edits, preparation rejects unknown paths, deletion, rename,
-copy, type changes, symlinks, submodules, unapproved workflow changes,
-divergence, incomplete regeneration, and concurrent head movement.
+Before push or PR edits, preparation rejects unknown paths, rename, copy, type
+changes, symlinks, submodules, unapproved workflow changes, divergence,
+incomplete regeneration, and concurrent head movement. Deletion is rejected
+everywhere except the updater-owned exact mirror trees
+`contracts/lunascripts/**` and `vendor/lunascripts/**`; a mirror deletion still
+has to match the independently regenerated tree and patch, the complete local
+diff, and the paginated GitHub diff.
 
 ## Read-only production audit
 

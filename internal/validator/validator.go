@@ -13,6 +13,7 @@ const (
 	MissingTerminal            = "MISSING_TERMINAL"
 	IncompleteGate             = "INCOMPLETE_GATE"
 	BraveNoCheck               = "BRAVE_NO_CHECK"
+	CheckMissingField          = "CHECK_MISSING_FIELD"
 	DuplicateOptionID          = "DUPLICATE_OPTION_ID"
 	SafeOptionHasCheck         = "SAFE_OPTION_HAS_CHECK"
 	InvalidTransition          = "INVALID_TRANSITION"
@@ -23,6 +24,7 @@ const (
 	InvalidSignalKind          = "INVALID_SIGNAL_KIND"
 	InvalidSignalName          = "INVALID_SIGNAL_NAME"
 	InvalidRarity              = "INVALID_RARITY"
+	InvalidAchievementID       = "INVALID_ACHIEVEMENT_ID"
 	AchievementMissingField    = "ACHIEVEMENT_MISSING_FIELD"
 	MinigameMissingDescription = "MINIGAME_MISSING_DESCRIPTION"
 	MinigameMissingName        = "MINIGAME_MISSING_NAME"
@@ -54,6 +56,8 @@ var validSignalKinds = map[string]bool{
 // both persistent boolean marks and author-defined integer values. Lowercase
 // names remain available to engine-managed values (for example `san`).
 var validAuthorSignalName = regexp.MustCompile(`^[A-Z][A-Z0-9_]*$`)
+
+var validAchievementID = regexp.MustCompile(`^[A-Z][A-Z0-9_]*$`)
 
 // reservedKeywords are identifiers reserved by the LS language. They
 // may not be used as signal mark names, signal int names, or character
@@ -300,6 +304,12 @@ func checkAchievements(nodes []ast.Node, errs *[]Error) {
 				})
 				continue
 			}
+			if !validAchievementID.MatchString(v.ID) {
+				*errs = append(*errs, Error{
+					Code:    InvalidAchievementID,
+					Message: fmt.Sprintf("achievement id %q must use SCREAMING_SNAKE_CASE", v.ID),
+				})
+			}
 			if v.Name == "" {
 				*errs = append(*errs, Error{
 					Code:    AchievementMissingField,
@@ -521,6 +531,19 @@ func checkBraveOptions(nodes []ast.Node, errs *[]Error) {
 							Code:    BraveNoCheck,
 							Message: fmt.Sprintf("brave option %q is missing a @check block", opt.ID),
 						})
+					} else {
+						if opt.Check.Attr == "" {
+							*errs = append(*errs, Error{
+								Code:    CheckMissingField,
+								Message: fmt.Sprintf("brave option %q check is missing required attr", opt.ID),
+							})
+						}
+						if opt.Check.DC <= 0 {
+							*errs = append(*errs, Error{
+								Code:    CheckMissingField,
+								Message: fmt.Sprintf("brave option %q check dc must be greater than zero", opt.ID),
+							})
+						}
 					}
 				case "safe":
 					if opt.Check != nil {

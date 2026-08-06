@@ -269,7 +269,7 @@ func (d *decompiler) writeStep(w *sourceWriter, step map[string]interface{}, ind
 	case "bg":
 		name := stringValue(step["name"])
 		d.record("bg", "bg", "", name, stringValue(step["url"]))
-		w.line(indent, "%sbg set %s%s", prefix, name, suffix(" ", stringValue(step["transition"])))
+		w.line(indent, "%sbg %s%s", prefix, name, suffix(" ", stringValue(step["transition"])))
 	case "char_show":
 		char := stringValue(step["character"])
 		look := stringValue(step["look"])

@@ -3,7 +3,7 @@
 
 @episode main/stress:01 "Stress Test" {
 
-  @bg set classroom
+  @bg classroom
   &music tense
 
   NARRATOR: [T50] Stress suite starts — each sub-test announces itself.
@@ -130,7 +130,7 @@
   // ================================================================
   // [T56] brave option 省略 @else（validator 宽松）+ safe option 嵌套 @if
   // ================================================================
-  @bg set hallway fade
+  @bg hallway fade
   &music upbeat
   &sfx bell
   &malia flat
@@ -168,7 +168,7 @@
   // ================================================================
   // [T58] 并发组边界: 连续 @ / & / 对话交替
   // ================================================================
-  @bg set gym cut
+  @bg gym cut
   &josie excited
 
   NARRATOR: [T58] Concurrent-group boundary test: dialogue breaks the group above; new @ below starts a fresh group.

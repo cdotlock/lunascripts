@@ -30,7 +30,10 @@ test("pull request files are slurped across every API page with status and renam
       calls.push([command, args]);
       return JSON.stringify([
         [{ filename: "a", status: "modified", sha: "b".repeat(40) }],
-        [{ filename: "c", previous_filename: "old", status: "renamed", sha: "d".repeat(40) }],
+        [
+          { filename: "c", previous_filename: "old", status: "renamed", sha: "d".repeat(40) },
+          { filename: "gone", status: "removed", sha: "e".repeat(40) },
+        ],
       ]);
     },
   };
@@ -38,6 +41,7 @@ test("pull request files are slurped across every API page with status and renam
   assert.deepEqual(files, [
     { path: "a", previousPath: null, status: "modified", headBlobSha: "b".repeat(40) },
     { path: "c", previousPath: "old", status: "renamed", headBlobSha: "d".repeat(40) },
+    { path: "gone", previousPath: null, status: "deleted", headBlobSha: "e".repeat(40) },
   ]);
   assert.deepEqual(calls[0][1].slice(-2), ["--paginate", "--slurp"]);
 });
