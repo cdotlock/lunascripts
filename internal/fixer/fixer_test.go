@@ -48,10 +48,10 @@ func TestFixCharacterCasing(t *testing.T) {
 			fixed:    true,
 		},
 		{
-			name:     "keyword stays unchanged",
+			name:     "legacy bg set becomes canonical",
 			input:    "@bg set beach",
-			expected: "@bg set beach",
-			fixed:    false,
+			expected: "@bg beach",
+			fixed:    true,
 		},
 		{
 			name:     "keyword cg stays unchanged (leaf form)",

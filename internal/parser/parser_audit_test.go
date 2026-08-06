@@ -142,6 +142,9 @@ func TestAudit_DialogueWithExprInCheckSuccessBlock(t *testing.T) {
 				NARRATOR: You failed.
 			}
 		}
+		@option B safe "Wait" {
+			NARRATOR: You wait.
+		}
 	}
 	@gate { @next main:02 }
 }`
@@ -395,6 +398,9 @@ func TestAudit_DeeplyNestedChoiceBrave(t *testing.T) {
 			} @else {
 				NARRATOR: Lose.
 			}
+		}
+		@option B safe "wait" {
+			NARRATOR: Wait.
 		}
 	}
 	@gate { @next main:02 }
@@ -869,6 +875,9 @@ func TestAudit_SafeOptionBody(t *testing.T) {
 			NARRATOR: Line1.
 			@affection guard +1
 			NARRATOR: Line2.
+		}
+		@option A safe "Wait" {
+			NARRATOR: Wait.
 		}
 	}
 	@gate { @next main:02 }

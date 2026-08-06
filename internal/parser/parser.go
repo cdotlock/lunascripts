@@ -435,15 +435,19 @@ func (p *Parser) parseDirective() (ast.Node, error) {
 	}
 }
 
-// parseBg parses: @bg set <name> [transition]
+// parseBg parses the canonical form @bg <name> [transition]. The legacy
+// @bg set <name> [transition] form remains accepted for existing content.
 func (p *Parser) parseBg() (ast.Node, error) {
-	p.advance()                                      // consume "bg"
-	if _, err := p.expect(token.IDENT); err != nil { // consume "set"
-		return nil, err
-	}
+	p.advance() // consume "bg"
 	name, err := p.expect(token.IDENT)
 	if err != nil {
 		return nil, err
+	}
+	if name.Literal == "set" {
+		name, err = p.expect(token.IDENT)
+		if err != nil {
+			return nil, err
+		}
 	}
 	node := &ast.BgSetNode{Name: name.Literal}
 	// Optional transition.
@@ -639,6 +643,7 @@ func (p *Parser) parseTrick() (ast.Node, error) {
 
 // parseChoice parses: @choice { @option ... }
 func (p *Parser) parseChoice() (ast.Node, error) {
+	choiceLine, choiceCol := p.cur.Line, p.cur.Col
 	p.advance() // consume "choice"
 	if _, err := p.expect(token.LBRACE); err != nil {
 		return nil, err
@@ -654,12 +659,12 @@ func (p *Parser) parseChoice() (ast.Node, error) {
 			}
 			node.Options = append(node.Options, opt)
 		} else {
-			p.advance()
+			return nil, fmt.Errorf("line %d col %d: @choice block may only contain @option entries", p.cur.Line, p.cur.Col)
 		}
 	}
 
-	if len(node.Options) == 0 {
-		return nil, fmt.Errorf("line %d col %d: @choice block has no @option entries", p.cur.Line, p.cur.Col)
+	if len(node.Options) < 2 {
+		return nil, fmt.Errorf("line %d col %d: @choice block requires at least 2 @option entries", choiceLine, choiceCol)
 	}
 
 	if _, err := p.expect(token.RBRACE); err != nil {

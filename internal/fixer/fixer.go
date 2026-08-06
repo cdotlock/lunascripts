@@ -106,6 +106,9 @@ func Fix(input string) *FixResult {
 		// 8. Lowercase character name in @affection/@affection directives
 		line = fixAffectionCharCase(line, lineNum, r)
 
+		// 9. Normalize legacy @bg set syntax to canonical @bg syntax.
+		line = fixLegacyBgSet(line, lineNum, r)
+
 		lines[i] = line
 	}
 
@@ -121,6 +124,22 @@ func Fix(input string) *FixResult {
 	checkErrors(r)
 
 	return r
+}
+
+func fixLegacyBgSet(line string, lineNum int, r *FixResult) string {
+	trimmed := strings.TrimSpace(line)
+	for _, directive := range []string{"@bg", "&bg"} {
+		legacy := directive + " set"
+		if trimmed != legacy && !strings.HasPrefix(trimmed, legacy+" ") && !strings.HasPrefix(trimmed, legacy+"\t") {
+			continue
+		}
+
+		start := strings.Index(line, legacy)
+		fixed := line[:start] + directive + line[start+len(legacy):]
+		r.Fixes = append(r.Fixes, fmt.Sprintf("line %d: normalized legacy %s syntax", lineNum, legacy))
+		return fixed
+	}
+	return line
 }
 
 // fixDirectiveCasing lowercases the word after @/& if it's not a known keyword.
