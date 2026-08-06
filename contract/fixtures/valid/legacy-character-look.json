@@ -5,7 +5,7 @@
   },
   "episode_id": "main:01",
   "gate": null,
-  "ls_contract_version": "2.1.0",
+  "ls_contract_version": "3.0.0",
   "seq": 1,
   "steps": [
     {

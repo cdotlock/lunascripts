@@ -11,6 +11,21 @@ behavior fixtures. A release whose declaration understates that bound is
 rejected. Stored production content is always audited read-only; repairs and
 all integration or production actions remain explicit human workflows.
 
+## 3.0.0
+
+- LS-SPEC rewritten as the v2 grammar-only reference: per-directive cards
+  (definition / syntax / params / example / validation); authoring guidance
+  moves to lunaverse-ide skills.
+- Removed from the spec: the Remix compatibility chapter and the v1 allowance
+  for reading check attributes as bare names inside `@if` (attributes resolve
+  only inside `check { }`). Compiler behavior is unchanged.
+- Documented engine semantics that were previously implicit: `@phone` blocks
+  are multiline-only and never voiced, `check` resolves at option entry
+  regardless of block position, `@text` senders are verbatim display labels,
+  bg transition `dissolve` added to the documented set, `@pause` takes no
+  operand, `@music fadeout` is not a directive.
+- CG content examples use full sprite tags `@char__outfit__demeanor[-action]`.
+
 ## 2.1.0
 
 Backward-compatible authoring contract:
