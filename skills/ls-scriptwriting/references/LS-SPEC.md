@@ -273,12 +273,12 @@ novel_<id>/
 **示例**（取自实际生产剧本）
 
 ```
-@cg door_slam_face "Night in @bg_voss_house_hallway_night, a single work lamp spilling from the doorway. @seren__urban_arrival stands mid-sentence, one hand half-raised, lips parted. Inside the room @knox__shadow_default is already turning away, his arm driving the door shut."
+@cg door_slam_face "Night in @bg_voss_house_hallway_night, a single work lamp spilling from the doorway. @seren__urban_arrival__stunned_blank stands mid-sentence, one hand half-raised, lips parted. Inside the room @knox__shadow_default__cold_dismissal is already turning away, his arm driving the door shut."
 ```
 
 **校验**
 - 单行叶子指令，无 `{ }` 块。
-- 编译器只查形态；content 的写作规范（分镜式写法、`@角色__outfit` / `@bg_<name>` 内嵌标签、道具独立成句、视频形态的精修流程等）全部由 episode-writer skill 规定。
+- 编译器只查形态；content 的写作规范（分镜式写法、`@角色__outfit__神态[-动作]` 完整 sprite 标签与 `@bg_<name>` 内嵌标签、道具独立成句、视频形态的精修流程等）全部由 episode-writer skill 规定。
 
 ### 2.3 对话
 
