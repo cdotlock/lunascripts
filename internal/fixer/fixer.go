@@ -560,8 +560,8 @@ var oldFormatKeywords = map[string]string{
 	"@endgroup":  "use & prefix for concurrent directives",
 	"@branch":    "use @option inside @choice block",
 	"@gain":      "use @affection",
-	"@wait":      "use @pause for N",
-	"@timeskip":  "removed — use @bg set with transition",
+	"@wait":      "use @pause",
+	"@timeskip":  "removed — use @bg with transition",
 	"@group":     "use & prefix for concurrent directives",
 	"@on":        "not part of LS syntax — use @if (check.success) / @else inside brave options",
 }
@@ -634,7 +634,7 @@ func checkOldFormatSyntax(lines []string, r *FixResult) {
 
 		// Legacy `@music play <name>` / `@music crossfade <name>`.
 		if musicLegacyPlayRe.MatchString(line) {
-			r.Errors = append(r.Errors, fmt.Sprintf("line %d: use @music <name> — the engine decides whether to fade in or cross-fade", lineNum))
+			r.Errors = append(r.Errors, fmt.Sprintf("line %d: use @music <name>", lineNum))
 			continue
 		}
 
@@ -652,7 +652,7 @@ func checkOldFormatSyntax(lines []string, r *FixResult) {
 
 		// Legacy `@pause for <N>`.
 		if pauseLegacyForRe.MatchString(line) {
-			r.Errors = append(r.Errors, fmt.Sprintf("line %d: @pause is single-click only — repeat the directive for longer pauses", lineNum))
+			r.Errors = append(r.Errors, fmt.Sprintf("line %d: use @pause with no arguments", lineNum))
 			continue
 		}
 

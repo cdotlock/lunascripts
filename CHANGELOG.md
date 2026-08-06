@@ -13,17 +13,23 @@ all integration or production actions remain explicit human workflows.
 
 ## 3.0.0
 
-- LS-SPEC rewritten as the v2 grammar-only reference: per-directive cards
+- LS-SPEC rewritten as the grammar-only reference: per-directive cards
   (definition / syntax / params / example / validation); authoring guidance
   moves to lunaverse-ide skills.
+- Brave options now mechanically require a non-empty `check.attr` and a
+  positive integer `check.dc`. Achievement ids must match
+  `^[A-Z][A-Z0-9_]*$`.
+- `@choice` blocks now reject every direct child other than `@option` and
+  require at least two options, preventing silently discarded content.
+- Canonical background syntax is `@bg <name> [transition]`; the compiler still
+  accepts legacy `@bg set <name> [transition]` for existing content.
+- `@text` participants are character ids, normalized to lowercase in emitted
+  JSON. The obsolete multiplayer cross-role section is removed.
 - Removed from the spec: the Remix compatibility chapter and the v1 allowance
   for reading check attributes as bare names inside `@if` (attributes resolve
-  only inside `check { }`). Compiler behavior is unchanged.
-- Documented engine semantics that were previously implicit: `@phone` blocks
-  are multiline-only and never voiced, `check` resolves at option entry
-  regardless of block position, `@text` senders are verbatim display labels,
-  bg transition `dissolve` added to the documented set, `@pause` takes no
-  operand, `@music fadeout` is not a directive.
+  only inside `check { }`).
+- Documented syntax includes multiline-only, unvoiced `@phone` blocks,
+  no-operand `@pause`, and the `dissolve` background transition.
 - CG content examples use full sprite tags `@char__outfit__demeanor[-action]`.
 
 ## 2.1.0

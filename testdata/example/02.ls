@@ -2,7 +2,7 @@
 
   // ===== Classroom, morning — three days later =====
 
-  @bg set classroom_morning fade
+  @bg classroom_morning fade
   &mrs_williams neutral_teacher
 
   NARRATOR: Three days later.
@@ -45,7 +45,7 @@
 
   // ===== Hallway, afternoon — Easton =====
 
-  @bg set school_hallway_afternoon fade
+  @bg school_hallway_afternoon fade
   &malia neutral_locker
   &easton neutral_gentle
 
@@ -97,7 +97,7 @@
 
   // ===== Parking lot, afternoon — Mauricio =====
 
-  @bg set school_parking_lot_afternoon fade
+  @bg school_parking_lot_afternoon fade
   &malia neutral_walking
   &mauricio neutral_motorcycle
 
@@ -155,7 +155,7 @@
 
   // ===== Malia's living room, evening =====
 
-  @bg set malias_living_room_evening fade
+  @bg malias_living_room_evening fade
   &malia sitting_couch
   &vikki neutral_blunt
 

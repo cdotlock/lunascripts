@@ -3,9 +3,9 @@
 > 本文件只定义语法：什么写法是合法的、编译器和引擎如何理解它。
 > 至于怎么用这些语法把剧本写好——选择密度、检定档位、look 词表、CG 写作规范、
 > signal 使用纪律等——由 lunaverse-ide 里的各 skill（entity-planner、episode-writer 等）规定，
-> 不在本文件。skill 可以在语法允许的范围内收窄写法，但不能与本文件矛盾。
+> 不在本文件。skill 只负责创作建议，不得增删或收紧本文件定义的合法语法。
 
-> **版本：v2（2026-08-04）。** 与 v1 的差异清单见附录 D。
+> **契约版本：3.0.0（2026-08-06）。** 变更清单见附录 D。
 
 ---
 
@@ -14,25 +14,7 @@
 ### 1.1 文件
 
 - 一个 `.ls` 文件 = 一集。UTF-8 纯文本，换行符 `\n`。
-- 路径即 ID：目录结构是 `branch_key`，文件名（不含扩展名）是 `seq`。
-
-```
-novel_<id>/
-└── main/
-    ├── 01.ls                      # main:01
-    ├── 02.ls                      # main:02
-    ├── bad/
-    │   └── 001/
-    │       └── 01.ls              # main/bad/001:01
-    ├── route/
-    │   └── 001/
-    │       └── 01.ls              # main/route/001:01
-    └── minor/
-        └── 11_a/
-            └── 01.ls              # main/minor/11_a:01
-```
-
-- `@episode` 头部写的 `branch_key` 必须与文件路径一致，validator 做一致性检查。
+- `@episode` 头部的 `<branch_key>:<seq>` 是本集 ID；编译器不根据文件路径反推或比对 ID。
 
 ### 1.2 基本规则
 
@@ -42,16 +24,17 @@ novel_<id>/
 | 空行 | — | 忽略，用于可读性分段 |
 | 字符串 | `"..."` | 双引号包裹 |
 | 块 | `{ }` | 可嵌套 |
-| 指令 | `@` 前缀 | 如 `@bg set school_hallway` |
+| 指令 | `@` 前缀 | 如 `@bg school_hallway` |
 | 并发指令 | `&` 前缀 | 与前一条 `@` 指令同时执行，见 §4 |
 | 对话行 | `角色名: 文本` | 角色名全大写，无前缀 |
 
 ### 1.3 舞台规则（引擎语义）
 
 - **MC**（玩家扮演的角色）固定在屏幕**左侧**，**其余角色**全部固定在**右侧**，位置不可指定。
-- **同屏一人**：任意时刻最多显示一个角色。谁有台词谁显示（`YOU:` 显示 MC），前一个自动消失。
-- 没有台词支撑的立绘指令会被引擎吞掉（不显示）。
-- `NARRATOR:` 出现时清空所有立绘；`YOU:` 和角色台词出现时有立绘。
+- **同屏一人**：任意时刻最多显示一个角色。
+- `@<char> <look>` 立即显示该角色或切换其立绘；角色对白使用该角色最近一次声明的 look。每个角色在本集首次对白前必须声明 look。
+- `YOU:` 由前端自动显示 MC，使用 MC 最近一次声明的 look；MC 在本集首次 `YOU:` 前必须声明 look。
+- 只有 `NARRATOR:` 会清空立绘。
 - 引擎在运行时才知道谁是 MC（由前端业务层注入）。编译产物不携带 MC 身份信息。
 
 ### 1.4 指令分类一览
@@ -59,7 +42,7 @@ novel_<id>/
 | 类别 | 指令 |
 |---|---|
 | 结构控制 | `@episode`、`@gate`、`@pause` |
-| 视觉呈现 | `@<char> <look>`、`@<char> bubble`、`@bg set`、`@cg` |
+| 视觉呈现 | `@<char> <look>`、`@<char> bubble`、`@bg`、`@cg` |
 | 对话 | `CHARACTER:`、`NARRATOR:`、`YOU:`、`CHARACTER [look]:` |
 | 手机/消息 | `@phone`、`@text` |
 | 音频 | `@music`、`@sfx` |
@@ -89,7 +72,7 @@ novel_<id>/
 
 | 参数 | 必填 | 取值 | 说明 |
 |---|---|---|---|
-| `branch_key:seq` | 是 | 与文件路径一致 | 本集 ID，如 `main:01` |
+| `branch_key:seq` | 是 | 集 ID | 如 `main:01` |
 | `title` | 是 | 字符串 | 本集标题 |
 
 **示例**
@@ -101,11 +84,11 @@ novel_<id>/
 ```
 
 **校验**
-- 头部与文件路径推导结果不一致报错；缺失报错。
+- 缺少 `@episode` 头部或必填参数报错。
 
 #### `@gate`
 
-路由声明块，声明本集所有出口：跳去下一集，或终结剧情。必须位于 `@episode` 块尾部，每集**恰好一个**。
+路由声明块，声明本集所有出口：跳去下一集，或终结剧情。每集**恰好一个**。
 
 ```
 @gate {
@@ -152,16 +135,14 @@ novel_<id>/
 
 #### `@pause`
 
-暂停，等玩家点击一次后继续，制造无文字的节奏停顿。
+等待玩家点击一次后继续。
 
 ```
 @pause
 ```
 
 **校验**
-- **无任何参数**，`@pause for N` 不是合法语法。
-- 需要更长停顿用连续多个 `@pause`。
-- 当前项目实践中已很少使用，各 skill 可自行禁用。
+- 无参数。
 
 ### 2.2 视觉呈现
 
@@ -179,7 +160,7 @@ novel_<id>/
 |---|---|---|---|
 | `char` | 是 | 角色 ID（小写） | 立绘挂在谁身上 |
 | `look` | 是 | 立绘素材键 | 编译器当**不透明字符串**原样透传进产物（产物字段名 `look`），存量旧键全兼容。新内容的命名规范 `<char>__<outfit>__<神态>[-<动作>]` 及词表由 producer 工具强制（episode-writer skill + IDE lint），不归编译器管 |
-| `transition` | 否 | `dissolve` / `fade` | 不写 = 瞬切；`dissolve` = 0.3s 交叉溶解；`fade` = 淡入 |
+| `transition` | 否 | `dissolve` / `fade` / `cut` / `slow` | 角色过渡效果 |
 
 **示例**
 
@@ -223,37 +204,37 @@ novel_<id>/
 - `bubble` 是保留字，look 不可与之同名。
 - 角色被切走时气泡随之消失。
 
-#### `@bg set` —— 切换背景
+#### `@bg` —— 切换背景
 
 切换全屏背景。
 
 ```
-@bg set <name> [transition]
+@bg <name> [transition]
 ```
 
 **参数**
 
 | 参数 | 必填 | 取值 | 说明 |
 |---|---|---|---|
-| `name` | 是 | 背景素材语义名 | 经素材映射表解析（§6） |
+| `name` | 是 | 背景素材语义名 | 经素材映射表解析（§5） |
 | `transition` | 否 | 见下表 | 不写 = 交叉溶解 |
 
-| transition | 效果 | 耗时 | 适用 |
-|---|---|---|---|
-| （不写） | 交叉溶解 | 0.5s | 同场所内时间变化 |
-| `dissolve` | 交叉溶解（显式写出，效果同缺省） | 0.5s | 同上 |
-| `fade` | 先黑屏再淡入 | 1.0s | 场景切换 |
-| `cut` | 直切 | 0s | 快速跳转 |
-| `slow` | 慢速淡入 | 2.0s | 情绪性转场 |
+| transition | 效果 |
+|---|---|
+| `dissolve` | 交叉溶解 |
+| `fade` | 淡入 |
+| `cut` | 直切 |
+| `slow` | 慢速过渡 |
 
 **示例**
 
 ```
-@bg set voss_house_kitchen_evening fade
+@bg voss_house_kitchen_evening fade
 ```
 
 **校验**
-- transition 超出合法值报错；注意 `crossfade` 不是背景过渡。
+- transition 超出合法值报错。
+- 新内容使用 `@bg <name> [transition]`；编译器仍接受存量写法 `@bg set <name> [transition]`。
 
 #### `@cg` —— 全屏 CG
 
@@ -303,7 +284,7 @@ CHARACTER: 文本
 @dean dean__winter_fireside__tight_lipped
 DEAN: You're late.
 
-DEAN: Rules are rules.        // 不换表情，沿用上一个 look，可不写 @dean 行
+DEAN: Rules are rules.
 ```
 
 **校验**
@@ -341,7 +322,7 @@ NARRATOR: Senior year. Day one.
 ```
 
 **校验**
-- 出现时**清空所有立绘**。立绘指令不要放在 `NARRATOR:` 行之前（会被清掉、白写）。
+- 出现时**清空所有立绘**。
 - 旁白中指代 MC 的人称规范（大写 YOU/YOUR）属写作规范，见 episode-writer skill。
 
 #### `YOU:` —— MC 内心独白
@@ -383,8 +364,8 @@ YOU: Another year. Same mess.
 
 | 参数 | 必填 | 取值 | 说明 |
 |---|---|---|---|
-| `from` / `to` | 是（二选一） | — | `from` = 收到的消息（灰色左对齐）；`to` = 发出的消息（蓝色右对齐） |
-| `char` | 是 | 发信人名 | 屏幕上的文字署名，原样显示，**不是配音角色**（大小写不受对话行的全大写规则约束） |
+| `from` / `to` | 是（二选一） | — | `from` = 发件人；`to` = 收件人 |
+| `char` | 是 | 角色 ID | 编译产物统一转小写；UI 根据角色 ID 解析显示名 |
 
 **示例**
 
@@ -415,7 +396,7 @@ YOU: Another year. Same mess.
 
 | 参数 | 必填 | 取值 | 说明 |
 |---|---|---|---|
-| `name` \| `stop` | 是 | 曲名语义名，或关键字 `stop` | 播放：无 BGM 时淡入，已有 BGM 时自动交叉淡入，脚本不区分。`stop`：淡出停止 |
+| `name` \| `stop` | 是 | 曲名语义名，或关键字 `stop` | `name` 设置 BGM；`stop` 停止 BGM |
 
 **示例**
 
@@ -423,9 +404,6 @@ YOU: Another year. Same mess.
 @music grief_suspense
 @music stop
 ```
-
-**校验**
-- **`@music fadeout` 不是合法写法**——会被当成播放一首名叫 "fadeout" 的曲子。淡出用 `@music stop`，切歌直接 `@music <新曲名>`。
 
 #### `@sfx`
 
@@ -514,6 +492,9 @@ YOU: Another year. Same mess.
 }
 ```
 
+**校验**
+- 块内只允许 `@option`，且至少有两个；其他内容直接报错。
+
 #### `@option`
 
 一个选项及其后续内容。
@@ -549,8 +530,8 @@ check {
 
 | 参数 | 必填 | 取值 | 说明 |
 |---|---|---|---|
-| `attr` | 是 | 属性名 | **语法上自由命名，不硬编码**。项目实际用哪几个属性（如恋爱题材的 BOLD/SWEET/SMART）由 entity-planner skill 定义 |
-| `dc` | 是 | 整数 | 难度值。语法上任意整数，档位约定（8/10/12/14/16）由 skill 层规定 |
+| `attr` | 是 | 非空属性名 | 属性集合由业务定义 |
+| `dc` | 是 | 正整数 | 难度值 |
 
 **示例**——完整的 choice 结构：
 
@@ -578,7 +559,7 @@ check {
 **校验**
 - 引擎公式：`D20(1-20) + 属性修正 >= DC → 成功`。
 - 属性值只在检定公式内部参与计算，**`@if` 不能裸名读取属性**（见 §3.2）。按属性做分支用检定结果间接表达。
-- **check 是 option 的属性，不是顺序步骤**：编译时被提取到 option 上，掷骰在玩家选中该 option 的瞬间结算，与 check 块写在体内第几行无关。语法上它可以出现在 body 任意位置（validator 只查有没有），但写在中间会让人误以为"演到这里才掷骰"。**惯例写在 option 体第一行**；producer 工具可强制这一点。
+- **check 是 brave option 的参数，不是顺序步骤**；玩家选中该 option 时结算。
 
 ### 2.7 状态变更
 
@@ -686,7 +667,7 @@ check {
 
 | 参数 | 必填 | 取值 | 说明 |
 |---|---|---|---|
-| `ID` | 是 | `SCREAMING_SNAKE_CASE` | 成就 ID |
+| `ID` | 是 | `^[A-Z][A-Z0-9_]*$` | 成就 ID |
 | `name` | 是 | 字符串 | 显示名称，英文短语 |
 | `rarity` | 是 | `uncommon` / `rare` / `epic` / `legendary` | **没有 `common`** |
 | `description` | 是 | 字符串 | 1-2 句英文 flavor 文本 |
@@ -704,6 +685,7 @@ check {
 ```
 
 **校验**
+- ID 必须匹配 `^[A-Z][A-Z0-9_]*$`。
 - 三个字段全部必填；缺 `{ }` 的裸形式是 parse error。
 
 #### `@butterfly`
@@ -803,7 +785,6 @@ check {
 
 - **不支持一元否定 `!`**。要否定布尔条件就交换 `@if` 与 `@else` 分支；`!=` 仍然合法。
 - `||` 优先级低于 `&&`；用括号分组改变结合。
-- 比较两侧必须同为整数类型（validator 校验）。
 - `MAX` / `MIN` 是保留字，必须全大写；参数少于 2 个是 parse error。
 - 比较类条件归 comparison，裸大写名归 flag——同一个名字不要一处当布尔一处当整数用。
 
@@ -821,54 +802,19 @@ check {
 
 ```
 // 三条并发：切背景的同时起音乐、上立绘
-@bg set school_hallway fade
+@bg school_hallway fade
 &music tense_strings
 &mauricio mauricio__varsity_jacket__neutral_smirk
 
 MAURICIO: Hey, Butterfly.
 ```
 
-注意：并发组里的立绘要有紧随的台词支撑（上例 `&mauricio` 后面就是他说话）。
-如果下一行是 `NARRATOR:`，立绘会被清屏、白写。
-
-**适用范围**：`&` 可用于所有单行指令（背景、角色、音频、状态变更等）。
-**不可用于块结构指令**——`@choice`、`@phone`、`@if`、`@gate` 必须 `@` 独立执行。
-`@trick` / `@minigame` / `@cg` 语法上允许 `&`，但几乎总该独占一步，建议保持 `@`。
-
-注意"同屏一人"规则：并发组里写多个角色，只有最后一个会显示。
-`&` 的主要用途是"角色 + 背景 + 音乐"或"角色 + 气泡"这类**不同类别**的同步。
+`&` 只能用于单行指令，并且必须加入前一条 `@` 开启的组。
+`@choice`、`@phone`、`@if`、`@gate` 等块结构只能使用 `@`。
 
 ---
 
-## 5. MP 跨角色信号（多人剧本）
-
-多人故事中，一个角色的关键选择由**引擎自动铸造**成跨角色信号，写入双方共享的状态盒，
-让对方的脚本能用 `@if (...)` 读到。作者**不手写**这类信号名，只读。
-
-**格式**：`mp_<role>_a<actIndex>_c<choiceIndex>_<optionId>`
-
-| 段 | 含义 |
-|---|---|
-| `role` | 产出该选择的角色 roleKey（小写）。roleKey 一经发布冻结，不可改名 |
-| `actIndex` | 该角色的 act 在自己 track 中的 0 起序号（编译期定） |
-| `choiceIndex` | 该 act 内联合选择点按文档顺序的 0 起序号（编译期定） |
-| `optionId` | 玩家实际选中的 `@option` 字面 ID（运行时定） |
-
-信号名由"选择在故事里的位置"决定（内容寻址），不依赖运行时先后顺序，因此重编译稳定、
-可以前向引用 partner 尚未到达的选择：
-
-```
-@if (mp_diego_a2_c0_A) {
-  SEIYA: I saw what Diego picked. The corner's mine now.
-}
-```
-
-**读取要防御**：partner 还没走到那个选择点时条件为 false，脚本要能在 false 分支自然推进。
-（`mp_*` 是引擎铸造名，小写开头，是作者 signal 全大写规则的既定例外。）
-
----
-
-## 6. 素材映射
+## 5. 素材映射
 
 脚本与素材**分离**：脚本只写语义名，素材映射表是独立文件（由 Lunaverse IDE 素材管线维护），
 编译时结合：`lsc compile script.ls --assets mapping.json -o output.json`。
@@ -892,7 +838,7 @@ MAURICIO: Hey, Butterfly.
 
 | 脚本指令 | 映射路径 |
 |---|---|
-| `@bg set <name>` | `assets.bg.<name>` |
+| `@bg <name>` | `assets.bg.<name>` |
 | `@<char> <look>` | `assets.characters.<char>.<look>` |
 | `@music <name>` | `assets.music.<name>` |
 | `@sfx <name>` | `assets.sfx.<name>` |
@@ -900,11 +846,12 @@ MAURICIO: Hey, Butterfly.
 | `@minigame <name> "..."` | `assets.minigames.<name>` |
 | `@trick ...` | 无素材（引擎原生） |
 
-映射表中找不到的语义名：validate 模式报错，compile 模式输出 warning + 空 URL。
+映射表中找不到的语义名会产生 warning；编译产物可能缺少对应 `url`。
+完整素材映射是发布前置条件，未解析完成的产物不是合格的发布 JSON。
 
 ---
 
-## 7. 编译
+## 6. 编译
 
 Go 单二进制工具 `lsc`：
 
@@ -915,9 +862,9 @@ lsc validate 01.ls --assets mapping.json                # 只验证不输出
 lsc decompile ep01.json                                 # 从 JSON 反推 .ls + 映射表
 ```
 
-职责：解析为 AST → 校验（语法、引用完整性、保留字、signal 命名）→ 素材映射 → 输出前端播放器
+职责：解析为 AST → 校验（语法、保留字、signal 命名）→ 素材映射 → 输出前端播放器
 直接消费的结构化 JSON。**编译产物的字段定义见 `docs/JSON-OUTPUT.md`**，本文件不展开；
-只需知道：step 带稳定 id、角色名统一小写、URL 已解析、条件是结构化 AST 不含表达式字符串。
+只需知道：step 带稳定 id、角色名统一小写、条件是结构化 AST 不含表达式字符串。
 
 ---
 
@@ -926,31 +873,31 @@ lsc decompile ep01.json                                 # 从 JSON 反推 .ls + 
 | 指令 | 说明 |
 |---|---|
 | `@episode <bk>:<seq> "<title>" { }` | 集定义（文件根块） |
-| `@gate { }` | 路由声明（集尾部，必填且唯一） |
+| `@gate { }` | 路由声明（每集必填且唯一） |
 | `@if (<cond>): @next <bk>:<seq>` | gate 内跳转分支 |
 | `@if (<cond>): @end <type>` | gate 内终结分支（`complete`/`to_be_continued`/`bad_ending`） |
 | `@else @if (<cond>): ...` / `@else: ...` | gate 内链式/兜底分支 |
-| `@pause` | 等玩家点击一次（无参数；项目当前少用） |
+| `@pause` | 等玩家点击一次（无参数） |
 | `@<char> <look> [transition]` | 角色显示/换 look（首次=入场） |
 | `@<char> bubble <type>` | 气泡动画（9 种 type） |
-| `@bg set <name> [transition]` | 切背景（fade/cut/slow/dissolve） |
+| `@bg <name> [transition]` | 切背景（dissolve/fade/cut/slow） |
 | `@cg <name> "<content>"` | 全屏 CG（叶子指令） |
 | `CHARACTER: text` | 对白（自动显示说话角色） |
 | `CHARACTER [look]: text` | 对白糖（= `@character look` + 对白） |
 | `NARRATOR: text` | 旁白（清空所有立绘） |
 | `YOU: text` | MC 内心独白（显示 MC 立绘） |
-| `@phone { @text ... }` | 手机界面（必须多行；块内只许 `@text`；不配音） |
+| `@phone {` ... `}` | 手机界面（必须多行；块内只许 `@text`；不配音） |
 | `@text from/to <char>: content` | 收到/发出消息 |
-| `@music <name>` / `@music stop` | 播放/停止 BGM（无 `fadeout` 写法） |
+| `@music <name>` / `@music stop` | 播放/停止 BGM |
 | `@sfx <name>` | 一次性音效 |
 | `@trick <type> "<prompt>"` | 强制体感交互（6 种 type） |
 | `@minigame <name> "<desc>"` | 可选小游戏（叶子指令） |
 | `@choice { }` / `@option <ID> <brave\|safe> "<text>" { }` | 选择块/选项；brave 必含 `check { }` |
-| `check { attr / dc }` | 检定参数（attr 自由命名，dc 任意整数） |
+| `check { attr / dc }` | 检定参数（attr 非空，dc 为正整数） |
 | `@affection <char> <+/-N>` | 好感度变化（正负都合法） |
 | `@signal mark <EVENT>` | 持久布尔标记（全大写） |
 | `@signal int <NAME> (=\|+\|-) <int>` | 持久整数变量（全大写） |
-| `@achievement <ID> { name/rarity/description }` | 成就解锁（三字段必填） |
+| `@achievement <ID> { name/rarity/description }` | 成就解锁（ID 全大写格式，三字段必填） |
 | `@butterfly "<desc>"` | 蝴蝶效应记录（不参与路由） |
 | `@if (<cond>) { } @else @if / @else` | body 条件分支 |
 | `MAX(...)` / `MIN(...)` | comparison 聚合 operand（≥2 参数） |
@@ -958,16 +905,10 @@ lsc decompile ep01.json                                 # 从 JSON 反推 .ls + 
 
 ## 附录 B：保留字
 
-以下标识符不可用作 signal mark 名、signal int 名、look 名：
-
-- 指令动词：`set`、`bubble`、`from`、`to`、`stop`
-- 流程关键字：`if`、`else`、`next`、`end`、`gate`、`episode`、`choice`、`option`、`check`、`pause`
-- 选项模式：`brave`、`safe`
-- ending 类型：`complete`、`to_be_continued`、`bad_ending`
-- 聚合函数：`MAX`、`MIN`
-- D20 检定结果：`success`、`fail`、`any`
-
-具体清单以 validator 为准并随版本更新。
+| 标识符类型 | 保留字 |
+|---|---|
+| signal mark / signal int | `MAX`、`MIN` |
+| look | `bubble` |
 
 ## 附录 C：最小完整示例
 
@@ -975,7 +916,7 @@ lsc decompile ep01.json                                 # 从 JSON 反推 .ls + 
 @episode main:01 "Three Place Settings" {
 
   // ===== 开场 =====
-  @bg set voss_house_kitchen_evening fade
+  @bg voss_house_kitchen_evening fade
   &music grief_suspense
 
   NARRATOR: Three place settings. Nobody set a fourth.
@@ -1025,9 +966,9 @@ lsc decompile ep01.json                                 # 从 JSON 反推 .ls + 
 }
 ```
 
-## 附录 D：与旧版（v1）的差异
+## 附录 D：3.0.0 与旧版的差异
 
-**移出本文件、归 skill 层的内容**（在语法允许范围内由 skill 收窄，变更不再动 spec）：
+**移出本文件、归 skill 层的创作建议**：
 
 - look 的 canonical 命名细则与 `look_vocab.json` 词表 → episode-writer skill
 - CG 写作规范（分镜式、内嵌标签、道具独立成句、视频形态精修流程）→ episode-writer skill
@@ -1040,10 +981,11 @@ lsc decompile ep01.json                                 # 从 JSON 反推 .ls + 
 
 **语法层修正**：
 
-- `@bg set` 过渡补 `dissolve`（validator 一直接受，旧表漏了）
+- 背景切换的 canonical 形式改为 `@bg <name> [transition]`；`@bg set ...` 仅作存量脚本兼容
 - `@phone` 补"必须多行"与"块内不配音"两条语义
-- `@music` 卡明确 `fadeout` 不是合法写法
-- `@pause` 明确无参数（`@pause for N` 不合法）
+- `@choice` 直接子节点只能是 `@option`，且至少两个
+- `check.attr` 必须非空，`check.dc` 必须为正整数
+- achievement ID 必须匹配 `^[A-Z][A-Z0-9_]*$`
 - 检定属性不再可在 `@if` 中裸名读取（v1 示例中 `CHA >= 14` 的写法废止）；`@if` 裸名只解析作者 signal 与引擎数值
 - 示例全部改用 canonical look 命名与全大写 signal
 

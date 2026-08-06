@@ -30,7 +30,7 @@
     ],
     {
       "id": "0004_nar",
-      "text": "[T30] char_show 新语法 — 单角色出场，引擎从 gamestate.MC 派生位置。",
+      "text": "[T30] char_show 新语法 — 单角色出场，前端按 MC 身份派生位置。",
       "type": "narrator"
     },
     {

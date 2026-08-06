@@ -172,7 +172,7 @@ curl -s -X POST http://localhost:8080/decompile \
 ```json
 {
   "episodes": {
-    "episode.ls": "@episode main:01 \"Test\" {\n\n  @bg set classroom_morning fade\n  ...\n}\n"
+    "episode.ls": "@episode main:01 \"Test\" {\n\n  @bg classroom_morning fade\n  ...\n}\n"
   },
   "asset_mapping": {
     "base_url": "",

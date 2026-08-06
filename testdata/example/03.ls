@@ -2,7 +2,7 @@
 
   // ===== Mauricio's bedroom, afternoon — Thursday =====
 
-  @bg set mauricios_bedroom_afternoon fade
+  @bg mauricios_bedroom_afternoon fade
 
   NARRATOR: Thursday. 4 PM. The first time I've been inside Mauricio Reyes's house since I was ten.
   NARRATOR: It looks different from how I remember. Smaller. Older. The wallpaper in the hallway is peeling. But his room is clean. Extremely clean. Books everywhere -- shelves, desk, floor stacks. Jane Eyre, Wuthering Heights, The Catcher in the Rye. A worn copy of The Unhoneymooners with dog-eared pages.
@@ -108,7 +108,7 @@
 
   // ===== Malia's kitchen, evening =====
 
-  @bg set malias_kitchen_evening fade
+  @bg malias_kitchen_evening fade
 
   @samuel neutral_warm
 

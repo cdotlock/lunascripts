@@ -3,7 +3,7 @@
 
 @episode main/route/easton:01 "To Be Continued — Easton's Route" {
 
-  @bg set bedroom
+  @bg bedroom
   &music calm
   &easton hopeful
 

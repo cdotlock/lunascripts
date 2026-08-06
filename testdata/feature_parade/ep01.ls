@@ -9,7 +9,7 @@
   // SCENE 1 — Concurrent group + dialogue kinds + phone messages
   // ================================================================
 
-  @bg set bedroom
+  @bg bedroom
   &music calm
   &malia phone
 
@@ -30,11 +30,11 @@
   // SCENE 2 — bg transition=fade + bubble types ×9 + pause
   // ================================================================
 
-  @bg set school fade
+  @bg school fade
   &music upbeat
   &josie excited
 
-  NARRATOR: [T9] bg transition=fade + music (auto-crossfade) + char_show (concurrent).
+  NARRATOR: [T9] bg transition=fade + music + char_show (concurrent).
 
   NARRATOR: [T10] Watch 9 bubbles fire in order below (heart/anger/sweat/question/exclaim/idea/music/doom/ellipsis).
   @josie bubble heart
@@ -55,7 +55,7 @@
   // SCENE 3 — bg transition=cut + same-screen char swap + sfx
   // ================================================================
 
-  @bg set hallway cut
+  @bg hallway cut
   &mauricio smirk
   &sfx bell
 
@@ -67,7 +67,7 @@
   // SCENE 4 — bg transition=slow + minigame (leaf) + trick (engine-native)
   // ================================================================
 
-  @bg set classroom slow
+  @bg classroom slow
   &music tense
   &malia flat
 
@@ -85,7 +85,7 @@
   // SCENE 5 — @choice (brave + check, safe) + all state directives
   // ================================================================
 
-  @bg set cafeteria fade
+  @bg cafeteria fade
   &music lunch
   &mark grin
 
@@ -145,7 +145,7 @@
   // SCENE 6 — top-level @if with compound / comparison / flag + CG
   // ================================================================
 
-  @bg set gym fade
+  @bg gym fade
   &music ambient
   &malia flat
 
@@ -170,7 +170,7 @@
   // SCENE 7 — affection vs affection, MAX/MIN operand, engine value comparison, @music stop
   // ================================================================
 
-  @bg set bedroom fade
+  @bg bedroom fade
   &music night
   &malia phone
 

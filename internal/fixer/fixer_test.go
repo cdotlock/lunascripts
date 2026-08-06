@@ -646,13 +646,13 @@ func TestLegacySfxPlay(t *testing.T) {
 	}
 }
 
-// TestLegacyPauseForN verifies `@pause for N` is flagged with the
-// "repeat the directive" hint (the new AST has no duration parameter).
+// TestLegacyPauseForN verifies `@pause for N` is flagged with the canonical
+// no-argument form.
 func TestLegacyPauseForN(t *testing.T) {
 	r := Fix("@pause for 3")
 	found := false
 	for _, e := range r.Errors {
-		if strings.Contains(e, "@pause is single-click only") {
+		if strings.Contains(e, "use @pause with no arguments") {
 			found = true
 			break
 		}

@@ -1,6 +1,6 @@
 # LS JSON 输出参考手册
 
-> 供前端播放器/游戏引擎对接使用。描述 `lsc compile` 输出的 JSON 结构、步骤类型、并发分组规则和引擎消费逻辑。
+> 供前端播放器/游戏引擎对接使用。本文只定义 `lsc compile` 输出的 JSON wire format，不定义前端呈现策略。
 
 ---
 
@@ -103,80 +103,17 @@ steps: [
 
 | LS 脚本 | JSON 输出 |
 |----------|----------|
-| `@bg set ...` 单独 | `{ "type": "bg", ... }` 对象 |
-| `@bg set ...` + `&music ...` + `&<char> <pose>` | `[{"type":"bg"}, {"type":"music"}, {"type":"char_show"}]` 数组 |
+| `@bg ...` 单独 | `{ "type": "bg", ... }` 对象 |
+| `@bg ...` + `&music ...` + `&<char> <pose>` | `[{"type":"bg"}, {"type":"music"}, {"type":"char_show"}]` 数组 |
 | `NARRATOR: text` | `{ "type": "narrator", ... }` 对象（始终独立） |
 
 ---
 
-## 3. 引擎消费规则
+## 3. 文档边界
 
-### 3.1 遍历算法
+本文仅规定字段与嵌套形态。角色可见性、立绘切换、清屏、动画与交互推进策略不属于 JSON wire contract。
 
-```
-for element in steps:
-    if element is array:
-        // 并发组：同时执行所有步骤
-        execute_all_simultaneously(element)
-        if any_click_wait_type(element):
-            wait_for_player_click()
-    else:
-        // 单步骤
-        execute(element)
-        if is_click_wait_type(element):
-            wait_for_player_click()
-```
-
-### 3.2 点击等待类型
-
-以下 type 需要等待玩家点击后才推进到下一个步骤：
-
-| type | 说明 |
-|------|------|
-| `dialogue` | 角色对白 |
-| `narrator` | 旁白 |
-| `you` | 内心独白 |
-| `pause` | 显式暂停 |
-
-### 3.3 自动推进类型
-
-以下 type 执行后立即推进，不等待玩家输入：
-
-| type | 说明 |
-|------|------|
-| `bg` | 背景切换 |
-| `char_show` | 角色显示 / 换 pose |
-| `bubble` | 气泡动画 |
-| `music` | 播放 BGM（引擎自动 from-silence/crossfade） |
-| `music_stop` | 停止 BGM（淡出） |
-| `sfx` | 一次性音效 |
-| `affection` | 好感度变更 |
-| `signal` | 持久信号写入（mark/int） |
-| `achievement` | 成就解锁事件（自带元数据） |
-| `butterfly` | 蝴蝶效应记录（喂下游生成 agent） |
-
-### 3.4 交互阻塞类型
-
-以下 type 会阻塞流程，由引擎内部管理推进：
-
-| type | 说明 |
-|------|------|
-| `choice` | 选择菜单，等待玩家选择 |
-| `minigame` | 可选小游戏，等待游戏结果（可跳） |
-| `trick` | 强制 trick（引擎原生检测），不可跳 |
-| `phone_show` | 手机界面（含 messages） |
-| `cg_show` | CG 展示（视频管线） |
-| `if` | 条件分支 |
-
-### 3.5 角色可见性的隐式语义
-
-JSON 不输出 `position` 字段——位置由引擎在运行时根据角色身份决定（MC 左、其余右）。引擎需维护角色可见性状态：
-
-- **`char_show`** step：显示该角色（或切 pose，如果已显示）；隐式切换说明前一个角色被替换（同屏一人）
-- **`dialogue`** step：引擎确保 `character` 字段对应的角色当前可见（用最后一次的 pose）；如果之前显示的是不同角色，自动切换
-- **`narrator`** / **`you`** step：清屏——所有角色立绘移出
-
-引擎自行管理"谁在场、用什么 pose"——编译器不输出隐式 hide 步骤，节奏由步骤序列驱动。
+发布有效的 JSON 中，素材类 URL 必须完成解析。编译器可对缺失素材发出 warning 并产出 URL 缺失或为空的中间结果，但该结果不满足发布契约。
 
 ---
 
@@ -286,11 +223,11 @@ steps[4] = 0005_ch choice 的 options[0].steps（Brave 选项 A）:
 |------|------|------|------|
 | `name` | string | 是 | 素材语义名 |
 | `url` | string | 是 | 已解析的 OSS URL |
-| `transition` | string | 否 | `"fade"` / `"cut"` / `"slow"`，不写为交叉溶解 |
+| `transition` | string | 否 | `"dissolve"` / `"fade"` / `"cut"` / `"slow"` |
 
 #### `char_show` — 角色显示 / 换 pose
 
-引擎使用同一 step type 处理"显示该角色"和"换 pose"两种情形——根据角色当前是否在场决定。**不输出 `position` 字段**——位置由引擎从角色身份派生（MC 左、其余右）。
+`char_show` 不输出 `position` 字段。
 
 ```json
 {
@@ -307,11 +244,7 @@ steps[4] = 0005_ch choice 的 options[0].steps（Brave 选项 A）:
 | `character` | string | 是 | 角色 ID（小写） |
 | `look` | string | 是 | 立绘名 |
 | `url` | string | 是 | 已解析的 OSS URL |
-| `transition` | string | 否 | 过渡效果（如 `"dissolve"`、`"fade"`） |
-
-引擎语义：
-- 该角色当前不可见 → 显示该角色（带 transition）；同时隐式隐藏屏幕上的其他角色（同屏一人规则）
-- 该角色当前已可见 → 切 pose（带 transition）
+| `transition` | string | 否 | `"dissolve"` / `"fade"` / `"cut"` / `"slow"` |
 
 #### `bubble` — 气泡动画
 
@@ -330,7 +263,7 @@ steps[4] = 0005_ch choice 的 options[0].steps（Brave 选项 A）:
 
 #### `cg_show` — CG 展示（leaf）
 
-CG 由 agent-forge 渲染为短视频。脚本只声明语义名 + 叙事 prose（`content` 字段），管线据此生成视频。运行时播放器只播放 `url`。
+CG 步骤携带素材语义名、解析后 URL 与生成所需的叙事 prose。
 
 ```json
 {
@@ -344,10 +277,10 @@ CG 由 agent-forge 渲染为短视频。脚本只声明语义名 + 叙事 prose�
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
 | `name` | string | 是 | CG 素材语义名 |
-| `url` | string | 是 | 已解析的 OSS URL（agent-forge 未跑完时可能为空字符串） |
-| `content` | string | **是** | 英文连续叙述：镜头走向 + 故事情节。供 agent-forge 生成视频；运行时播放器可忽略 |
+| `url` | string | 是 | 已解析的 OSS URL；中间编译结果可为空，但不满足发布契约 |
+| `content` | string | **是** | 英文连续叙述：镜头走向 + 故事情节 |
 
-**leaf step**——无 `steps` 子数组、无 `duration`、无 `transition` 字段。CG 期间没有叠加对白；要在 CG 前后说话用普通 dialogue/narrator/you step。
+**leaf step**——无 `steps` 子数组、无 `duration`、无 `transition` 字段。
 
 ### 4.2 对话类
 
@@ -366,8 +299,6 @@ CG 由 agent-forge 渲染为短视频。脚本只声明语义名 + 叙事 prose�
 | `character` | string | 是 | 角色 ID（**始终小写**，脚本中 `MAURICIO:` → JSON 中 `"mauricio"`） |
 | `text` | string | 是 | 对白内容 |
 
-引擎语义：自动显示 `character` 角色（用最后一次的 pose，或默认 pose）；如果之前显示的是其他角色，自动切换。
-
 > **注意：** 所有步骤类型中的 `character` 字段在 JSON 输出中统一为小写。
 
 #### `narrator` — 旁白
@@ -383,8 +314,6 @@ CG 由 agent-forge 渲染为短视频。脚本只声明语义名 + 叙事 prose�
 |------|------|------|------|
 | `text` | string | 是 | 旁白内容 |
 
-引擎语义：清屏（所有角色立绘消失）。
-
 #### `you` — 内心独白
 
 ```json
@@ -398,8 +327,6 @@ CG 由 agent-forge 渲染为短视频。脚本只声明语义名 + 叙事 prose�
 |------|------|------|------|
 | `text` | string | 是 | MC 内心独白内容 |
 
-引擎语义：清屏。视觉效果与 `narrator` 相同，区别在叙事口吻（第三人称 vs 第一人称）。
-
 ### 4.3 时序控制类
 
 #### `pause` — 暂停等待
@@ -410,7 +337,7 @@ CG 由 agent-forge 渲染为短视频。脚本只声明语义名 + 叙事 prose�
 }
 ```
 
-无字段。引擎等待玩家点击一次后推进。
+无额外字段。
 
 ### 4.4 手机/消息类
 
@@ -428,9 +355,7 @@ CG 由 agent-forge 渲染为短视频。脚本只声明语义名 + 叙事 prose�
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `messages` | array | 是 | 消息列表（`text_message` 对象，至少 1 条） |
-
-引擎语义：弹出手机界面，依次展示 messages；玩家点击推进；最后一条消息后自动收起手机。**没有单独的 phone_hide step**——`phone_show` 的生命周期由其自身管理。
+| `messages` | array | 是 | `text_message` 对象列表 |
 
 #### `text_message` — 短信消息（phone_show 内部）
 
@@ -445,8 +370,8 @@ CG 由 agent-forge 渲染为短视频。脚本只声明语义名 + 叙事 prose�
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `direction` | string | 是 | `"from"`（收到）/ `"to"`（发出） |
-| `character` | string | 是 | 角色 ID |
+| `direction` | string | 是 | `"from"`（`character` 为发件人）/ `"to"`（`character` 为收件人） |
+| `character` | string | 是 | 角色 ID（小写） |
 | `text` | string | 是 | 消息内容 |
 
 ### 4.5 音频类
@@ -466,8 +391,6 @@ CG 由 agent-forge 渲染为短视频。脚本只声明语义名 + 叙事 prose�
 | `name` | string | 是 | 曲目语义名 |
 | `url` | string | 是 | 已解析的 OSS URL |
 
-引擎语义：当前无 BGM → 淡入新 BGM；当前有 BGM → 交叉淡入。脚本不区分。
-
 #### `music_stop` — 停止 BGM
 
 ```json
@@ -476,7 +399,7 @@ CG 由 agent-forge 渲染为短视频。脚本只声明语义名 + 叙事 prose�
 }
 ```
 
-无字段。引擎淡出当前 BGM。
+无额外字段。
 
 #### `sfx` — 一次性音效
 
@@ -529,7 +452,7 @@ brave 和 safe 选项内容统一在 `steps` 字段下。brave 的成功/失败�
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `options` | array | 是 | 选项列表 |
+| `options` | array | 是 | 选项列表，至少 2 项 |
 
 **Option 对象：**
 
@@ -538,12 +461,12 @@ brave 和 safe 选项内容统一在 `steps` 字段下。brave 的成功/失败�
 | `id` | string | 是 | 选项编号（A / B / C ...） |
 | `mode` | string | 是 | `"brave"`（需检定）/ `"safe"`（无检定） |
 | `text` | string | 是 | 选项显示文本 |
-| `check` | object | brave 必填 | `{ "attr": "CHA", "dc": 12 }` |
-| `steps` | array | 是 | 选项体内所有步骤。brave 选项内部通常首个 step 就是一个 `check` 条件的 if——validator **不**强制 then/else 都填满 |
+| `check` | object | brave 必填 | `{ "attr": "CHA", "dc": 12 }`；`attr` 非空，`dc` 为正整数 |
+| `steps` | array | 是 | 选项体内所有步骤 |
 
 #### `minigame` — 可选小游戏（leaf）
 
-`minigame` 是 leaf step——没有 body / steps / 评级分支。下游 vibe-coding agent 按 `description` 生成 H5 游戏，URL 写回素材表后由解析器填入 `game_url`。玩家可玩可跳；跳过等价于把整条 step 当 no-op，下一个 step 直接执行。奖励由引擎根据 H5 回传的分数缩放（反作弊在此），脚本不参与。
+`minigame` 是 leaf step，没有 body / steps / 评级分支。`description` 用于下游生成，`game_url` 携带解析后素材地址。
 
 ```json
 {
@@ -558,11 +481,11 @@ brave 和 safe 选项内容统一在 `steps` 字段下。brave 的成功/失败�
 |------|------|------|------|
 | `name` | string | 是 | 素材句柄，用于查 `assets.minigames.<name>` |
 | `game_url` | string | 否 | 已解析的小游戏 URL。生成器尚未完成时可缺省或为空字符串 |
-| `description` | string | **是** | 连贯英文 prose：场景 + 简单玩法。喂给下游 vibe-coding agent；运行时播放器可忽略 |
+| `description` | string | **是** | 连贯英文 prose：场景 + 简单玩法 |
 
 #### `trick` — 强制 trick（leaf）
 
-`trick` 是 leaf step。引擎检测玩家完成相应的体感动作之前**必须阻塞**——这是与 `minigame` 最根本的差别（minigame 可跳，trick 不能跳）。无奖励，无评级，无叙事分支。
+`trick` 是 leaf step，无子步骤、奖励、评级或叙事分支。
 
 ```json
 {
@@ -621,17 +544,6 @@ brave 和 safe 选项内容统一在 `steps` 字段下。brave 的成功/失败�
 | `op` | string | 是 | `"="` / `"+"` / `"-"` |
 | `value` | number | 是 | 整数。op=`=` 时可为负；op=`+`/`-` 时为非负 |
 
-引擎语义：
-- `kind: "mark"` → 写入持久 flag store
-- `kind: "int"` → 按 op 更新持久 int store；首次引用从 0 起算
-
-#### `mark` 生命周期
-
-1. 脚本发出 `@signal mark EVENT_NAME`
-2. 引擎收到 `{"type": "signal", "kind": "mark", "event": "EVENT_NAME"}`，写入持久存储
-3. 后续脚本中 `@if (EVENT_NAME) { }` 编译为 `{"type": "if", "condition": {"type": "flag", "name": "EVENT_NAME"}, ...}`
-4. 引擎求值：在已存储的 marks 中查找 → 找到返回 true，否则返回 false
-
 #### `achievement` — 成就解锁
 
 ```json
@@ -644,16 +556,14 @@ brave 和 safe 选项内容统一在 `steps` 字段下。brave 的成功/失败�
 }
 ```
 
-引擎收到该 step 后走成就系统：UI 弹窗、解锁状态持久化、数据上报。同一 `achievement_id` 重复触发由引擎按 `achievement_id` 去重（首次解锁即生效）。触发事件**不**影响 flag 存储。
-
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `achievement_id` | string | 是 | 成就语义标识（来自 LS `@achievement <id>`） |
+| `achievement_id` | string | 是 | 成就语义标识，匹配 `^[A-Z][A-Z0-9_]*$` |
 | `name` | string | 是 | 显示名称（英文） |
 | `rarity` | string | 是 | `"uncommon"` / `"rare"` / `"epic"` / `"legendary"`（**无 `common`**） |
 | `description` | string | 是 | DM 口吻 flavor 文本（英文） |
 
-> **注意 `id` vs `achievement_id`：** 与所有 step 一样，`achievement` 也带通用的 `id` 字段（cursor 稳定步骤 id，格式 `<seq>_ach`，见 §4.0）；`achievement_id` 才是 LS 源里 `@achievement <id>` 写下的语义标识。两者不可互换：执行器/UI 用 `achievement_id` 记录解锁状态，cursor 用 `id` 定位。`minigame` step 同理用 `name` 携带素材句柄，通用的 `id` 字段是 cursor 锚点。
+> **注意 `id` vs `achievement_id`：** `id` 是通用 cursor 步骤标识（`<seq>_ach`）；`achievement_id` 是 LS 源中的成就语义标识。
 
 #### `butterfly` — 蝴蝶效应记录
 
@@ -665,7 +575,7 @@ brave 和 safe 选项内容统一在 `steps` 字段下。brave 的成功/失败�
 |------|------|------|------|
 | `description` | string | 是 | 英文 prose：玩家行为与其性格含义 |
 
-**消费者**：Remix Executor 和 Dream 内容生成器。引擎收到 step 后追加到玩家的 butterfly 累积存储，提供给下游生成 agent 作为玩家画像数据。**不参与运行时路由判定**——gate 求值不读 butterfly 累积。
+`butterfly` 是下游内容生成元数据，不参与 gate 路由。
 
 ### 4.8 流程控制类
 
@@ -828,8 +738,6 @@ brave 和 safe 选项内容统一在 `steps` 字段下。brave 的成功/失败�
 |------|------|
 | `args` | Operand AST 数组。**长度 ≥ 2，无上限**。每个 arg 可以是任意 kind（含递归嵌套的 max/min） |
 
-引擎语义：递归求值每个 arg，然后取这些值的最大/最小值。
-
 **`compound`** — 复合条件。`left` 和 `right` 是递归的完整条件对象：
 
 ```json
@@ -857,31 +765,15 @@ brave 和 safe 选项内容统一在 `steps` 字段下。brave 的成功/失败�
 |------|------|
 | `result` | `"success"` / `"fail"` |
 
-只在 brave option 体内的 `@if` 里生成。编译器不做作用域校验；源脚本写在错误位置时运行时恒为 false。
+只在 brave option 体内的 `@if` 里生成。
 
 ---
 
-## 5. 并发组行为
-
-### 5.1 执行模型
-
-```
-并发组 = [step_1, step_2, step_3]
-
-引擎行为：
-  1. 同时发起 step_1, step_2, step_3 的执行
-  2. 检查组内是否包含点击等待类型（dialogue / narrator / you / pause）
-     - 有 → 渲染完成后等待玩家点击
-     - 无 → 立即推进到下一个步骤/组
-```
-
-### 5.2 典型并发组场景
-
-**场景搭建**（最常见用法）：
+## 5. 并发组形态
 
 LS 源码：
 ```
-@bg set school_cafeteria fade
+@bg school_cafeteria fade
 &music casual_lunch
 &mark grin_confident
 ```
@@ -895,24 +787,11 @@ JSON 输出：
 ]
 ```
 
-引擎行为：同时切背景 + 换音乐 + 角色入场。全部是自动推进类型，无需等待。
-
-**角色 + 气泡同步**：
-
-```json
-[
-  {"type": "char_show", "character": "mauricio", "look": "arms_crossed_angry", "url": "..."},
-  {"type": "bubble", "character": "josie", "bubble_type": "sweat"}
-]
-```
-
-注意"同屏一人"规则——只有最后一个 `char_show` 实际显示。气泡和角色不同类，可以共存（气泡跟着当前在场的角色）。
-
 ---
 
 ## 6. Gate 路由
 
-`gate` 是集末尾的路由声明，决定玩家完成本集后跳转到哪一集或如何终结。采用嵌套 if/else 链结构，条件为结构化对象，**叶子节点可以是 `{next: <branch_key>}` 或 `{end: <ending_type>}`**。
+`gate` 是集的路由声明，决定玩家完成本集后跳转到哪一集或如何终结。采用嵌套 if/else 链结构，条件为结构化对象，**叶子节点可以是 `{next: <branch_key>}` 或 `{end: <ending_type>}`**。
 
 ### 6.1 形态示例
 
@@ -987,17 +866,11 @@ Gate 中的条件使用与 body `@if` 相同的结构化 AST 格式（见 §4.8 
 }
 ```
 
-| type | 含义 | 引擎行为建议 |
-|------|------|-------------|
-| `complete` | 全剧终 | 滚字幕/致谢画面，可回到主菜单 |
-| `to_be_continued` | 待续 | "本章完，敬请期待" 画面 |
-| `bad_ending` | 坏结局 | 显示坏结局提示，提供重开本章入口 |
-
-**消费规则：**
-
-- 若 `ending != null`：播放完 `steps` 后进入终结画面，不再消费 `gate`
-- 若 `gate != null`：播放完 `steps` 后走 gate 判定。判定到 `next` 叶子 → 跳转；判定到 `end` 叶子 → 显示对应终结画面
-- 两者均为 null 在编译时已拒绝，前端不会遇到
+| type | 含义 |
+|------|------|
+| `complete` | 全剧终 |
+| `to_be_continued` | 待续 |
+| `bad_ending` | 坏结局 |
 
 ---
 
