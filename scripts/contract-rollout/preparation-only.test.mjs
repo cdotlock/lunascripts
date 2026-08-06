@@ -83,6 +83,18 @@ test("diff evidence fails closed on unsafe status, path, mode, type, regeneratio
   }), /regenerated patch/i);
 });
 
+test("deletion is allowed only inside an updater-owned exact mirror tree", () => {
+  const raw = `:100644 000000 ${OLD_BLOB} ${"0".repeat(40)} D\0vendor/lunascripts/docs/ENGINE-INTEGRATION.md\0`;
+  const evidence = buildDiffEvidence({
+    runner: gitRunner(raw), cwd: "/tmp/ide", baseSha: BASE, headSha: SHA,
+    allowed: ["vendor/lunascripts"], removable: ["vendor/lunascripts"],
+    expectedTreeSha: TREE, expectedPatchSha256: PATCH_DIGEST,
+  });
+  assert.equal(evidence.files[0].status, "deleted");
+  assert.doesNotThrow(() => validateDiffEvidence(evidence, ["vendor/lunascripts"], ["vendor/lunascripts"]));
+  assert.throws(() => validateDiffEvidence(evidence, ["vendor/lunascripts"]), /delete/i);
+});
+
 test("bound read-only audit keeps every sanitized finding and separate manual suggestions", () => {
   const report = {
     schemaVersion: 2, kind: "consumer-preparation",

@@ -28,6 +28,7 @@ export const CONSUMERS = Object.freeze([
       "scripts/check-lunascripts-authority.test.ts", "scripts/lunascripts-contract-audit-lib.ts", "scripts/lunascripts-contract-audit.test.ts",
       "scripts/lunascripts-contract-audit.ts", "scripts/update-lunascripts-contract.mjs", "scripts/update-lunascripts-contract.test.mjs",
     ],
+    removable: ["contracts/lunascripts"],
   },
   {
     key: "ide",
@@ -45,6 +46,7 @@ export const CONSUMERS = Object.freeze([
       "scripts/update-vendor.mjs", "test/agent-guidance-contract.test.mjs", "test/lunascripts-authority.test.mjs",
       "test/update-vendor.test.mjs", "vendor/README.md", "vendor/lunascripts",
     ],
+    removable: ["vendor/lunascripts"],
   },
 ]);
 
@@ -121,7 +123,7 @@ function parseRawDiff(raw) {
   return files;
 }
 
-export function validateDiffEvidence(evidence, allowed) {
+export function validateDiffEvidence(evidence, allowed, removable = []) {
   for (const key of ["baseSha", "headSha", "mergeBaseSha", "headTreeSha", "expectedTreeSha"]) assertSha(evidence?.[key], `diff evidence ${key}`);
   if (evidence.mergeBaseSha !== evidence.baseSha) throw new Error("consumer branch diverges from its exact main base");
   if (evidence.headTreeSha !== evidence.expectedTreeSha) throw new Error("head tree does not match clean-base regenerated tree");
@@ -130,7 +132,14 @@ export function validateDiffEvidence(evidence, allowed) {
   for (const file of evidence.files) {
     if (!isAllowed(file.path, allowed)) throw new Error(`unapproved consumer path: ${file.path}`);
     if (file.previousPath || file.status === "renamed" || file.status === "copied") throw new Error("rename and copy changes are forbidden");
-    if (file.status === "deleted") throw new Error("delete changes are forbidden");
+    if (file.status === "deleted") {
+      if (!isAllowed(file.path, removable)) throw new Error("delete changes are forbidden outside updater-owned mirror trees");
+      if (!new Set(["100644", "100755"]).has(file.oldMode) || file.oldType !== "blob" ||
+          file.newMode !== "000000" || file.newType !== "missing" || file.headBlobSha !== "0".repeat(40)) {
+        throw new Error("deleted mirror file has unsafe mode, type, or object identity");
+      }
+      continue;
+    }
     if (!new Set(["added", "modified"]).has(file.status)) throw new Error(`unsafe diff status: ${file.status}`);
     if (file.newType === "symlink") throw new Error("symlink changes are forbidden");
     if (file.newType === "submodule") throw new Error("submodule changes are forbidden");
@@ -142,7 +151,7 @@ export function validateDiffEvidence(evidence, allowed) {
   return evidence;
 }
 
-export function buildDiffEvidence({ runner, cwd, baseSha, headSha, allowed, expectedTreeSha, expectedPatchSha256 }) {
+export function buildDiffEvidence({ runner, cwd, baseSha, headSha, allowed, removable = [], expectedTreeSha, expectedPatchSha256 }) {
   const evidence = {
     baseSha, headSha,
     mergeBaseSha: runner.capture("git", ["merge-base", baseSha, headSha], { cwd }),
@@ -153,7 +162,7 @@ export function buildDiffEvidence({ runner, cwd, baseSha, headSha, allowed, expe
     files: parseRawDiff(runner.capture("git", ["diff", "--raw", "-z", "--full-index", "--no-abbrev", baseSha, headSha, "--"], { cwd, trim: false })),
   };
   evidence.digest = payloadDigest(evidence);
-  return validateDiffEvidence(evidence, allowed);
+  return validateDiffEvidence(evidence, allowed, removable);
 }
 
 function sanitize(value, key = "") {
@@ -266,7 +275,7 @@ function completeRemoteEvidence(github, consumer, pr, local) {
   const evidence = { ...local, remoteFiles, remoteFilesDigest: contentDigest(remoteFiles) };
   delete evidence.digest;
   evidence.digest = payloadDigest(evidence);
-  return validateDiffEvidence(evidence, consumer.allowed);
+  return validateDiffEvidence(evidence, consumer.allowed, consumer.removable);
 }
 
 function verifyAdoptedPullRequest(github, consumer, existing, branch, expectedHeadSha) {
@@ -312,7 +321,10 @@ export function prepareConsumerWorkspace({ runner, github, consumer, branch, pin
     runner.capture("git", ["commit", "-m", `chore(ls): consume contract ${contractVersion}`], { cwd });
   }
   const headSha = runner.capture("git", ["rev-parse", "HEAD"], { cwd });
-  const localEvidence = buildDiffEvidence({ runner, cwd, baseSha, headSha, allowed: consumer.allowed, expectedTreeSha: expected.treeSha, expectedPatchSha256: expected.patchSha256 });
+  const localEvidence = buildDiffEvidence({
+    runner, cwd, baseSha, headSha, allowed: consumer.allowed, removable: consumer.removable,
+    expectedTreeSha: expected.treeSha, expectedPatchSha256: expected.patchSha256,
+  });
   publishConsumerBranch({ runner, github, consumer, existing, branch, cwd, startingHeadSha, headSha, changed: changed.length > 0 });
   const title = `chore(ls): consume contract ${contractVersion}`;
   const body = manualBody(contractVersion, pinSha, upstreamUrl, localEvidence);
