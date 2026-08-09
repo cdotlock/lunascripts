@@ -5,6 +5,9 @@ name: MANUAL ONLY — Deploy to Railway
 on:
   workflow_dispatch: {}
 
+permissions:
+  contents: read
+
 concurrency:
   group: railway-deploy-main
   cancel-in-progress: false
@@ -18,8 +21,35 @@ jobs:
       RAILWAY_PROJECT_ID: 64a837fc-1712-492f-b571-e1fec8090cd7
       RAILWAY_ENVIRONMENT: production
       RAILWAY_SERVICE_ID: b33addae-782a-469a-929e-56c8fd09d70c
+      SERVICE_BASE_URL: https://moonshort-script-production.up.railway.app
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+      - name: Verify the exact canonical main revision
+        run: |
+          test "$GITHUB_REF" = "refs/heads/main"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git fetch origin main --depth=1
+          test "$(git rev-parse origin/main)" = "$GITHUB_SHA"
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Test the compiler and API readiness contract
+        run: |
+          go test ./...
+          node --test scripts/contractctl.test.mjs scripts/contract-rollout/*.test.mjs
+          go build -o bin/lsc ./cmd/lsc
+          python -m pip install -r requirements.txt
+          python -m unittest discover -s tests
+          echo "EXPECTED_CONTRACT_VERSION=$(python -c 'import json; print(json.load(open("contract/contract.json"))["contract_version"])')" >> "$GITHUB_ENV"
       - name: Install Railway CLI
         run: |
           curl -fsSL https://railway.com/install.sh | bash
@@ -28,5 +58,96 @@ jobs:
         env:
           RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
         run: |
+          git fetch origin main --depth=1
+          test "$(git rev-parse origin/main)" = "$GITHUB_SHA"
+          python - "$GITHUB_SHA" <<'PY'
+          import json
+          from pathlib import Path
+          import sys
+
+          Path("build-info.json").write_text(
+              json.dumps({"source_revision": sys.argv[1]}, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          PY
           railway link --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" --service "$RAILWAY_SERVICE_ID"
-          railway up --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" --service "$RAILWAY_SERVICE_ID" --ci
+          railway up --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" --service "$RAILWAY_SERVICE_ID" --ci --message "main@$GITHUB_SHA"
+      - name: Verify the exact deployed compiler
+        run: |
+          git fetch origin main --depth=1
+          test "$(git rev-parse origin/main)" = "$GITHUB_SHA"
+          verified=false
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent --show-error --max-time 10 "$SERVICE_BASE_URL/version" --output /tmp/lunascripts-version.json \
+              && python - "$GITHUB_SHA" "$EXPECTED_CONTRACT_VERSION" /tmp/lunascripts-version.json <<'PY'
+          import json
+          import sys
+
+          expected_revision, expected_contract, path = sys.argv[1:]
+          with open(path, encoding="utf-8") as handle:
+              actual = json.load(handle)
+          assert actual["source_revision"] == expected_revision, actual
+          assert actual["ls_contract_version"] == expected_contract, actual
+          PY
+            then
+              verified=true
+              break
+            fi
+            sleep 5
+          done
+          test "$verified" = true
+
+          curl --fail --silent --show-error --max-time 10 "$SERVICE_BASE_URL/ready" --output /tmp/lunascripts-ready.json
+          curl --fail --silent --show-error --max-time 10 "$SERVICE_BASE_URL/spec" --output /tmp/lunascripts-spec.json
+          curl --fail --silent --show-error --max-time 30 --request POST "$SERVICE_BASE_URL/compile" \
+            --form "script=@testdata/minimal.ls" --output /tmp/lunascripts-compile.json
+          python - "$EXPECTED_CONTRACT_VERSION" "$GITHUB_SHA" "$SERVICE_BASE_URL" /tmp/lunascripts-ready.json /tmp/lunascripts-spec.json /tmp/lunascripts-compile.json <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          import sys
+          from urllib.request import urlopen
+
+          expected_contract, expected_revision, base_url = sys.argv[1:4]
+          with open(sys.argv[4], encoding="utf-8") as handle:
+              ready = json.load(handle)
+          with open(sys.argv[5], encoding="utf-8") as handle:
+              index = json.load(handle)
+          with open(sys.argv[6], encoding="utf-8") as handle:
+              compiled = json.load(handle)
+          assert ready["status"] == "ready", ready
+          assert ready["source_revision"] == expected_revision, ready
+          assert ready["ls_contract_version"] == expected_contract, ready
+          assert index["source_revision"] == expected_revision, index
+          assert index["ls_contract_version"] == expected_contract, index
+          assert compiled["ls_contract_version"] == expected_contract, compiled
+          assert compiled["steps"][0]["name"] == "classroom_morning", compiled["steps"][0]
+          assert compiled["steps"][0]["transition"] == "fade", compiled["steps"][0]
+
+          local_paths = {
+              "repository-rules": Path("AGENTS.md"),
+              "contract-changelog": Path("CHANGELOG.md"),
+              "ls-spec": Path("LS-SPEC.md"),
+              "contract": Path("contract/contract.json"),
+              "contract-manifest-schema": Path("contract/contract-manifest.schema.json"),
+              "episode-schema": Path("contract/episode.schema.json"),
+              "scriptwriting-skill": Path("skills/ls-scriptwriting/SKILL.md"),
+              "scriptwriting-ls-spec": Path("skills/ls-scriptwriting/references/LS-SPEC.md"),
+              "directive-table": Path("skills/ls-scriptwriting/references/directive-table.md"),
+              "addressing": Path("skills/ls-scriptwriting/references/addressing.md"),
+              "compiler-runbook": Path("docs/compiler-service-runbook.md"),
+              "json-output-spec": Path("docs/JSON-OUTPUT.md"),
+              "consumer-preparation-runbook": Path("docs/contract-consumer-preparation.md"),
+          }
+          remote = {resource["name"]: resource for resource in index["resources"]}
+          assert set(remote) == set(local_paths), (set(remote), set(local_paths))
+          for name, path in local_paths.items():
+              local_digest = hashlib.sha256(path.read_bytes()).hexdigest()
+              assert remote[name]["sha256"] == local_digest, (name, remote[name])
+              with urlopen(base_url + remote[name]["url"], timeout=10) as response:
+                  body = response.read()
+                  assert response.headers["X-Source-Revision"] == expected_revision, name
+              assert hashlib.sha256(body).hexdigest() == local_digest, name
+          PY
+          git fetch origin main --depth=1
+          test "$(git rev-parse origin/main)" = "$GITHUB_SHA"

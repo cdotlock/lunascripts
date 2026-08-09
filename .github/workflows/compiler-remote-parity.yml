@@ -1,0 +1,109 @@
+name: Remote Compiler parity with main
+
+# Read-only drift guard. It never deploys or mutates production; a human must
+# run deploy-railway.yml for every main change while this check waits.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: compiler-remote-parity-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    env:
+      SERVICE_BASE_URL: https://moonshort-script-production.up.railway.app
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - name: Verify canonical main and wait for the human-operated release
+        run: |
+          test "$GITHUB_REF" = "refs/heads/main"
+          git fetch origin main --depth=1
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git rev-parse origin/main)" = "$GITHUB_SHA"
+
+          converged=false
+          for attempt in $(seq 1 120); do
+            if curl --fail --silent --show-error --max-time 10 "$SERVICE_BASE_URL/version" --output /tmp/lunascripts-version.json \
+              && curl --fail --silent --show-error --max-time 10 "$SERVICE_BASE_URL/spec" --output /tmp/lunascripts-spec.json \
+              && python - "$GITHUB_SHA" "$SERVICE_BASE_URL" /tmp/lunascripts-version.json /tmp/lunascripts-spec.json <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          import sys
+          from urllib.request import urlopen
+
+          expected_revision, base_url, version_path, spec_path = sys.argv[1:]
+          local_paths = {
+              "repository-rules": Path("AGENTS.md"),
+              "contract-changelog": Path("CHANGELOG.md"),
+              "ls-spec": Path("LS-SPEC.md"),
+              "contract": Path("contract/contract.json"),
+              "contract-manifest-schema": Path("contract/contract-manifest.schema.json"),
+              "episode-schema": Path("contract/episode.schema.json"),
+              "scriptwriting-skill": Path("skills/ls-scriptwriting/SKILL.md"),
+              "scriptwriting-ls-spec": Path("skills/ls-scriptwriting/references/LS-SPEC.md"),
+              "directive-table": Path("skills/ls-scriptwriting/references/directive-table.md"),
+              "addressing": Path("skills/ls-scriptwriting/references/addressing.md"),
+              "compiler-runbook": Path("docs/compiler-service-runbook.md"),
+              "json-output-spec": Path("docs/JSON-OUTPUT.md"),
+              "consumer-preparation-runbook": Path("docs/contract-consumer-preparation.md"),
+          }
+          with open(version_path, encoding="utf-8") as handle:
+              version = json.load(handle)
+          with open(spec_path, encoding="utf-8") as handle:
+              index = json.load(handle)
+          expected_contract = json.loads(local_paths["contract"].read_text())["contract_version"]
+          assert version["source_revision"] == expected_revision, version
+          assert version["ls_contract_version"] == expected_contract, version
+          assert index["source_revision"] == expected_revision, index
+          assert index["ls_contract_version"] == expected_contract, index
+
+          remote = {resource["name"]: resource for resource in index["resources"]}
+          assert set(remote) == set(local_paths), (set(remote), set(local_paths))
+          for name, path in local_paths.items():
+              local_digest = hashlib.sha256(path.read_bytes()).hexdigest()
+              assert remote[name]["sha256"] == local_digest, (name, remote[name])
+              with urlopen(base_url + remote[name]["url"], timeout=10) as response:
+                  body = response.read()
+                  assert response.headers["X-Source-Revision"] == expected_revision, name
+              assert hashlib.sha256(body).hexdigest() == local_digest, name
+          PY
+            then
+              converged=true
+              break
+            fi
+            sleep 5
+          done
+          test "$converged" = true
+      - name: Verify semantic readiness and canonical compile
+        run: |
+          curl --fail --silent --show-error --max-time 10 "$SERVICE_BASE_URL/ready" --output /tmp/lunascripts-ready.json
+          curl --fail --silent --show-error --max-time 30 --request POST "$SERVICE_BASE_URL/compile" \
+            --form "script=@testdata/minimal.ls" --output /tmp/lunascripts-compile.json
+          python - "$GITHUB_SHA" /tmp/lunascripts-ready.json /tmp/lunascripts-compile.json <<'PY'
+          import json
+          import sys
+
+          expected_revision = sys.argv[1]
+          expected_contract = json.load(open("contract/contract.json"))["contract_version"]
+          with open(sys.argv[2], encoding="utf-8") as handle:
+              ready = json.load(handle)
+          with open(sys.argv[3], encoding="utf-8") as handle:
+              compiled = json.load(handle)
+          assert ready["status"] == "ready", ready
+          assert ready["source_revision"] == expected_revision, ready
+          assert ready["ls_contract_version"] == expected_contract, ready
+          assert compiled["ls_contract_version"] == expected_contract, compiled
+          assert compiled["steps"][0]["name"] == "classroom_morning", compiled["steps"][0]
+          assert compiled["steps"][0]["transition"] == "fade", compiled["steps"][0]
+          PY

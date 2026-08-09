@@ -1,5 +1,6 @@
 # Lunaverse Scripts authority and consumer preparation
 
+- **IRON RULE — every canonical `main` change must reach the remote Compiler.** No path is exempt: code, contract artifacts, fixtures, docs, Skills, workflows, and runbooks must all be followed by a human-operated production deployment from the exact new `main` SHA. The change is not operationally complete until `/version.source_revision` equals that SHA, `/ready` passes its semantic compile probe, and `/spec` serves the revision-bound authority resources. Follow [`docs/compiler-service-runbook.md`](docs/compiler-service-runbook.md).
 - This repository is the only authority for LS syntax, compiler semantics, Episode JSON schemas, fixtures, contract versions, and compatibility notes. Consumer repositories must not invent or override language rules.
 - A contract-impacting pull request must update the semantic contract version and changelog, then run `node scripts/contractctl.mjs rollout consumers prepare <upstream-pr-url>`. Existing Backend/IDE PRs may be adopted with `--backend-pr` and `--ide-pr`; duplicate consumer PRs are forbidden.
 - Preparation pins the exact upstream candidate SHA, runs consumer tests and CI, verifies the complete local and paginated GitHub diff, and publishes the same preparation report on all three PRs.

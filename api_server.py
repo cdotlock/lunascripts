@@ -1,22 +1,163 @@
+import asyncio
+import hashlib
 import os
 import json
+import re
 import shutil
 import tempfile
 import subprocess
 import zipfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Optional
 
-from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi import FastAPI, File, HTTPException, Query, UploadFile
+from fastapi.responses import JSONResponse, PlainTextResponse, Response
 
-LS_BIN = Path(__file__).resolve().parent / "bin" / "lsc"
+APP_DIR = Path(__file__).resolve().parent
+LS_BIN = APP_DIR / "bin" / "lsc"
+CONTRACT_MANIFEST = APP_DIR / "contract" / "contract.json"
+BUILD_INFO = APP_DIR / "build-info.json"
+API_VERSION = "1.3.0"
+REQUIRE_SOURCE_REVISION = os.environ.get("REQUIRE_SOURCE_REVISION", "0") == "1"
+
+SPEC_RESOURCES = {
+    "repository-rules": {
+        "path": APP_DIR / "AGENTS.md",
+        "media_type": "text/markdown",
+        "description": "Repository authority, rollout, and production synchronization rules.",
+    },
+    "contract-changelog": {
+        "path": APP_DIR / "CHANGELOG.md",
+        "media_type": "text/markdown",
+        "description": "LS contract versions, compatibility changes, and migrations.",
+    },
+    "ls-spec": {
+        "path": APP_DIR / "LS-SPEC.md",
+        "media_type": "text/markdown",
+        "description": "Canonical Luna Script grammar and language semantics.",
+    },
+    "contract": {
+        "path": CONTRACT_MANIFEST,
+        "media_type": "application/json",
+        "description": "Machine-readable LS contract manifest and compatibility policy.",
+    },
+    "contract-manifest-schema": {
+        "path": APP_DIR / "contract" / "contract-manifest.schema.json",
+        "media_type": "application/json",
+        "description": "JSON Schema for the machine-readable contract manifest.",
+    },
+    "episode-schema": {
+        "path": APP_DIR / "contract" / "episode.schema.json",
+        "media_type": "application/json",
+        "description": "Canonical Episode JSON schema emitted by the compiler.",
+    },
+    "scriptwriting-skill": {
+        "path": APP_DIR / "skills" / "ls-scriptwriting" / "SKILL.md",
+        "media_type": "text/markdown",
+        "description": "Agent-facing LS authoring workflow and quality rules.",
+    },
+    "scriptwriting-ls-spec": {
+        "path": APP_DIR / "skills" / "ls-scriptwriting" / "references" / "LS-SPEC.md",
+        "media_type": "text/markdown",
+        "description": "LS Spec mirror packaged with the scriptwriting Skill.",
+    },
+    "directive-table": {
+        "path": APP_DIR / "skills" / "ls-scriptwriting" / "references" / "directive-table.md",
+        "media_type": "text/markdown",
+        "description": "Compact directive grammar and emission reference.",
+    },
+    "addressing": {
+        "path": APP_DIR / "skills" / "ls-scriptwriting" / "references" / "addressing.md",
+        "media_type": "text/markdown",
+        "description": "Canonical player and character addressing rules.",
+    },
+    "compiler-runbook": {
+        "path": APP_DIR / "docs" / "compiler-service-runbook.md",
+        "media_type": "text/markdown",
+        "description": "Production compiler synchronization and incident runbook.",
+    },
+    "json-output-spec": {
+        "path": APP_DIR / "docs" / "JSON-OUTPUT.md",
+        "media_type": "text/markdown",
+        "description": "Canonical compiler JSON output field reference.",
+    },
+    "consumer-preparation-runbook": {
+        "path": APP_DIR / "docs" / "contract-consumer-preparation.md",
+        "media_type": "text/markdown",
+        "description": "Contract consumer preparation, evidence, and operator workflow.",
+    },
+}
+
+MAX_SCRIPT_BYTES = 1 * 1024 * 1024
+MAX_ASSETS_BYTES = 2 * 1024 * 1024
+MAX_ZIP_BYTES = 10 * 1024 * 1024
+MAX_ZIP_MEMBERS = 100
+MAX_ZIP_UNCOMPRESSED_BYTES = 25 * 1024 * 1024
+MAX_REQUEST_BODY_BYTES = 13 * 1024 * 1024
+LS_MAX_CONCURRENCY = max(1, int(os.environ.get("LS_MAX_CONCURRENCY", "2")))
+LS_QUEUE_TIMEOUT_SECONDS = 1.0
+_LS_SEMAPHORE = asyncio.Semaphore(LS_MAX_CONCURRENCY)
+_READINESS_SEMAPHORE = asyncio.Semaphore(1)
+
+
+def _source_revision() -> str:
+    try:
+        value = json.loads(BUILD_INFO.read_text(encoding="utf-8")).get("source_revision")
+        return value.strip() if isinstance(value, str) and value.strip() else "unknown"
+    except (OSError, json.JSONDecodeError):
+        return "unknown"
+
+
+SOURCE_REVISION = _source_revision()
+
+
+class RequestBodyTooLarge(Exception):
+    pass
+
+
+class RequestBodyLimitMiddleware:
+    def __init__(self, app, max_bytes: int):
+        self.app = app
+        self.max_bytes = max_bytes
+
+    async def __call__(self, scope, receive, send):
+        if scope.get("type") != "http" or scope.get("method") not in {"POST", "PUT", "PATCH"}:
+            await self.app(scope, receive, send)
+            return
+
+        for name, value in scope.get("headers", []):
+            if name.lower() == b"content-length":
+                try:
+                    if int(value) > self.max_bytes:
+                        response = JSONResponse(status_code=413, content={"detail": "request body too large"})
+                        await response(scope, receive, send)
+                        return
+                except ValueError:
+                    pass
+
+        received = 0
+
+        async def limited_receive():
+            nonlocal received
+            message = await receive()
+            if message.get("type") == "http.request":
+                received += len(message.get("body", b""))
+                if received > self.max_bytes:
+                    raise RequestBodyTooLarge
+            return message
+
+        try:
+            await self.app(scope, limited_receive, send)
+        except RequestBodyTooLarge:
+            response = JSONResponse(status_code=413, content={"detail": "request body too large"})
+            await response(scope, receive, send)
 
 app = FastAPI(
     title="Lunascripts API",
     description="Compile, decompile, validate, and fix Lunascripts (LS) files via HTTP.",
-    version="1.2.0",
+    version=API_VERSION,
 )
+app.add_middleware(RequestBodyLimitMiddleware, max_bytes=MAX_REQUEST_BODY_BYTES)
 
 
 def _run_ls(*args: str, workdir: Optional[str] = None, timeout: int = 30) -> subprocess.CompletedProcess:
@@ -28,6 +169,111 @@ def _run_ls(*args: str, workdir: Optional[str] = None, timeout: int = 30) -> sub
         cwd=workdir,
         timeout=timeout,
     )
+
+
+async def _run_ls_async(
+    *args: str, workdir: Optional[str] = None, timeout: int = 30
+) -> subprocess.CompletedProcess:
+    try:
+        await asyncio.wait_for(_LS_SEMAPHORE.acquire(), timeout=LS_QUEUE_TIMEOUT_SECONDS)
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=503, detail="compiler is busy")
+    try:
+        return await asyncio.to_thread(_run_ls, *args, workdir=workdir, timeout=timeout)
+    finally:
+        _LS_SEMAPHORE.release()
+
+
+async def _run_readiness_probe_async(*args: str, timeout: int) -> subprocess.CompletedProcess:
+    try:
+        await asyncio.wait_for(_READINESS_SEMAPHORE.acquire(), timeout=LS_QUEUE_TIMEOUT_SECONDS)
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=503, detail="readiness probe is busy")
+    try:
+        return await asyncio.to_thread(_run_ls, *args, timeout=timeout)
+    finally:
+        _READINESS_SEMAPHORE.release()
+
+
+def _contract_version() -> str:
+    try:
+        manifest = json.loads(CONTRACT_MANIFEST.read_text(encoding="utf-8"))
+        version = manifest.get("contract_version")
+        return version if isinstance(version, str) and version else "unknown"
+    except (OSError, json.JSONDecodeError):
+        return "unknown"
+
+
+def _version_payload() -> dict[str, str]:
+    return {
+        "service": "Lunascripts API",
+        "api_version": API_VERSION,
+        "ls_contract_version": _contract_version(),
+        "source_revision": SOURCE_REVISION,
+    }
+
+
+def _spec_metadata(name: str, resource: dict[str, object], data: bytes) -> dict[str, object]:
+    return {
+        "name": name,
+        "url": f"/spec/{name}?revision={SOURCE_REVISION}",
+        "media_type": resource["media_type"],
+        "description": resource["description"],
+        "sha256": hashlib.sha256(data).hexdigest(),
+        "bytes": len(data),
+    }
+
+
+def _spec_headers(data: bytes) -> dict[str, str]:
+    digest = hashlib.sha256(data).hexdigest()
+    return {
+        "ETag": f'"sha256:{digest}"',
+        "Cache-Control": "public, max-age=300",
+        "X-LS-Contract-Version": _contract_version(),
+        "X-Source-Revision": SOURCE_REVISION,
+    }
+
+
+def _missing_or_invalid_spec_resources() -> list[str]:
+    invalid = []
+    for name, resource in SPEC_RESOURCES.items():
+        try:
+            data = resource["path"].read_bytes()
+            if resource["media_type"] == "application/json":
+                json.loads(data)
+        except (OSError, json.JSONDecodeError):
+            invalid.append(name)
+    return invalid
+
+
+async def _read_upload_limited(upload: UploadFile, limit: int, label: str) -> bytes:
+    data = await upload.read(limit + 1)
+    if len(data) > limit:
+        raise HTTPException(status_code=413, detail=f"{label} exceeds {limit} bytes")
+    return data
+
+
+def _validate_zip_archive(zf: zipfile.ZipFile) -> None:
+    members = zf.infolist()
+    if len(members) > MAX_ZIP_MEMBERS:
+        raise HTTPException(
+            status_code=413,
+            detail=f"zip archive exceeds {MAX_ZIP_MEMBERS} members",
+        )
+
+    total_size = 0
+    for member in members:
+        path = PurePosixPath(member.filename)
+        if path.is_absolute() or ".." in path.parts:
+            raise HTTPException(status_code=422, detail="zip archive contains an unsafe path")
+        if member.flag_bits & 0x1:
+            raise HTTPException(status_code=422, detail="encrypted zip archives are not supported")
+        total_size += member.file_size
+        if total_size > MAX_ZIP_UNCOMPRESSED_BYTES:
+            raise HTTPException(
+                status_code=413,
+                detail=f"zip archive expands beyond {MAX_ZIP_UNCOMPRESSED_BYTES} bytes",
+            )
 
 
 # ── /compile (single file) ──────────────────────────────────────────────
@@ -45,7 +291,7 @@ async def compile_script(
     """
     tmpdir = tempfile.mkdtemp(prefix="ls_compile_")
     try:
-        script_bytes = await script.read()
+        script_bytes = await _read_upload_limited(script, MAX_SCRIPT_BYTES, "script")
         script_text = script_bytes.decode("utf-8")
         script_path = os.path.join(tmpdir, "script.ls.md")
         with open(script_path, "w", encoding="utf-8") as f:
@@ -54,7 +300,7 @@ async def compile_script(
         args = ["compile", script_path, "-o", os.path.join(tmpdir, "output.json")]
 
         if assets is not None:
-            assets_bytes = await assets.read()
+            assets_bytes = await _read_upload_limited(assets, MAX_ASSETS_BYTES, "assets")
             assets_text = assets_bytes.decode("utf-8")
             assets_path = os.path.join(tmpdir, "assets.json")
             with open(assets_path, "w", encoding="utf-8") as f:
@@ -62,7 +308,7 @@ async def compile_script(
             args.insert(2, "--assets")
             args.insert(3, assets_path)
 
-        proc = _run_ls(*args, timeout=30)
+        proc = await _run_ls_async(*args, timeout=30)
 
         if proc.returncode != 0:
             raise HTTPException(status_code=422, detail={"error": proc.stderr.strip()})
@@ -101,7 +347,7 @@ async def compile_directory(
     """
     tmpdir = tempfile.mkdtemp(prefix="ls_compiledir_")
     try:
-        zip_bytes = await zipfile_upload.read()
+        zip_bytes = await _read_upload_limited(zipfile_upload, MAX_ZIP_BYTES, "zip archive")
         zip_path = os.path.join(tmpdir, "input.zip")
         with open(zip_path, "wb") as f:
             f.write(zip_bytes)
@@ -109,12 +355,13 @@ async def compile_directory(
         episode_dir = os.path.join(tmpdir, "episodes")
         os.makedirs(episode_dir)
         with zipfile.ZipFile(zip_path, "r") as zf:
+            _validate_zip_archive(zf)
             zf.extractall(episode_dir)
 
         args = ["compile", episode_dir, "-o", os.path.join(tmpdir, "output.json")]
 
         if assets is not None:
-            assets_bytes = await assets.read()
+            assets_bytes = await _read_upload_limited(assets, MAX_ASSETS_BYTES, "assets")
             assets_text = assets_bytes.decode("utf-8")
             assets_path = os.path.join(tmpdir, "assets.json")
             with open(assets_path, "w", encoding="utf-8") as f:
@@ -122,7 +369,7 @@ async def compile_directory(
             args.insert(2, "--assets")
             args.insert(3, assets_path)
 
-        proc = _run_ls(*args, timeout=60)
+        proc = await _run_ls_async(*args, timeout=60)
 
         if proc.returncode != 0:
             raise HTTPException(status_code=422, detail={"error": proc.stderr.strip()})
@@ -133,6 +380,8 @@ async def compile_directory(
 
         return JSONResponse(content=result)
 
+    except zipfile.BadZipFile:
+        raise HTTPException(status_code=422, detail="invalid zip archive")
     except subprocess.TimeoutExpired:
         raise HTTPException(status_code=504, detail="Directory compilation timed out")
     except HTTPException:
@@ -156,7 +405,7 @@ async def decompile_json(
     """
     tmpdir = tempfile.mkdtemp(prefix="ls_decompile_")
     try:
-        compiled_bytes = await compiled.read()
+        compiled_bytes = await _read_upload_limited(compiled, MAX_SCRIPT_BYTES, "compiled JSON")
         compiled_text = compiled_bytes.decode("utf-8")
         input_path = os.path.join(tmpdir, "input.json")
         with open(input_path, "w", encoding="utf-8") as f:
@@ -164,7 +413,7 @@ async def decompile_json(
 
         output_dir = os.path.join(tmpdir, "decompiled")
 
-        proc = _run_ls("decompile", input_path, "-o", output_dir, timeout=30)
+        proc = await _run_ls_async("decompile", input_path, "-o", output_dir, timeout=30)
 
         warnings = []
         if proc.stderr.strip():
@@ -231,7 +480,7 @@ async def validate_script(
     """
     tmpdir = tempfile.mkdtemp(prefix="ls_validate_")
     try:
-        script_bytes = await script.read()
+        script_bytes = await _read_upload_limited(script, MAX_SCRIPT_BYTES, "script")
         script_text = script_bytes.decode("utf-8")
         script_path = os.path.join(tmpdir, "script.ls.md")
         with open(script_path, "w", encoding="utf-8") as f:
@@ -240,7 +489,7 @@ async def validate_script(
         args = ["validate", script_path]
 
         if assets is not None:
-            assets_bytes = await assets.read()
+            assets_bytes = await _read_upload_limited(assets, MAX_ASSETS_BYTES, "assets")
             assets_text = assets_bytes.decode("utf-8")
             assets_path = os.path.join(tmpdir, "assets.json")
             with open(assets_path, "w", encoding="utf-8") as f:
@@ -248,7 +497,7 @@ async def validate_script(
             args.append("--assets")
             args.append(assets_path)
 
-        proc = _run_ls(*args, timeout=30)
+        proc = await _run_ls_async(*args, timeout=30)
 
         return JSONResponse(
             content={
@@ -286,14 +535,14 @@ async def fix_script(
     """
     tmpdir = tempfile.mkdtemp(prefix="ls_fix_")
     try:
-        script_bytes = await script.read()
+        script_bytes = await _read_upload_limited(script, MAX_SCRIPT_BYTES, "script")
         script_text = script_bytes.decode("utf-8")
         script_path = os.path.join(tmpdir, "script.ls.md")
         with open(script_path, "w", encoding="utf-8") as f:
             f.write(script_text)
 
         if check:
-            proc = _run_ls("fix", script_path, "--check", timeout=30)
+            proc = await _run_ls_async("fix", script_path, "--check", timeout=30)
             return JSONResponse(
                 content={
                     "check": True,
@@ -303,7 +552,7 @@ async def fix_script(
             )
         else:
             output_path = os.path.join(tmpdir, "fixed.ls.md")
-            proc = _run_ls("fix", script_path, "-o", output_path, timeout=30)
+            proc = await _run_ls_async("fix", script_path, "-o", output_path, timeout=30)
 
             if proc.returncode != 0 and not os.path.exists(output_path):
                 raise HTTPException(status_code=422, detail={"error": proc.stderr.strip()})
@@ -341,9 +590,14 @@ async def root():
     return JSONResponse(
         content={
             "service": "Lunascripts API",
-            "version": "1.2.0",
+            "version": API_VERSION,
+            "ls_contract_version": _contract_version(),
+            "source_revision": SOURCE_REVISION,
             "endpoints": {
                 "health": "GET /health",
+                "ready": "GET /ready",
+                "version": "GET /version",
+                "spec": "GET /spec",
                 "compile": "POST /compile",
                 "compile-dir": "POST /compile-dir",
                 "decompile": "POST /decompile",
@@ -365,4 +619,133 @@ async def health():
             status_code=503,
             content={"status": "unhealthy", "reason": "lsc binary not found"},
         )
-    return {"status": "ok"}
+    return {"status": "ok", **_version_payload()}
+
+
+@app.get("/version")
+async def version():
+    """Return the deployed API, contract, and source revision."""
+    return _version_payload()
+
+
+@app.get("/spec")
+async def spec_index():
+    """Return a discoverable, revision-bound index of agent-readable authority."""
+    resources = []
+    missing = []
+    for name, resource in SPEC_RESOURCES.items():
+        path = resource["path"]
+        try:
+            data = path.read_bytes()
+        except OSError:
+            missing.append(name)
+            continue
+        resources.append(_spec_metadata(name, resource, data))
+
+    if missing:
+        return JSONResponse(
+            status_code=503,
+            content={"status": "not_ready", "missing_resources": missing, **_version_payload()},
+        )
+
+    return {
+        "authority": "Canonical Lunaverse Luna Script rules mirrored from repository main.",
+        "sync_invariant": "source_revision must equal the canonical repository main HEAD.",
+        **_version_payload(),
+        "resources": resources,
+    }
+
+
+@app.get("/spec/{resource_name}")
+async def spec_resource(resource_name: str, revision: Optional[str] = None):
+    """Return one allowlisted authority resource with revision and digest headers."""
+    if revision is not None and revision != SOURCE_REVISION:
+        raise HTTPException(status_code=409, detail="requested source revision is not deployed")
+
+    resource = SPEC_RESOURCES.get(resource_name)
+    if resource is None:
+        raise HTTPException(status_code=404, detail="unknown spec resource")
+
+    path = resource["path"]
+    try:
+        data = path.read_bytes()
+    except OSError:
+        raise HTTPException(status_code=503, detail="spec resource unavailable")
+
+    headers = _spec_headers(data)
+    if resource["media_type"] == "application/json":
+        try:
+            json.loads(data)
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=503, detail="spec resource is invalid JSON")
+        return Response(content=data, media_type="application/json", headers=headers)
+
+    return PlainTextResponse(
+        content=data.decode("utf-8"),
+        media_type=str(resource["media_type"]),
+        headers=headers,
+    )
+
+
+@app.get("/ready")
+async def ready():
+    """Compile a canonical probe so readiness proves LS contract semantics."""
+    if REQUIRE_SOURCE_REVISION and not re.fullmatch(r"[0-9a-f]{40}", SOURCE_REVISION):
+        return JSONResponse(
+            status_code=503,
+            content={"status": "not_ready", "reason": "source revision unavailable"},
+        )
+
+    expected_contract = _contract_version()
+    if expected_contract == "unknown":
+        return JSONResponse(
+            status_code=503,
+            content={"status": "not_ready", "reason": "contract manifest unavailable"},
+        )
+
+    invalid_resources = _missing_or_invalid_spec_resources()
+    if invalid_resources:
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "not_ready",
+                "reason": "spec authority resources unavailable",
+                "resources": invalid_resources,
+            },
+        )
+
+    with tempfile.TemporaryDirectory(prefix="ls_ready_") as tmpdir:
+        script_path = Path(tmpdir) / "ready.ls"
+        script_path.write_text(
+            '@episode main:01 "Readiness" {\n'
+            "  @bg readiness_background fade\n"
+            "  NARRATOR: Compiler readiness probe.\n"
+            "  @gate {\n"
+            "    @next main:02\n"
+            "  }\n"
+            "}\n",
+            encoding="utf-8",
+        )
+        try:
+            proc = await _run_readiness_probe_async("compile", str(script_path), timeout=5)
+            result = json.loads(proc.stdout) if proc.returncode == 0 else None
+        except (OSError, json.JSONDecodeError, subprocess.TimeoutExpired) as exc:
+            return JSONResponse(
+                status_code=503,
+                content={"status": "not_ready", "reason": f"compiler probe failed: {exc}"},
+            )
+
+    steps = result.get("steps") if isinstance(result, dict) else None
+    first_step = steps[0] if isinstance(steps, list) and steps else {}
+    if (
+        not isinstance(result, dict)
+        or result.get("ls_contract_version") != expected_contract
+        or first_step.get("name") != "readiness_background"
+        or first_step.get("transition") != "fade"
+    ):
+        return JSONResponse(
+            status_code=503,
+            content={"status": "not_ready", "reason": "compiler contract probe mismatch"},
+        )
+
+    return {"status": "ready", **_version_payload()}

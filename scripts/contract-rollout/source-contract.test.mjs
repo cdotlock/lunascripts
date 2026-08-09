@@ -29,6 +29,30 @@ test("post-merge workflow only synchronizes existing consumer pull requests", ()
 
 test("manual upstream deploy workflow is disconnected from contract automation", () => {
   const workflow = read("../../.github/workflows/deploy-railway.yml");
+  const operationalWorkflow = workflow.replace(/^.*node --test.*$/gm, "");
   assert.match(workflow, /MANUAL ONLY/);
-  assert.doesNotMatch(workflow, /contractctl|controller|rollback|recovery|push:/i);
+  assert.doesNotMatch(operationalWorkflow, /contractctl|controller|rollback|recovery|push:/i);
+});
+
+test("remote compiler parity covers every main change without production write authority", () => {
+  const workflow = read("../../.github/workflows/compiler-remote-parity.yml");
+  assert.match(workflow, /push:\s*\n\s*branches:\s*\[main\]/);
+  assert.doesNotMatch(workflow, /paths-ignore|paths:/);
+  assert.match(workflow, /\/version/);
+  assert.match(workflow, /\/ready/);
+  assert.match(workflow, /\/spec/);
+  assert.match(workflow, /\/compile/);
+  assert.match(workflow, /GITHUB_SHA/);
+  assert.doesNotMatch(workflow, /RAILWAY_API_TOKEN|railway\s+up|secrets\./i);
+});
+
+test("production provenance is baked into the image instead of relabeled at runtime", () => {
+  const api = read("../../api_server.py");
+  const dockerfile = read("../../Dockerfile");
+  const workflow = read("../../.github/workflows/deploy-railway.yml");
+  assert.match(api, /BUILD_INFO.*build-info\.json/);
+  assert.doesNotMatch(api, /environ\.get\(["']SOURCE_REVISION/);
+  assert.match(dockerfile, /COPY build-info\.json/);
+  assert.match(workflow, /Path\(["']build-info\.json["']\)\.write_text/);
+  assert.doesNotMatch(workflow, /railway variable set.*SOURCE_REVISION/);
 });

@@ -11,3 +11,15 @@ testdata/feature_parade/assets/
 docs/
 *.md
 !FASTAPI.md
+!AGENTS.md
+!CHANGELOG.md
+!LS-SPEC.md
+!skills/ls-scriptwriting/SKILL.md
+!skills/ls-scriptwriting/references/LS-SPEC.md
+!skills/ls-scriptwriting/references/directive-table.md
+!skills/ls-scriptwriting/references/addressing.md
+!docs/
+docs/*
+!docs/JSON-OUTPUT.md
+!docs/compiler-service-runbook.md
+!docs/contract-consumer-preparation.md

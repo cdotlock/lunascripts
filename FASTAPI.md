@@ -8,7 +8,7 @@ This directory provides a FastAPI HTTP wrapper around the `lsc` CLI binary. An L
 >
 > Swagger docs: https://moonshort-script-production.up.railway.app/docs
 >
-> Deployed on Railway from `main`. The Dockerfile in this repo (multi-stage: Go build → Python uvicorn) is the source of truth — every push to `main` that touches `cmd/`, `internal/`, `api_server.py`, `requirements.txt`, or `Dockerfile` should be redeployed via `railway up --service lunascripts --ci`. Railway's healthcheck hits `/health` and restarts on failure.
+> Deployed manually on Railway from the exact canonical `main` revision. The Dockerfile in this repo (multi-stage: Go build → Python uvicorn) is the source of truth. The manual production workflow tests and records the selected `main` SHA, then verifies `/version`, semantic `/ready`, and a real canonical compile. Railway's healthcheck hits `/ready` and restarts on failure.
 
 Smoke-tested from outside:
 
@@ -17,6 +17,9 @@ BASE=https://moonshort-script-production.up.railway.app
 
 curl -s "$BASE/health"
 # {"status":"ok"}
+
+curl -s "$BASE/spec"
+# revision-bound index of LS rules, schemas, Skills, and runbook resources
 
 curl -s -X POST "$BASE/validate" -F "script=@testdata/minimal.ls"
 # {"valid":true,"errors":null,"stdout":"OK"}
@@ -52,6 +55,10 @@ The server is now listening on `http://localhost:8080`. All endpoints return JSO
 | `POST /validate`   | `lsc validate file.ls [--assets mapping.json]`                    |
 | `POST /fix`        | `lsc fix file.ls [-o output.ls]`                                  |
 | `GET /health`      | (server health check)                                            |
+| `GET /ready`       | (canonical compiler/contract readiness probe)                    |
+| `GET /version`     | (API, LS contract, and exact source revision)                    |
+| `GET /spec`        | (agent-readable authority resource index)                         |
+| `GET /spec/{name}` | (one revision-bound authority resource)                           |
 
 ---
 
@@ -59,13 +66,52 @@ The server is now listening on `http://localhost:8080`. All endpoints return JSO
 
 ### `GET /health`
 
-Check whether the server is alive and the `lsc` binary is found.
+Lightweight liveness check: confirms that the server is alive and the `lsc` binary exists. Use `/ready` to prove compiler semantics.
 
 ```bash
 curl -s http://localhost:8080/health
-# → {"status":"ok"}
+# → {"status":"ok","service":"Lunascripts API","api_version":"1.3.0","ls_contract_version":"3.0.0","source_revision":"..."}
 # or
 # → {"status":"unhealthy","reason":"lsc binary not found"}   (HTTP 503)
+```
+
+### `GET /ready`
+
+Compiles a small canonical `@bg <name> fade` probe and verifies the emitted background name, transition, and LS contract version. Railway uses this endpoint for deployment health.
+
+```bash
+curl -s http://localhost:8080/ready
+# → {"status":"ready","service":"Lunascripts API","api_version":"1.3.0","ls_contract_version":"3.0.0","source_revision":"..."}
+```
+
+### `GET /version`
+
+Returns the API version, LS contract version, and exact source revision recorded by the production release workflow.
+
+```bash
+curl -s http://localhost:8080/version
+# → {"service":"Lunascripts API","api_version":"1.3.0","ls_contract_version":"3.0.0","source_revision":"..."}
+```
+
+### `GET /spec` and `GET /spec/{name}`
+
+Agents should call `/spec` first to discover the exact authority bundled with
+the deployed compiler. The index returns the deployment revision, LS contract
+version, URL, media type, byte size, and SHA-256 digest for every resource.
+
+Available names are `repository-rules`, `contract-changelog`, `ls-spec`,
+`contract`, `contract-manifest-schema`, `episode-schema`,
+`scriptwriting-skill`, `scriptwriting-ls-spec`, `directive-table`, `addressing`,
+`compiler-runbook`, `json-output-spec`, and `consumer-preparation-runbook`.
+Individual responses include `ETag`,
+`X-Source-Revision`, and `X-LS-Contract-Version`; an Agent should not mix
+resources whose revision headers differ.
+
+```bash
+curl -s http://localhost:8080/spec
+curl -s http://localhost:8080/spec/ls-spec
+curl -s http://localhost:8080/spec/episode-schema
+curl -s http://localhost:8080/spec/scriptwriting-skill
 ```
 
 ---
@@ -114,6 +160,7 @@ curl -s -X POST http://localhost:8080/compile \
 
 | HTTP status | Meaning                                          |
 |-------------|--------------------------------------------------|
+| 413         | Uploaded script or assets exceed the service limit |
 | 422         | Compilation failed — `detail.error` has stderr   |
 | 504         | Compilation timed out (30 s)                     |
 | 500         | Internal server error — `detail` has message     |
@@ -123,6 +170,13 @@ curl -s -X POST http://localhost:8080/compile \
 ### `POST /compile-dir`
 
 Compile a directory of LS `.ls` files (uploaded as a zip archive) into structured JSON. Equivalent to `lsc compile <dir/>`.
+
+The public service caps the total request body at 13 MiB before multipart
+parsing. It also caps a zip at 10 MiB compressed, 100 members, and 25 MiB
+expanded; scripts/compiled JSON are capped at 1 MiB and asset mappings at 2 MiB.
+Compiler subprocesses run off the server event loop with bounded concurrency
+and a short queue timeout. Readiness uses an independent probe lane so health
+and spec reads remain responsive during compilation.
 
 **Request:** `multipart/form-data`
 

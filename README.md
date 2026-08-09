@@ -1,5 +1,12 @@
 # lunascripts
 
+> **Production synchronization iron rule:** every change merged into canonical
+> `main`—including docs, Skills, fixtures, schemas, workflows, and compiler
+> code—must be followed by a human-operated deployment of that exact SHA to the
+> remote Compiler. Work is not operationally complete until `/version`,
+> semantic `/ready`, and `/spec` prove parity. See the
+> [Compiler service runbook](docs/compiler-service-runbook.md).
+
 Lunascripts (LS) interpreter for MobAI interactive visual novels.
 
 Parses `.md` script files into structured JSON for the frontend player, resolving asset semantic names to OSS URLs.
@@ -30,6 +37,11 @@ lsc validate episode.ls.md
 ## Script Format
 
 See [LS-SPEC.md](LS-SPEC.md) for the complete specification.
+
+Agents can discover the production-mirrored rules from
+`https://moonshort-script-production.up.railway.app/spec`, then read individual
+revision-bound resources such as `/spec/ls-spec`, `/spec/contract`,
+`/spec/episode-schema`, and `/spec/scriptwriting-skill`.
 
 ## Consumer contract
 
