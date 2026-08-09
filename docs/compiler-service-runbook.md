@@ -36,19 +36,12 @@ Agents should begin with these calls instead of relying on remembered syntax:
 | `GET /version` | Exact deployed repository revision and LS contract version |
 | `GET /ready` | Canonical `@bg <name> fade` compile probe plus spec availability |
 | `GET /spec` | Discoverable index of authority resources, sizes, and SHA-256 digests |
-| `GET /spec/repository-rules` | Repository and rollout iron rules |
-| `GET /spec/contract-changelog` | Contract versions, compatibility, and migrations |
 | `GET /spec/ls-spec` | Canonical Luna Script grammar and semantics |
-| `GET /spec/contract` | Machine-readable contract manifest |
-| `GET /spec/contract-manifest-schema` | JSON Schema for the contract manifest |
-| `GET /spec/episode-schema` | Canonical Episode JSON schema |
-| `GET /spec/scriptwriting-skill` | Agent authoring workflow and quality rules |
-| `GET /spec/scriptwriting-ls-spec` | LS Spec mirror referenced by the Skill |
-| `GET /spec/directive-table` | Compact directive grammar reference |
-| `GET /spec/addressing` | Player and character addressing rules |
-| `GET /spec/compiler-runbook` | This production runbook |
-| `GET /spec/json-output-spec` | Compiler JSON output field reference |
-| `GET /spec/consumer-preparation-runbook` | Consumer preparation and evidence workflow |
+| `GET /spec/json-output` | Canonical compiler JSON output field reference |
+
+The public spec API is deliberately limited to the two documents an Agent
+needs to write LS and consume compiler output. Repository governance, Skills,
+schemas, changelogs, and operator runbooks remain repository-local.
 
 Each individual resource response carries `ETag`, `X-Source-Revision`, and
 `X-LS-Contract-Version` headers. An Agent should reject mixed revisions rather

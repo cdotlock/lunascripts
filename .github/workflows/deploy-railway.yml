@@ -125,19 +125,8 @@ jobs:
           assert compiled["steps"][0]["transition"] == "fade", compiled["steps"][0]
 
           local_paths = {
-              "repository-rules": Path("AGENTS.md"),
-              "contract-changelog": Path("CHANGELOG.md"),
               "ls-spec": Path("LS-SPEC.md"),
-              "contract": Path("contract/contract.json"),
-              "contract-manifest-schema": Path("contract/contract-manifest.schema.json"),
-              "episode-schema": Path("contract/episode.schema.json"),
-              "scriptwriting-skill": Path("skills/ls-scriptwriting/SKILL.md"),
-              "scriptwriting-ls-spec": Path("skills/ls-scriptwriting/references/LS-SPEC.md"),
-              "directive-table": Path("skills/ls-scriptwriting/references/directive-table.md"),
-              "addressing": Path("skills/ls-scriptwriting/references/addressing.md"),
-              "compiler-runbook": Path("docs/compiler-service-runbook.md"),
-              "json-output-spec": Path("docs/JSON-OUTPUT.md"),
-              "consumer-preparation-runbook": Path("docs/contract-consumer-preparation.md"),
+              "json-output": Path("docs/JSON-OUTPUT.md"),
           }
           remote = {resource["name"]: resource for resource in index["resources"]}
           assert set(remote) == set(local_paths), (set(remote), set(local_paths))

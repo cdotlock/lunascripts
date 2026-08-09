@@ -52,6 +52,7 @@ class ApiServerIntegrationTests(unittest.IsolatedAsyncioTestCase):
     async def test_spec_index_and_resources_are_revision_bound(self):
         index = await api_server.spec_index()
         names = {resource["name"] for resource in index["resources"]}
+        self.assertEqual(names, {"ls-spec", "json-output"})
         self.assertEqual(names, set(api_server.SPEC_RESOURCES))
         self.assertEqual(index["source_revision"], api_server.SOURCE_REVISION)
         self.assertTrue(all(len(resource["sha256"]) == 64 for resource in index["resources"]))
@@ -70,8 +71,8 @@ class ApiServerIntegrationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(ls_spec.headers["x-source-revision"], api_server.SOURCE_REVISION)
         self.assertTrue(ls_spec.headers["etag"].startswith('"sha256:'))
 
-        contract = await api_server.spec_resource("contract")
-        self.assertEqual(json.loads(contract.body)["contract_version"], "3.0.0")
+        json_output = await api_server.spec_resource("json-output")
+        self.assertIn(b"LS JSON", json_output.body)
 
         with self.assertRaises(HTTPException) as missing:
             await api_server.spec_resource("not-allowlisted")

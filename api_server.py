@@ -17,74 +17,19 @@ APP_DIR = Path(__file__).resolve().parent
 LS_BIN = APP_DIR / "bin" / "lsc"
 CONTRACT_MANIFEST = APP_DIR / "contract" / "contract.json"
 BUILD_INFO = APP_DIR / "build-info.json"
-API_VERSION = "1.3.0"
+API_VERSION = "1.4.0"
 REQUIRE_SOURCE_REVISION = os.environ.get("REQUIRE_SOURCE_REVISION", "0") == "1"
 
 SPEC_RESOURCES = {
-    "repository-rules": {
-        "path": APP_DIR / "AGENTS.md",
-        "media_type": "text/markdown",
-        "description": "Repository authority, rollout, and production synchronization rules.",
-    },
-    "contract-changelog": {
-        "path": APP_DIR / "CHANGELOG.md",
-        "media_type": "text/markdown",
-        "description": "LS contract versions, compatibility changes, and migrations.",
-    },
     "ls-spec": {
         "path": APP_DIR / "LS-SPEC.md",
         "media_type": "text/markdown",
         "description": "Canonical Luna Script grammar and language semantics.",
     },
-    "contract": {
-        "path": CONTRACT_MANIFEST,
-        "media_type": "application/json",
-        "description": "Machine-readable LS contract manifest and compatibility policy.",
-    },
-    "contract-manifest-schema": {
-        "path": APP_DIR / "contract" / "contract-manifest.schema.json",
-        "media_type": "application/json",
-        "description": "JSON Schema for the machine-readable contract manifest.",
-    },
-    "episode-schema": {
-        "path": APP_DIR / "contract" / "episode.schema.json",
-        "media_type": "application/json",
-        "description": "Canonical Episode JSON schema emitted by the compiler.",
-    },
-    "scriptwriting-skill": {
-        "path": APP_DIR / "skills" / "ls-scriptwriting" / "SKILL.md",
-        "media_type": "text/markdown",
-        "description": "Agent-facing LS authoring workflow and quality rules.",
-    },
-    "scriptwriting-ls-spec": {
-        "path": APP_DIR / "skills" / "ls-scriptwriting" / "references" / "LS-SPEC.md",
-        "media_type": "text/markdown",
-        "description": "LS Spec mirror packaged with the scriptwriting Skill.",
-    },
-    "directive-table": {
-        "path": APP_DIR / "skills" / "ls-scriptwriting" / "references" / "directive-table.md",
-        "media_type": "text/markdown",
-        "description": "Compact directive grammar and emission reference.",
-    },
-    "addressing": {
-        "path": APP_DIR / "skills" / "ls-scriptwriting" / "references" / "addressing.md",
-        "media_type": "text/markdown",
-        "description": "Canonical player and character addressing rules.",
-    },
-    "compiler-runbook": {
-        "path": APP_DIR / "docs" / "compiler-service-runbook.md",
-        "media_type": "text/markdown",
-        "description": "Production compiler synchronization and incident runbook.",
-    },
-    "json-output-spec": {
+    "json-output": {
         "path": APP_DIR / "docs" / "JSON-OUTPUT.md",
         "media_type": "text/markdown",
         "description": "Canonical compiler JSON output field reference.",
-    },
-    "consumer-preparation-runbook": {
-        "path": APP_DIR / "docs" / "contract-consumer-preparation.md",
-        "media_type": "text/markdown",
-        "description": "Contract consumer preparation, evidence, and operator workflow.",
     },
 }
 

@@ -70,7 +70,7 @@ Lightweight liveness check: confirms that the server is alive and the `lsc` bina
 
 ```bash
 curl -s http://localhost:8080/health
-# → {"status":"ok","service":"Lunascripts API","api_version":"1.3.0","ls_contract_version":"3.0.0","source_revision":"..."}
+# → {"status":"ok","service":"Lunascripts API","api_version":"1.4.0","ls_contract_version":"3.0.0","source_revision":"..."}
 # or
 # → {"status":"unhealthy","reason":"lsc binary not found"}   (HTTP 503)
 ```
@@ -81,7 +81,7 @@ Compiles a small canonical `@bg <name> fade` probe and verifies the emitted back
 
 ```bash
 curl -s http://localhost:8080/ready
-# → {"status":"ready","service":"Lunascripts API","api_version":"1.3.0","ls_contract_version":"3.0.0","source_revision":"..."}
+# → {"status":"ready","service":"Lunascripts API","api_version":"1.4.0","ls_contract_version":"3.0.0","source_revision":"..."}
 ```
 
 ### `GET /version`
@@ -90,7 +90,7 @@ Returns the API version, LS contract version, and exact source revision recorded
 
 ```bash
 curl -s http://localhost:8080/version
-# → {"service":"Lunascripts API","api_version":"1.3.0","ls_contract_version":"3.0.0","source_revision":"..."}
+# → {"service":"Lunascripts API","api_version":"1.4.0","ls_contract_version":"3.0.0","source_revision":"..."}
 ```
 
 ### `GET /spec` and `GET /spec/{name}`
@@ -99,10 +99,9 @@ Agents should call `/spec` first to discover the exact authority bundled with
 the deployed compiler. The index returns the deployment revision, LS contract
 version, URL, media type, byte size, and SHA-256 digest for every resource.
 
-Available names are `repository-rules`, `contract-changelog`, `ls-spec`,
-`contract`, `contract-manifest-schema`, `episode-schema`,
-`scriptwriting-skill`, `scriptwriting-ls-spec`, `directive-table`, `addressing`,
-`compiler-runbook`, `json-output-spec`, and `consumer-preparation-runbook`.
+The public authority surface intentionally contains only `ls-spec` and
+`json-output`. Repository governance, Skills, schemas, changelogs, and operator
+runbooks remain repository-local and are not part of the Agent-facing API.
 Individual responses include `ETag`,
 `X-Source-Revision`, and `X-LS-Contract-Version`; an Agent should not mix
 resources whose revision headers differ.
@@ -110,8 +109,7 @@ resources whose revision headers differ.
 ```bash
 curl -s http://localhost:8080/spec
 curl -s http://localhost:8080/spec/ls-spec
-curl -s http://localhost:8080/spec/episode-schema
-curl -s http://localhost:8080/spec/scriptwriting-skill
+curl -s http://localhost:8080/spec/json-output
 ```
 
 ---

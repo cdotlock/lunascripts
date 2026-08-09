@@ -44,25 +44,14 @@ jobs:
 
           expected_revision, base_url, version_path, spec_path = sys.argv[1:]
           local_paths = {
-              "repository-rules": Path("AGENTS.md"),
-              "contract-changelog": Path("CHANGELOG.md"),
               "ls-spec": Path("LS-SPEC.md"),
-              "contract": Path("contract/contract.json"),
-              "contract-manifest-schema": Path("contract/contract-manifest.schema.json"),
-              "episode-schema": Path("contract/episode.schema.json"),
-              "scriptwriting-skill": Path("skills/ls-scriptwriting/SKILL.md"),
-              "scriptwriting-ls-spec": Path("skills/ls-scriptwriting/references/LS-SPEC.md"),
-              "directive-table": Path("skills/ls-scriptwriting/references/directive-table.md"),
-              "addressing": Path("skills/ls-scriptwriting/references/addressing.md"),
-              "compiler-runbook": Path("docs/compiler-service-runbook.md"),
-              "json-output-spec": Path("docs/JSON-OUTPUT.md"),
-              "consumer-preparation-runbook": Path("docs/contract-consumer-preparation.md"),
+              "json-output": Path("docs/JSON-OUTPUT.md"),
           }
           with open(version_path, encoding="utf-8") as handle:
               version = json.load(handle)
           with open(spec_path, encoding="utf-8") as handle:
               index = json.load(handle)
-          expected_contract = json.loads(local_paths["contract"].read_text())["contract_version"]
+          expected_contract = json.loads(Path("contract/contract.json").read_text())["contract_version"]
           assert version["source_revision"] == expected_revision, version
           assert version["ls_contract_version"] == expected_contract, version
           assert index["source_revision"] == expected_revision, index

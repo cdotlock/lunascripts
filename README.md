@@ -40,8 +40,7 @@ See [LS-SPEC.md](LS-SPEC.md) for the complete specification.
 
 Agents can discover the production-mirrored rules from
 `https://moonshort-script-production.up.railway.app/spec`, then read individual
-revision-bound resources such as `/spec/ls-spec`, `/spec/contract`,
-`/spec/episode-schema`, and `/spec/scriptwriting-skill`.
+revision-bound resources `/spec/ls-spec` and `/spec/json-output`.
 
 ## Consumer contract
 
