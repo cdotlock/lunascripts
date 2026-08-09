@@ -44,13 +44,28 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Detect whether consumer synchronization is required
+        id: impact
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          changed="$(git diff --name-only "$BEFORE_SHA" "$GITHUB_SHA" --)"
+          CHANGED_PATHS="$changed" node --input-type=module <<'NODE' >> "$GITHUB_OUTPUT"
+          import { isContractImpactingPath } from "./scripts/contract-rollout/core.mjs";
+          const paths = (process.env.CHANGED_PATHS ?? "").split(/\r?\n/).filter(Boolean);
+          console.log(`required=${paths.some(isContractImpactingPath)}`);
+          NODE
       - name: Configure Git authentication
+        if: ${{ steps.impact.outputs.required == 'true' }}
         run: gh auth setup-git
       - name: Resolve the unique merged upstream PR
+        if: ${{ steps.impact.outputs.required == 'true' }}
         id: source
         run: |
           set -euo pipefail
           url="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/pulls" --jq '[.[] | select(.base.ref == "main" and .merged_at != null)] | if length == 1 then .[0].html_url else error("expected one merged main PR") end')"
           echo "url=$url" >> "$GITHUB_OUTPUT"
       - name: Synchronize the original consumer PRs
+        if: ${{ steps.impact.outputs.required == 'true' }}
         run: node scripts/contractctl.mjs rollout consumers sync '${{ steps.source.outputs.url }}'

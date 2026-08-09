@@ -24,6 +24,8 @@ test("GitHub client cannot merge pull requests or dispatch production workflows"
 test("post-merge workflow only synchronizes existing consumer pull requests", () => {
   const workflow = read("../../.github/workflows/contract-rollout.yml");
   assert.match(workflow, /consumers sync/);
+  assert.match(workflow, /isContractImpactingPath/);
+  assert.match(workflow, /steps\.impact\.outputs\.required == 'true'/);
   assert.doesNotMatch(workflow, /continue|resume|confirm|deploy|smoke|rollback/i);
 });
 
