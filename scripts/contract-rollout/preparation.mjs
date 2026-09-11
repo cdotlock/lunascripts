@@ -19,7 +19,7 @@ export const CONSUMERS = Object.freeze([
     update: (sha) => ["node", ["scripts/update-lunascripts-contract.mjs", "--ref", sha, "--json"]],
     verify: [
       ["node", ["--test", "scripts/update-lunascripts-contract.test.mjs"]],
-      ["pnpm", ["vitest", "run", "scripts/lunascripts-contract-audit.test.ts", "scripts/check-lunascripts-authority.test.ts", "__tests__/core/schema-signal-int.test.ts"]],
+      ["pnpm", ["vitest", "run", "scripts/lunascripts-contract-audit.test.ts", "scripts/check-lunascripts-authority.test.ts", "__tests__/core/schema-signal-int.test.ts", "app/services/release-content-health-service.test.ts"]],
     ],
     owned: ["contracts/lunascripts", "contracts/lunascripts.lock.json", "docs/ls-refactor/LS-SPEC.md", "docs/ls-refactor/JSON-OUTPUT.md", "ide-assets/skills/adaptation-episode-writer/ls-spec.md"],
     allowed: [
