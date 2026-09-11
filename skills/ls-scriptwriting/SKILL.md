@@ -78,10 +78,10 @@ LS has three syntaxes that alternate freely:
 ```
 MAURICIO: Hey, Butterfly.
 NARRATOR: Senior year. Day one.
-YOU: He hasn't called me that in eight years.
+INNER_THOUGHT: He hasn't called me that in eight years.
 ```
 
-Three special names: `NARRATOR` (third-person scene narration), `YOU` (MC's inner monologue), and any other name (character dialogue). Character names in dialogue are case-insensitive with their `@` directive counterparts — `MAURICIO:` in dialogue = `@mauricio` in directives.
+Three special names: `NARRATOR` (third-person scene narration), `INNER_THOUGHT` (MC's unspoken inner monologue; never audible dialogue), and any other name (character dialogue). Character names in dialogue are case-insensitive with their `@` directive counterparts — `MAURICIO:` in dialogue = `@mauricio` in directives.
 
 **Syntax sugar — pose change + dialogue in one line:**
 ```
@@ -101,7 +101,7 @@ Read this before writing. LLMs reliably fall into specific traps that pass the p
 3. **Do change backgrounds when the location does.** The opposite failure: LLMs sometimes run two scenes off the same backdrop. If you wrote a scene-cut in your head (cafeteria → rooftop), that's two `@bg ...` calls — backgrounds anchor the player's spatial sense.
 4. **`@butterfly` feeds downstream content generators, not gate routing.** Gate evaluation does **not** read butterfly records; routing relies on deterministic state (`@signal mark`, `@signal int`, `@affection`, choice history). Use a specific description of what *this* player did. Bad: "Made a choice." Good: "Showed vulnerability by accepting help from a former rival."
 5. **Don't write essay-length option text.** Choice option text is the player's UI button label — keep it under **~12 words**. Long narrative belongs *inside* the option block, not in the option text. Bad: `@option A brave "Stand your ground and tell him exactly how you feel about everything that happened last summer when he lied" { ... }`. Good: `@option A brave "Stand your ground." { ... }`.
-6. **Don't compress when you should breathe.** LLMs default to terse summarization; Galgame pacing is the opposite. Let scenes land — an `@pause` after scene setup, an internal `YOU:` line between two pieces of dialogue, an extra silent beat after a confession. Token pressure pushes you toward "compress"; resist it. Players paid to live the moments, not skim a plot summary.
+6. **Don't compress when you should breathe.** LLMs default to terse summarization; Galgame pacing is the opposite. Let scenes land — an `@pause` after scene setup, an internal `INNER_THOUGHT:` line between two pieces of dialogue, an extra silent beat after a confession. Token pressure pushes you toward "compress"; resist it. Players paid to live the moments, not skim a plot summary.
 7. **Don't write side branches with no entry, or gate routes with no destination.** Every side episode (`main/route/...`, `main/bad/...`) you imagine needs a `@gate` somewhere upstream that routes into it via `@next`. Conversely, every `@next <branch_key>` in a `@gate` must point at an episode file you actually wrote. A beautiful unreachable bad-end is dead content; a `@next main/route/001:01` with no file is a broken link.
 8. **Respect the concurrency rules.** `&` only joins a single-line directive to the preceding `@` group. It cannot lead a sequence or be used on block structures (`choice`, `phone`, `if`, `gate`) or dialogue.
 9. **Run the fixer before compiling.** The interpreter ships `lsc fix <file>` that auto-repairs common LLM mistakes (missing `@if` parens, `&` on blocks, character-name casing in `@affection`, BOM/CRLF, unclosed blocks). **If the script was LLM-generated, run `lsc fix` first, then `lsc validate`, then `lsc compile`.** This is the single highest-ROI habit when iterating with LLMs.
@@ -131,7 +131,7 @@ Visual directives use the forms below.
 
 Just two forms:
 
-- **`@<char> <pose> [transition]`** — immediately show the character or switch their pose. Dialogue uses the character's most recently declared pose; declare a pose before that character's first dialogue. `YOU:` displays the MC using the MC's declared pose. Only `NARRATOR:` clears the stage.
+- **`@<char> <pose> [transition]`** — immediately show the character or switch their pose. Dialogue uses the character's most recently declared pose; declare a pose before that character's first dialogue. `INNER_THOUGHT:` displays the MC using the MC's declared pose. Only `NARRATOR:` clears the stage.
 - **`@<char> bubble <type>`** — a one-shot bubble animation over the current character. Auto-disappears.
 
 **`bubble` is a reserved word** — it cannot be a pose name. `@malia bubble` always parses as "play a bubble", never as "switch to a pose called bubble".
@@ -165,7 +165,7 @@ CG replaces the entire screen and is rendered by downstream agent-forge as a sho
 CG carries **no embedded dialogue**. If a beat needs voiceover or inner monologue around the CG, write dialogue before or after the `@cg` directive.
 
 ```
-YOU: The city lights blurred through my tears.
+INNER_THOUGHT: The city lights blurred through my tears.
 @cg window_stare "The camera opens on Malia's silhouette against the rain-streaked window. Slow push-in on her eyes — one tear tracks down, catching the cold blue of the skyline."
 NARRATOR: She stood there for what felt like hours.
 ```
@@ -302,7 +302,7 @@ A `@choice` contains at least two `@option` blocks. Each option has an ID (A, B,
   @option B safe "Have Mark make a scene." {
     @mark grin_mischief
     MARK: HEY EASTON! You want some of my mystery casserole?
-    YOU: Thank god for Mark.
+    INNER_THOUGHT: Thank god for Mark.
     @butterfly "Had Mark create a diversion to avoid Easton"
   }
 }
@@ -415,7 +415,7 @@ Guidelines for ints:
   ```
 - ✅ **Single-beat achievement**: A singular narrative moment unlocks an achievement directly:
   ```
-  YOU: I leaned in. He didn't pull back.
+  INNER_THOUGHT: I leaned in. He didn't pull back.
   @achievement FIRST_KISS {
     name: "First Kiss"
     rarity: uncommon
@@ -462,7 +462,7 @@ One directive, one form: `@achievement <id> { name / rarity / description }`. Th
 
 1. **Single-beat achievement** — fire inline at the moment the achievement makes narrative sense:
    ```
-   YOU: I leaned in. He didn't pull back.
+   INNER_THOUGHT: I leaned in. He didn't pull back.
    @achievement FIRST_KISS {
      name: "First Kiss"
      rarity: uncommon
@@ -500,7 +500,7 @@ Use `@if` to show different content based on game state. **Parentheses `()` are 
 }
 
 @if (san <= 20 || FAILED_TWICE) {
-  YOU: I can barely keep it together.
+  INNER_THOUGHT: I can barely keep it together.
 }
 ```
 
@@ -660,7 +660,7 @@ These aren't enforced by the interpreter, but they make for a good player experi
 - **Expand, don't compress.** LLMs default to terse summarization; resist that. A scene with one dialogue exchange is too thin — the player needs the inner monologue, the silent beat, the second look at the photograph. Token pressure pushes you toward compression; the player paid for the moments, not the plot summary.
 - **Scene changes**: Use `@bg ... fade` between locations. Don't change backgrounds mid-dialogue without a beat.
 - **Character entrances**: Declare a character's pose before their first dialogue.
-- **Inner monologue**: Use `YOU:` liberally — it keeps the player in the protagonist's head and builds emotional investment.
+- **Inner monologue**: Use `INNER_THOUGHT:` liberally — it keeps the player in the protagonist's head and builds emotional investment.
 - **Phone messages**: Keep them short (under 20 words per message). They're in chat bubbles.
 - **Bubbles**: Use sparingly for emotional punctuation, not on every line.
 - **Music transitions**: A new `@music <name>` between scenes feels like a fresh chapter; `@music stop` before silence or big moments lets the room breathe.

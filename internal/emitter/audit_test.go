@@ -102,7 +102,7 @@ func TestAuditA_ConcurrentGrouping(t *testing.T) {
 	if !ok {
 		t.Fatalf("steps[3] should be object, got %T", steps[3])
 	}
-	assertType(t, you, "you", "steps[3]")
+	assertType(t, you, "inner_thought", "steps[3]")
 }
 
 // ---------- Audit B: Gate if/else chain ----------
@@ -709,7 +709,7 @@ func TestAuditG_AllNodeTypesHaveTypeField(t *testing.T) {
 		{"cg_show", &ast.CgShowNode{Name: "cg1", Content: "x"}, "cg_show"},
 		{"dialogue", &ast.DialogueNode{Character: "C", Text: "hi"}, "dialogue"},
 		{"narrator", &ast.NarratorNode{Text: "n"}, "narrator"},
-		{"you", &ast.YouNode{Text: "y"}, "you"},
+		{"you", &ast.YouNode{Text: "y"}, "inner_thought"},
 		{"phone_show", &ast.PhoneShowNode{}, "phone_show"},
 		{"text_message", &ast.TextMessageNode{Direction: "from", Char: "c", Content: "hi"}, "text_message"},
 		{"music", &ast.MusicSetNode{Name: "t"}, "music"},

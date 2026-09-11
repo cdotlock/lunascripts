@@ -664,7 +664,7 @@ async def ready():
         script_path.write_text(
             '@episode main:01 "Readiness" {\n'
             "  @bg readiness_background fade\n"
-            "  NARRATOR: Compiler readiness probe.\n"
+            "  INNER_THOUGHT: Compiler readiness probe.\n"
             "  @gate {\n"
             "    @next main:02\n"
             "  }\n"
@@ -682,11 +682,14 @@ async def ready():
 
     steps = result.get("steps") if isinstance(result, dict) else None
     first_step = steps[0] if isinstance(steps, list) and steps else {}
+    thought_step = steps[1] if isinstance(steps, list) and len(steps) > 1 else {}
     if (
         not isinstance(result, dict)
         or result.get("ls_contract_version") != expected_contract
         or first_step.get("name") != "readiness_background"
         or first_step.get("transition") != "fade"
+        or thought_step.get("type") != "inner_thought"
+        or thought_step.get("id") != "0002_you"
     ):
         return JSONResponse(
             status_code=503,

@@ -18,9 +18,9 @@ NARRATOR: And me.
 
 @sfx phone_buzz
 
-YOU: Easton.
+INNER_THOUGHT: Easton.
 
-YOU: Of course it's Easton.
+INNER_THOUGHT: Of course it's Easton.
 
 @phone show
 @text from EASTON: Can we talk? I know you said you needed space but I miss you. I'll be at the park at 8.
@@ -28,11 +28,11 @@ YOU: Of course it's Easton.
 
 @expr malia neutral_stare
 
-YOU: He misses me.
+INNER_THOUGHT: He misses me.
 
-YOU: He missed me three months ago too. Right before he took Jianna to his dad's company gala and I watched the photos on Instagram from my bathroom floor.
+INNER_THOUGHT: He missed me three months ago too. Right before he took Jianna to his dad's company gala and I watched the photos on Instagram from my bathroom floor.
 
-YOU: "Can we talk" is the opening line of every conversation that has ever ruined my week.
+INNER_THOUGHT: "Can we talk" is the opening line of every conversation that has ever ruined my week.
 
 @expr malia neutral_flat
 
@@ -85,7 +85,7 @@ MALIA [neutral_flat]: I did not check.
 
 JOSIE [neutral_loving]: Babe. You checked the parking lot before you checked your schedule. I saw you.
 
-YOU: I hate having a best friend who actually pays attention.
+INNER_THOUGHT: I hate having a best friend who actually pays attention.
 
 @hide josie fade
 @hide malia fade
@@ -110,23 +110,23 @@ MALIA [neutral_annoyed]: I'm looking at the hallway. He happens to be in the hal
 
 @expr mauricio neutral_reading
 
-YOU: Mauricio Reyes.
+INNER_THOUGHT: Mauricio Reyes.
 
-YOU: Soccer captain. Easton's best friend. My next-door neighbor since I was six. Reads more than anyone I know but would rather die than admit it.
+INNER_THOUGHT: Soccer captain. Easton's best friend. My next-door neighbor since I was six. Reads more than anyone I know but would rather die than admit it.
 
-YOU: We don't talk.
+INNER_THOUGHT: We don't talk.
 
-YOU: We used to. When we were kids. Then we didn't. Then he started hating me. I never found out why.
+INNER_THOUGHT: We used to. When we were kids. Then we didn't. Then he started hating me. I never found out why.
 
-YOU: So I hated him back.
+INNER_THOUGHT: So I hated him back.
 
-YOU: It's been working fine for eight years.
+INNER_THOUGHT: It's been working fine for eight years.
 
 @expr mauricio neutral_glance
 
-YOU: Fine.
+INNER_THOUGHT: Fine.
 
-YOU: Completely fine.
+INNER_THOUGHT: Completely fine.
 
 @hide mauricio fade
 @hide josie fade
@@ -142,15 +142,15 @@ MRS_WILLIAMS: Welcome to AP English, seniors. This semester you'll be doing a pa
 
 MRS_WILLIAMS: Oh, grow up. You'll survive.
 
-YOU: Please not him. Anyone but him.
+INNER_THOUGHT: Please not him. Anyone but him.
 
 @expr mauricio sitting_eyebrow
 
-YOU: That eyebrow thing he does.
+INNER_THOUGHT: That eyebrow thing he does.
 
-YOU: I don't know what it means. I don't want to know what it means.
+INNER_THOUGHT: I don't know what it means. I don't want to know what it means.
 
-YOU: I especially don't want to know why it made my stomach do something inconvenient just now.
+INNER_THOUGHT: I especially don't want to know why it made my stomach do something inconvenient just now.
 
 @hide mrs_williams fade
 @hide malia fade
@@ -181,17 +181,17 @@ MALIA [neutral_glare]: Mark.
 
 MARK [neutral_innocent]: What? I'm supporting local agriculture.
 
-YOU: Mark Thomas. My best friend since middle school. YouTuber. Professional idiot. Secretly the smartest person in this building but if you told anyone that, he'd deny it so convincingly you'd apologize for the accusation.
+INNER_THOUGHT: Mark Thomas. My best friend since middle school. YouTuber. Professional idiot. Secretly the smartest person in this building but if you told anyone that, he'd deny it so convincingly you'd apologize for the accusation.
 
-YOU: He's also the only person who has never once asked me about Easton.
+INNER_THOUGHT: He's also the only person who has never once asked me about Easton.
 
-YOU: I don't know if that's because he doesn't care or because he knows exactly how much I don't want to talk about it.
+INNER_THOUGHT: I don't know if that's because he doesn't care or because he knows exactly how much I don't want to talk about it.
 
-YOU: With Mark, it could be either.
+INNER_THOUGHT: With Mark, it could be either.
 
 @show easton neutral_warm at right
 
-YOU: Oh no.
+INNER_THOUGHT: Oh no.
 
 JOSIE: Twelve o'clock. Incoming.
 
@@ -215,7 +215,7 @@ MARK [neutral_quiet]: Want me to make a scene? I can absolutely make a scene.
 
   MALIA [neutral_controlled]: It was fine.
 
-  YOU: It was not fine. It was three months of pretending my chest didn't hurt every time I drove past the park where we used to sit on the hood of his car and talk about nothing until 2 AM.
+  INNER_THOUGHT: It was not fine. It was three months of pretending my chest didn't hurt every time I drove past the park where we used to sit on the hood of his car and talk about nothing until 2 AM.
 
   EASTON [neutral_careful]: Did you get my text this morning?
 
@@ -231,9 +231,9 @@ MARK [neutral_quiet]: Want me to make a scene? I can absolutely make a scene.
 
   @hide easton fade
 
-  YOU: "When you're ready."
+  INNER_THOUGHT: "When you're ready."
 
-  YOU: He always says that. Like it's my timeline holding us back and not his father's merger.
+  INNER_THOUGHT: He always says that. Like it's my timeline holding us back and not his father's merger.
 
   @gain EASTON_LET_APPROACH
   @affection EASTON +1
@@ -259,11 +259,11 @@ MARK [neutral_quiet]: Want me to make a scene? I can absolutely make a scene.
 
   @show malia neutral_exhale at center
 
-  YOU: I'll thank Mark later. With actual fries. An entire plate of them.
+  INNER_THOUGHT: I'll thank Mark later. With actual fries. An entire plate of them.
 
-  YOU: I'm not ready to see him act like everything can go back to how it was.
+  INNER_THOUGHT: I'm not ready to see him act like everything can go back to how it was.
 
-  YOU: Because part of me wants it to. And that part is the part I don't trust.
+  INNER_THOUGHT: Because part of me wants it to. And that part is the part I don't trust.
 
   @gain EASTON_AVOIDED
   @affection MARK +1
@@ -290,17 +290,17 @@ MALIA [neutral_defensive]: I'm looking at the general area of athletic activity.
 
 @show elias neutral_stretching at right
 
-YOU: Elias Hall.
+INNER_THOUGHT: Elias Hall.
 
-YOU: I've known him for two years and I'm not sure I've heard him say more than forty words total.
+INNER_THOUGHT: I've known him for two years and I'm not sure I've heard him say more than forty words total.
 
-YOU: But sometimes he looks at people in a way that makes you feel like he just read your entire search history.
+INNER_THOUGHT: But sometimes he looks at people in a way that makes you feel like he just read your entire search history.
 
 @hide elias fade
 
 @show mauricio neutral_dribbling at right
 
-YOU: He wasn't looking at me.
+INNER_THOUGHT: He wasn't looking at me.
 
 JOSIE [neutral_smirk]: He was looking at you.
 
@@ -308,7 +308,7 @@ MALIA [neutral_fast]: He was looking at the scoreboard.
 
 JOSIE [neutral_dry]: The scoreboard is behind you, Malia.
 
-YOU: Shut up, Josie.
+INNER_THOUGHT: Shut up, Josie.
 
 @hide malia fade
 @hide josie fade
@@ -326,11 +326,11 @@ NARRATOR: He doesn't.
 
 @sfx arguing_muffled
 
-YOU: It's happening again.
+INNER_THOUGHT: It's happening again.
 
-YOU: His parents.
+INNER_THOUGHT: His parents.
 
-YOU: I've been hearing it through the walls since middle school. His dad. Drunk. His mom. Tired. And Mauricio somewhere in between, being whatever his family needs him to be.
+INNER_THOUGHT: I've been hearing it through the walls since middle school. His dad. Drunk. His mom. Tired. And Mauricio somewhere in between, being whatever his family needs him to be.
 
 @sfx door_slam
 
@@ -338,15 +338,15 @@ YOU: I've been hearing it through the walls since middle school. His dad. Drunk.
 
 @sfx arguing_muffled
 
-YOU: I should close the curtain.
+INNER_THOUGHT: I should close the curtain.
 
-YOU: This isn't my business.
+INNER_THOUGHT: This isn't my business.
 
 @wait 1.0
 
-YOU: Right.
+INNER_THOUGHT: Right.
 
-YOU: None of my business.
+INNER_THOUGHT: None of my business.
 
 @sfx phone_buzz
 
@@ -354,17 +354,17 @@ YOU: None of my business.
 @text from UNKNOWN: nice curtains, Butterfly
 @phone hide
 
-YOU: ...
+INNER_THOUGHT: ...
 
-YOU: He hasn't called me that in eight years.
+INNER_THOUGHT: He hasn't called me that in eight years.
 
-YOU: Butterfly.
+INNER_THOUGHT: Butterfly.
 
-YOU: I used to catch butterflies in the yard when we were kids. He'd follow me around and hold the jar. I was six. He was the only person I let help.
+INNER_THOUGHT: I used to catch butterflies in the yard when we were kids. He'd follow me around and hold the jar. I was six. He was the only person I let help.
 
-YOU: Then one day he stopped helping. And started hating. And I never found out why.
+INNER_THOUGHT: Then one day he stopped helping. And started hating. And I never found out why.
 
-YOU: Until tonight I thought he'd forgotten the word entirely.
+INNER_THOUGHT: Until tonight I thought he'd forgotten the word entirely.
 
 @expr malia neutral_stare
 
@@ -392,11 +392,11 @@ MRS_WILLIAMS: Thomas and Uhrin. Garcia and Macari. King and Davis.
 
 MRS_WILLIAMS: Hernandez and...
 
-YOU: Please not him. Please not him.
+INNER_THOUGHT: Please not him. Please not him.
 
 MRS_WILLIAMS: Reyes.
 
-YOU: Of course.
+INNER_THOUGHT: Of course.
 
 @show mauricio sitting_reading at right
 
@@ -424,17 +424,17 @@ NARRATOR: It says: "Jane Eyre. My house. Thursday 4pm."
 
 NARRATOR: No question mark. Not a suggestion. A decision he made for both of us.
 
-YOU: The audacity of this man.
+INNER_THOUGHT: The audacity of this man.
 
-YOU: I could refuse. Find him at lunch, throw the paper back, tell him I pick the book and the location.
+INNER_THOUGHT: I could refuse. Find him at lunch, throw the paper back, tell him I pick the book and the location.
 
-YOU: But Jane Eyre is actually a good choice.
+INNER_THOUGHT: But Jane Eyre is actually a good choice.
 
-YOU: And I kind of want to see what his house looks like inside.
+INNER_THOUGHT: And I kind of want to see what his house looks like inside.
 
-YOU: For academic purposes.
+INNER_THOUGHT: For academic purposes.
 
-YOU: Strictly academic.
+INNER_THOUGHT: Strictly academic.
 
 @hide mauricio fade
 @hide malia fade
@@ -452,11 +452,11 @@ EASTON [neutral_earnest]: I talked to my dad last night. About us. About Jianna.
 
 EASTON [neutral_vulnerable]: I told him I don't want the arrangement. He said... he said he needs time to think about it. But he didn't say no. That's new. He always says no.
 
-YOU: He talked to his dad.
+INNER_THOUGHT: He talked to his dad.
 
-YOU: He actually talked to his dad.
+INNER_THOUGHT: He actually talked to his dad.
 
-YOU: Easton has never -- in two years -- brought me up to Rafferty King. Not once.
+INNER_THOUGHT: Easton has never -- in two years -- brought me up to Rafferty King. Not once.
 
 EASTON [neutral_hopeful]: I know I've been--I know I haven't been brave. And I know you have no reason to trust me. But I'm trying, Mal. I'm really trying.
 
@@ -480,13 +480,13 @@ EASTON [neutral_hopeful]: I know I've been--I know I haven't been brave. And I k
 
   EASTON [neutral_direct]: I'm not outgrowing you, Malia. That's the one thing I'm sure of.
 
-  YOU: ...
+  INNER_THOUGHT: ...
 
-  YOU: He's never talked about his dad like that before. Never quoted him. Never let me see the bruise.
+  INNER_THOUGHT: He's never talked about his dad like that before. Never quoted him. Never let me see the bruise.
 
-  YOU: That's not "I'm trying." That's "I'm bleeding and I came here anyway."
+  INNER_THOUGHT: That's not "I'm trying." That's "I'm bleeding and I came here anyway."
 
-  YOU: I don't know what to do with a version of Easton who shows me his wounds instead of promising to heal them.
+  INNER_THOUGHT: I don't know what to do with a version of Easton who shows me his wounds instead of promising to heal them.
 
   @gain EASTON_ACKNOWLEDGED
   @affection EASTON +2
@@ -503,11 +503,11 @@ EASTON [neutral_hopeful]: I know I've been--I know I haven't been brave. And I k
 
   @hide easton fade
 
-  YOU: I said "for you" and not "for us."
+  INNER_THOUGHT: I said "for you" and not "for us."
 
-  YOU: I did that on purpose.
+  INNER_THOUGHT: I did that on purpose.
 
-  YOU: I also kind of wish I hadn't.
+  INNER_THOUGHT: I also kind of wish I hadn't.
 
   @gain EASTON_DISTANCE
 @endbranch
@@ -544,9 +544,9 @@ MAURICIO: I don't. I care about saving mine.
 @branch TAKE_RIDE
   @expr malia neutral_helmet
 
-  YOU: Okay.
+  INNER_THOUGHT: Okay.
 
-  YOU: His jacket smells like detergent and something else. Something warm. I'm cataloguing this for no reason.
+  INNER_THOUGHT: His jacket smells like detergent and something else. Something warm. I'm cataloguing this for no reason.
 
   @sfx motorcycle_start
 
@@ -562,11 +562,11 @@ MAURICIO: I don't. I care about saving mine.
 
   @hide mauricio fade
 
-  YOU: My hands still feel warm where they were on his jacket.
+  INNER_THOUGHT: My hands still feel warm where they were on his jacket.
 
-  YOU: That's just -- body heat. Basic thermodynamics. I learned that in ninth grade. It doesn't mean--
+  INNER_THOUGHT: That's just -- body heat. Basic thermodynamics. I learned that in ninth grade. It doesn't mean--
 
-  YOU: It doesn't mean anything.
+  INNER_THOUGHT: It doesn't mean anything.
 
   @gain MAURICIO_RIDE
   @affection MAURICIO +1
@@ -581,17 +581,17 @@ MAURICIO: I don't. I care about saving mine.
 
   @hide mauricio fade
 
-  YOU: There it is again. Butterfly.
+  INNER_THOUGHT: There it is again. Butterfly.
 
-  YOU: He said it like it was nothing. Like it's just a word.
+  INNER_THOUGHT: He said it like it was nothing. Like it's just a word.
 
-  YOU: It's not just a word. It's the word a ten-year-old boy used to call me while I ran around the yard with a mason jar and he--
+  INNER_THOUGHT: It's not just a word. It's the word a ten-year-old boy used to call me while I ran around the yard with a mason jar and he--
 
-  YOU: No.
+  INNER_THOUGHT: No.
 
-  YOU: I'm not doing this. I'm going to the bus stop. I'm going to put my earbuds in. I'm going to listen to something loud and angry and not think about the way he almost smiled when he said it.
+  INNER_THOUGHT: I'm not doing this. I'm going to the bus stop. I'm going to put my earbuds in. I'm going to listen to something loud and angry and not think about the way he almost smiled when he said it.
 
-  YOU: I need to stop using that phrase.
+  INNER_THOUGHT: I need to stop using that phrase.
 
   @gain MAURICIO_REFUSED_RIDE
 @endbranch
@@ -617,9 +617,9 @@ MALIA [neutral_alarmed]: I do NOT--
 
 VIKKI [neutral_casual]: Last Thursday you said "motorcycle" and then "stop it" and then something in Spanish that I'm choosing to believe was a vocabulary exercise.
 
-YOU: I am going to die.
+INNER_THOUGHT: I am going to die.
 
-YOU: I am going to die right here on this couch and Vikki is going to put that on my tombstone.
+INNER_THOUGHT: I am going to die right here on this couch and Vikki is going to put that on my tombstone.
 
 @show samuel neutral_warm at center
 
@@ -633,11 +633,11 @@ VIKKI [neutral_innocent]: I'm bonding.
 @text from MARK: yo. Elias is being weird. he asked about you today. like, specifically about you. Asked what you like to read.
 @phone hide
 
-YOU: Elias asked about me?
+INNER_THOUGHT: Elias asked about me?
 
-YOU: Elias doesn't ask about anyone. He observes. He doesn't ask.
+INNER_THOUGHT: Elias doesn't ask about anyone. He observes. He doesn't ask.
 
-YOU: What does that mean?
+INNER_THOUGHT: What does that mean?
 
 @phone show
 @text from MARK: idk just thought it was random. or maybe not random. with that dude you can never tell. anyway see you tomorrow
@@ -670,11 +670,11 @@ MALIA [neutral_surprised]: You have more books than the school library.
 
 MAURICIO [neutral_flat]: The school library has seventeen copies of Lord of the Flies and none of Toni Morrison. That's not a library. That's a crime scene.
 
-YOU: He just made a literary joke.
+INNER_THOUGHT: He just made a literary joke.
 
-YOU: An actually funny literary joke.
+INNER_THOUGHT: An actually funny literary joke.
 
-YOU: I'm going to pretend I didn't almost smile.
+INNER_THOUGHT: I'm going to pretend I didn't almost smile.
 
 @expr malia sitting_edge
 
@@ -690,9 +690,9 @@ MAURICIO [neutral_calm]: It means you're stubborn, principled, and you'd rather 
 
 @wait 0.5
 
-YOU: ...
+INNER_THOUGHT: ...
 
-YOU: That is both the most annoying and the most accurate thing anyone has ever said about me.
+INNER_THOUGHT: That is both the most annoying and the most accurate thing anyone has ever said about me.
 
 MALIA [neutral_recovering]: Fine. Jane it is. But only because her chapters are better.
 
@@ -724,11 +724,11 @@ MALIA [neutral_surprised]: You're... feeding me?
 
 MAURICIO [neutral_flat]: You can't analyze nineteenth-century feminist literature on an empty stomach. That's not generosity. That's academic standards.
 
-YOU: He brought me food and framed it as an academic necessity.
+INNER_THOUGHT: He brought me food and framed it as an academic necessity.
 
-YOU: I don't know whether to be annoyed or touched.
+INNER_THOUGHT: I don't know whether to be annoyed or touched.
 
-YOU: I'm both.
+INNER_THOUGHT: I'm both.
 
 @sfx arguing_muffled
 
@@ -744,15 +744,15 @@ MAURICIO [neutral_low]: Stay here.
 
 @hide mauricio fade
 
-YOU: I know what just happened downstairs. I've been hearing it through the walls for years.
+INNER_THOUGHT: I know what just happened downstairs. I've been hearing it through the walls for years.
 
 @wait 1.0
 
 @show mauricio standing_blank at right
 
-YOU: I could pretend I didn't notice. Walk out. Say "see you next week." Keep the wall between us.
+INNER_THOUGHT: I could pretend I didn't notice. Walk out. Say "see you next week." Keep the wall between us.
 
-YOU: Or I could--
+INNER_THOUGHT: Or I could--
 
 @choice
   "[Say something.]" -> SAY_SOMETHING
@@ -782,9 +782,9 @@ YOU: Or I could--
 
   MAURICIO [neutral_low]: You should go home, Malia.
 
-  YOU: He used my actual name. Not "Hernandez." Not "Butterfly." My name.
+  INNER_THOUGHT: He used my actual name. Not "Hernandez." Not "Butterfly." My name.
 
-  YOU: It sounded different in his voice than it does in anyone else's.
+  INNER_THOUGHT: It sounded different in his voice than it does in anyone else's.
 
   MALIA: My window's always open. In case you need somewhere that's not here.
 
@@ -803,17 +803,17 @@ YOU: Or I could--
   @hide malia fade
   @hide mauricio fade
 
-  YOU: I didn't say anything.
+  INNER_THOUGHT: I didn't say anything.
 
-  YOU: Because what would I say? "Are you okay?" He's clearly not okay.
+  INNER_THOUGHT: Because what would I say? "Are you okay?" He's clearly not okay.
 
-  YOU: "I'm sorry?" He doesn't want my sorry. He doesn't want anything from me except to finish this project and go back to ignoring each other.
+  INNER_THOUGHT: "I'm sorry?" He doesn't want my sorry. He doesn't want anything from me except to finish this project and go back to ignoring each other.
 
-  YOU: But.
+  INNER_THOUGHT: But.
 
-  YOU: That butterfly on his keychain.
+  INNER_THOUGHT: That butterfly on his keychain.
 
-  YOU: Why does he carry a butterfly?
+  INNER_THOUGHT: Why does he carry a butterfly?
 
   @gain MAURICIO_WALL_STAYED
 @endbranch
@@ -855,31 +855,31 @@ SAMUEL [neutral_knowing_smile]: I didn't say it wasn't.
 @text from ELIAS: Hey. Mark gave me your number. Hope that's okay. I wanted to ask -- have you read anything by Sylvia Plath? I'm looking for a recommendation for someone.
 @phone hide
 
-YOU: Elias Hall is texting me. About Sylvia Plath. On a Friday night.
+INNER_THOUGHT: Elias Hall is texting me. About Sylvia Plath. On a Friday night.
 
-YOU: "For someone." Who is "someone"?
+INNER_THOUGHT: "For someone." Who is "someone"?
 
-YOU: Also, since when does Elias text people? He's the most antisocial person in our entire friend group.
+INNER_THOUGHT: Also, since when does Elias text people? He's the most antisocial person in our entire friend group.
 
 @phone show
 @text to ELIAS: The Bell Jar. start there. who's it for?
 @text from ELIAS: Myself. I just didn't want to say that and sound pretentious.
 @phone hide
 
-YOU: He asked for a recommendation but said "for someone" instead of "for me" because he didn't want to seem pretentious.
+INNER_THOUGHT: He asked for a recommendation but said "for someone" instead of "for me" because he didn't want to seem pretentious.
 
-YOU: That's either very endearing or very calculated.
+INNER_THOUGHT: That's either very endearing or very calculated.
 
-YOU: I genuinely cannot tell.
+INNER_THOUGHT: I genuinely cannot tell.
 
 @phone show
 @text to ELIAS: not pretentious. good taste actually.
 @text from ELIAS: Thanks. Goodnight, Malia.
 @phone hide
 
-YOU: "Goodnight, Malia."
+INNER_THOUGHT: "Goodnight, Malia."
 
-YOU: Period at the end and everything. Elias Hall is the only person under 25 who uses periods in texts sincerely.
+INNER_THOUGHT: Period at the end and everything. Elias Hall is the only person under 25 who uses periods in texts sincerely.
 
 NARRATOR: Three conversations open. Easton's unread text from this morning. Elias's polite sign-off. And the text from Mauricio: "nice curtains, Butterfly."
 
@@ -923,11 +923,11 @@ MARK [neutral_victory]: THAT'S WHAT I'M TALKING ABOUT.
 
 @expr malia neutral_laugh
 
-YOU: Was that--
+INNER_THOUGHT: Was that--
 
-YOU: No. That was nothing. He was looking at the general area of beer pong activity.
+INNER_THOUGHT: No. That was nothing. He was looking at the general area of beer pong activity.
 
-YOU: I need to stop reading his eye movements like they're subtitles.
+INNER_THOUGHT: I need to stop reading his eye movements like they're subtitles.
 
 @hide mark fade
 @hide josie fade
@@ -959,15 +959,15 @@ MAURICIO [neutral_flat]: It means figure it out, King. Before someone else does.
 
 @hide mauricio fade
 
-YOU: "Before someone else does."
+INNER_THOUGHT: "Before someone else does."
 
-YOU: What did that mean?
+INNER_THOUGHT: What did that mean?
 
-YOU: What did THAT mean?
+INNER_THOUGHT: What did THAT mean?
 
-YOU: Was he talking about me? Was he talking about himself? Was he threatening Easton or warning him?
+INNER_THOUGHT: Was he talking about me? Was he talking about himself? Was he threatening Easton or warning him?
 
-YOU: My heart is doing something that has nothing to do with the music.
+INNER_THOUGHT: My heart is doing something that has nothing to do with the music.
 
 @hide malia fade
 
@@ -990,7 +990,7 @@ ELIAS [neutral_thoughtful]: I think Esther Greenwood is performing normal the wa
 
 @wait 0.5
 
-YOU: That's... an incredibly precise reading for someone who started this morning.
+INNER_THOUGHT: That's... an incredibly precise reading for someone who started this morning.
 
 MALIA [neutral_interested]: What do you mean "notices the wrong things"?
 
@@ -998,13 +998,13 @@ ELIAS [neutral_calm]: People who are fine notice the big picture. People who are
 
 @wait 1.0
 
-YOU: He just described something I recognize.
+INNER_THOUGHT: He just described something I recognize.
 
-YOU: After my mom left, I spent six months looking at cracks in the ceiling. Fourteen cracks. I counted all of them.
+INNER_THOUGHT: After my mom left, I spent six months looking at cracks in the ceiling. Fourteen cracks. I counted all of them.
 
-YOU: I've never told anyone that.
+INNER_THOUGHT: I've never told anyone that.
 
-YOU: And Elias didn't ask me to. He just said something that made me think about it on my own.
+INNER_THOUGHT: And Elias didn't ask me to. He just said something that made me think about it on my own.
 
 MALIA [neutral_quiet]: That's really good, Elias.
 
@@ -1044,9 +1044,9 @@ EASTON: Mal? You out here?
 
 EASTON [neutral_hopeful]: Can we talk for a minute? Somewhere quiet?
 
-YOU: He looks good tonight. He always looks good. That's part of the problem.
+INNER_THOUGHT: He looks good tonight. He always looks good. That's part of the problem.
 
-YOU: The other part is that when he says "can we talk," I remember every version of us that almost worked.
+INNER_THOUGHT: The other part is that when he says "can we talk," I remember every version of us that almost worked.
 
 EASTON [neutral_sincere]: I just want five minutes. That's all I'm asking.
 
@@ -1054,7 +1054,7 @@ EASTON [neutral_sincere]: I just want five minutes. That's all I'm asking.
 
 MAURICIO [neutral_flat]: Don't mind me.
 
-YOU: This kitchen is too small for whatever is happening right now.
+INNER_THOUGHT: This kitchen is too small for whatever is happening right now.
 
 @expr mauricio neutral_leaving
 
@@ -1062,11 +1062,11 @@ MAURICIO [neutral_quiet]: Your butterfly's slipping.
 
 @hide mauricio fade
 
-YOU: He noticed my necklace clasp was coming undone.
+INNER_THOUGHT: He noticed my necklace clasp was coming undone.
 
-YOU: In a dark kitchen. While getting ice. While pretending he wasn't looking at me.
+INNER_THOUGHT: In a dark kitchen. While getting ice. While pretending he wasn't looking at me.
 
-YOU: How does he notice things like that?
+INNER_THOUGHT: How does he notice things like that?
 
 EASTON [neutral_careful]: You two have been... talking more?
 
@@ -1074,9 +1074,9 @@ MALIA [neutral_quick]: We have a project together. English class.
 
 EASTON [neutral_nodding]: Right. The project.
 
-YOU: He doesn't look convinced.
+INNER_THOUGHT: He doesn't look convinced.
 
-YOU: He shouldn't be.
+INNER_THOUGHT: He shouldn't be.
 
 @hide malia fade
 @hide easton fade
@@ -1105,17 +1105,17 @@ NARRATOR: Four people who said something today that I'm still thinking about.
 @text from ELIAS: Finished chapter 5. You were right. Goodnight, Malia.
 @phone hide
 
-YOU: Easton is trying. I believe that now. The question is whether trying is going to be enough this time.
+INNER_THOUGHT: Easton is trying. I believe that now. The question is whether trying is going to be enough this time.
 
-YOU: Mauricio called me Butterfly and noticed my necklace in the dark and I still haven't replied to his text because I don't know what to say to a boy who hated me for eight years and is now doing things like that.
+INNER_THOUGHT: Mauricio called me Butterfly and noticed my necklace in the dark and I still haven't replied to his text because I don't know what to say to a boy who hated me for eight years and is now doing things like that.
 
-YOU: Mark grabbed my jacket. Mark always grabs my jacket. Mark remembers every small thing I need before I need it, and somehow I've never once thought about what that means.
+INNER_THOUGHT: Mark grabbed my jacket. Mark always grabs my jacket. Mark remembers every small thing I need before I need it, and somehow I've never once thought about what that means.
 
-YOU: Elias said I notice cracks. And he's right. And the fact that he's right without me ever telling him makes me feel something I can't name.
+INNER_THOUGHT: Elias said I notice cracks. And he's right. And the fact that he's right without me ever telling him makes me feel something I can't name.
 
-YOU: Four boys. Four completely different versions of what this year could look like.
+INNER_THOUGHT: Four boys. Four completely different versions of what this year could look like.
 
-YOU: One who's learning to fight for me. One who's been fighting something since before I knew him. One who fights for everyone except himself. And one who doesn't fight at all -- he just sees.
+INNER_THOUGHT: One who's learning to fight for me. One who's been fighting something since before I knew him. One who fights for everyone except himself. And one who doesn't fight at all -- he just sees.
 
 @show josie neutral_soft at right
 
@@ -1131,13 +1131,13 @@ JOSIE [neutral_arm_around]: That's okay. Not knowing is allowed.
 
 @hide josie fade
 
-YOU: I'm going to respond to one of them.
+INNER_THOUGHT: I'm going to respond to one of them.
 
-YOU: Just one.
+INNER_THOUGHT: Just one.
 
-YOU: The one I respond to first is the one I'm actually thinking about.
+INNER_THOUGHT: The one I respond to first is the one I'm actually thinking about.
 
-YOU: Which means I already know more than I'm admitting.
+INNER_THOUGHT: Which means I already know more than I'm admitting.
 
 @choice premium "Route Tendency"
   "Reply to Easton." -> ROUTE_EASTON
@@ -1156,7 +1156,7 @@ YOU: Which means I already know more than I'm admitting.
   @text to EASTON: Tuesday.
   @phone hide
 
-  YOU: I chose him once before. Maybe I owe it to both of us to see if this time can be different.
+  INNER_THOUGHT: I chose him once before. Maybe I owe it to both of us to see if this time can be different.
 
   @bg coffee_shop_morning fade
 
@@ -1166,19 +1166,19 @@ YOU: Which means I already know more than I'm admitting.
 
   NARRATOR: He's been there for thirty minutes. There are two empty cups in front of him. He drank two coffees waiting for me because he was so nervous about being late that he came early and then didn't know what to do with his hands.
 
-  YOU: He came early.
+  INNER_THOUGHT: He came early.
 
-  YOU: He's never early for anything.
+  INNER_THOUGHT: He's never early for anything.
 
-  YOU: But he was early for this.
+  INNER_THOUGHT: But he was early for this.
 
   @show easton standing_surprised at right
 
   @expr malia neutral_smile
 
-  YOU: Okay.
+  INNER_THOUGHT: Okay.
 
-  YOU: Maybe this time.
+  INNER_THOUGHT: Maybe this time.
 @endbranch
 
 @branch ROUTE_MAURICIO
@@ -1201,15 +1201,15 @@ YOU: Which means I already know more than I'm admitting.
   @text from MAURICIO: noted.
   @phone hide
 
-  YOU: "Noted."
+  INNER_THOUGHT: "Noted."
 
-  YOU: One word. No emoji. Period at the end.
+  INNER_THOUGHT: One word. No emoji. Period at the end.
 
-  YOU: But he replied in eight seconds. At midnight. He was awake. He was waiting.
+  INNER_THOUGHT: But he replied in eight seconds. At midnight. He was awake. He was waiting.
 
-  YOU: Or I'm projecting.
+  INNER_THOUGHT: Or I'm projecting.
 
-  YOU: But eight seconds.
+  INNER_THOUGHT: But eight seconds.
 
   @bg malias_bedroom_night fade
 
@@ -1223,11 +1223,11 @@ YOU: Which means I already know more than I'm admitting.
 
   NARRATOR: But his curtain is open.
 
-  YOU: That's not nothing.
+  INNER_THOUGHT: That's not nothing.
 
-  YOU: He heard me. "My window is always open." And his answer isn't words. It's a curtain.
+  INNER_THOUGHT: He heard me. "My window is always open." And his answer isn't words. It's a curtain.
 
-  YOU: Mauricio Reyes doesn't speak in sentences. He speaks in gestures. And I'm starting to learn the language.
+  INNER_THOUGHT: Mauricio Reyes doesn't speak in sentences. He speaks in gestures. And I'm starting to learn the language.
 @endbranch
 
 @branch ROUTE_MARK
@@ -1239,22 +1239,22 @@ YOU: Which means I already know more than I'm admitting.
   @text from MARK: always. you want it back tonight or can I use it as a pillow? it smells like your shampoo and honestly that's an upgrade from my actual pillow
   @phone hide
 
-  YOU: ...
+  INNER_THOUGHT: ...
 
-  YOU: Did Mark Thomas just say my shampoo smells good?
+  INNER_THOUGHT: Did Mark Thomas just say my shampoo smells good?
 
-  YOU: That's -- that's a joke. Obviously. Mark says things like that to everyone.
+  INNER_THOUGHT: That's -- that's a joke. Obviously. Mark says things like that to everyone.
 
   @phone show
   @text to MARK: keep it. consider it rent for the beer pong partnership.
   @text from MARK: deal. night Hernandez <3
   @phone hide
 
-  YOU: He sends a heart emoji to everyone.
+  INNER_THOUGHT: He sends a heart emoji to everyone.
 
-  YOU: He sends a heart emoji to everyone.
+  INNER_THOUGHT: He sends a heart emoji to everyone.
 
-  YOU: ...right?
+  INNER_THOUGHT: ...right?
 
   @bg malias_house_morning fade
 
@@ -1268,11 +1268,11 @@ YOU: Which means I already know more than I'm admitting.
 
   NARRATOR: He went and got fries. At six in the morning. On a Sunday. And left them on my porch without knocking.
 
-  YOU: Mark Thomas has done a thousand kind things for me in six years and I've filed every one under "best friend behavior."
+  INNER_THOUGHT: Mark Thomas has done a thousand kind things for me in six years and I've filed every one under "best friend behavior."
 
-  YOU: So why is this one making my chest do something different?
+  INNER_THOUGHT: So why is this one making my chest do something different?
 
-  YOU: Maybe it's the same thing it always was. Maybe I just never let myself name it.
+  INNER_THOUGHT: Maybe it's the same thing it always was. Maybe I just never let myself name it.
 @endbranch
 
 @branch ROUTE_ELIAS
@@ -1292,22 +1292,22 @@ YOU: Which means I already know more than I'm admitting.
   @text from ELIAS: That came out more charming than I intended. I'm genuinely just an insomniac.
   @phone hide
 
-  YOU: He corrected himself.
+  INNER_THOUGHT: He corrected himself.
 
-  YOU: He said something that sounded like a line, realized it, and immediately took it back.
+  INNER_THOUGHT: He said something that sounded like a line, realized it, and immediately took it back.
 
-  YOU: I've never met anyone who is that aware of how they sound and that uncomfortable with accidentally being smooth.
+  INNER_THOUGHT: I've never met anyone who is that aware of how they sound and that uncomfortable with accidentally being smooth.
 
-  YOU: It's weirdly--
+  INNER_THOUGHT: It's weirdly--
 
-  YOU: No. Not going there tonight.
+  INNER_THOUGHT: No. Not going there tonight.
 
   @phone show
   @text to ELIAS: goodnight, Elias.
   @text from ELIAS: Goodnight, Malia.
   @phone hide
 
-  YOU: Periods. Both of us. I'm going to think about that longer than I should.
+  INNER_THOUGHT: Periods. Both of us. I'm going to think about that longer than I should.
 
   @bg classroom_morning fade
 
@@ -1323,11 +1323,11 @@ YOU: Which means I already know more than I'm admitting.
 
   NARRATOR: In the margin, in tiny handwriting: "This one reminded me of you."
 
-  YOU: ...
+  INNER_THOUGHT: ...
 
-  YOU: Elias Hall left a book on my desk. With annotations. One of them says "this one reminded me of you" next to a passage about a girl who sees what no one else sees.
+  INNER_THOUGHT: Elias Hall left a book on my desk. With annotations. One of them says "this one reminded me of you" next to a passage about a girl who sees what no one else sees.
 
-  YOU: He is reading me like I am a book. And the terrifying part is I don't think he's wrong about a single underline.
+  INNER_THOUGHT: He is reading me like I am a book. And the terrifying part is I don't think he's wrong about a single underline.
 @endbranch
 
 @hide malia fade

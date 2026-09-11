@@ -283,8 +283,8 @@ func (d *decompiler) writeStep(w *sourceWriter, step map[string]interface{}, ind
 		w.line(indent, "%s: %s", strings.ToUpper(stringValue(step["character"])), stringValue(step["text"]))
 	case "narrator":
 		w.line(indent, "NARRATOR: %s", stringValue(step["text"]))
-	case "you":
-		w.line(indent, "YOU: %s", stringValue(step["text"]))
+	case "inner_thought", "you":
+		w.line(indent, "INNER_THOUGHT: %s", stringValue(step["text"]))
 	case "phone_show":
 		w.line(indent, "%sphone {", prefix)
 		if messages, ok := step["messages"].([]interface{}); ok {

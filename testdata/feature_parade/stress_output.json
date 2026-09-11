@@ -5,7 +5,7 @@
   "gate": {
     "next": "main:02"
   },
-  "ls_contract_version": "3.0.0",
+  "ls_contract_version": "4.0.0",
   "seq": 1,
   "steps": [
     [
@@ -845,7 +845,7 @@
                 {
                   "id": "0074_you",
                   "text": "[T56c] safe body nested @else.",
-                  "type": "you"
+                  "type": "inner_thought"
                 }
               ],
               "id": "0071_ctrl",
@@ -853,7 +853,7 @@
                 {
                   "id": "0072_you",
                   "text": "[T56b] safe body nested @if true.",
-                  "type": "you"
+                  "type": "inner_thought"
                 },
                 {
                   "description": "Walked away but hesitated",

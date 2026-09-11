@@ -59,7 +59,7 @@
     {
       "id": "0009_you",
       "text": "[T44] Where does this go?",
-      "type": "you"
+      "type": "inner_thought"
     },
     {
       "id": "0010_nar",

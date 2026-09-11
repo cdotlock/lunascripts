@@ -14,7 +14,7 @@
   &malia phone
 
   NARRATOR: [T1] Concurrent group fired: bg + music + char_show (one & group).
-  YOU: [T2] YOU internal monologue renders here.
+  INNER_THOUGHT: [T2] INNER_THOUGHT internal monologue renders here.
   NARRATOR: [T3] NARRATOR line (separate from dialogue).
   MALIA: [T4] CHARACTER dialogue line from MALIA.
 
@@ -151,19 +151,19 @@
 
   NARRATOR: [T23] Top-level @if chain with compound(comparison && flag) / compound(comparison || flag) / @else.
   @if (affection.easton >= 2 && EP01_FACED_EASTON) {
-    YOU: [T23a] compound (comparison && flag) true.
+    INNER_THOUGHT: [T23a] compound (comparison && flag) true.
     @malia bubble heart
   } @else @if (affection.easton < 0 || EP01_DEFLECTED) {
-    YOU: [T23b] compound (comparison || flag) true.
+    INNER_THOUGHT: [T23b] compound (comparison || flag) true.
     @malia bubble doom
   } @else {
-    YOU: [T23c] fallback @else.
+    INNER_THOUGHT: [T23c] fallback @else.
     @malia bubble ellipsis
   }
 
   NARRATOR: [T24] @cg window_stare — leaf indirect (no body); CG describes itself in prose.
   NARRATOR: [T24a] NARRATOR line BEFORE the CG leaf (formerly nested inside body).
-  YOU: [T24b] YOU line BEFORE the CG leaf (formerly nested inside body).
+  INNER_THOUGHT: [T24b] INNER_THOUGHT line BEFORE the CG leaf (formerly nested inside body).
   @cg window_stare "Wide shot pushes in as Malia stands at the gym window, late sunlight cutting through dust. The camera holds long enough to catch the slow tilt of her head, then dissolves to the silhouette of the empty court behind her."
 
   // ================================================================
@@ -181,7 +181,7 @@
     }
     @affection easton +1
   } @else {
-    YOU: [T25b] mauricio-leading or tied branch — no phone message.
+    INNER_THOUGHT: [T25b] mauricio-leading or tied branch — no phone message.
   }
 
   NARRATOR: [T25m] @if with MAX(...) aggregate operand — triggers a butterfly if any LI's affection has reached 5.
@@ -194,23 +194,23 @@
     }
     NARRATOR: [T25m1] MAX(...) >= 5 branch — achievement rare unlocked.
   } @else {
-    YOU: [T25m2] no LI has crossed affection 5 yet.
+    INNER_THOUGHT: [T25m2] no LI has crossed affection 5 yet.
   }
 
   NARRATOR: [T25n] @if with MIN(...) aggregate — guards against any negative affection.
   @if (MIN(affection.easton, affection.mauricio, affection.elias) >= 0) {
-    YOU: [T25n1] MIN(...) >= 0 — all LIs non-negative.
+    INNER_THOUGHT: [T25n1] MIN(...) >= 0 — all LIs non-negative.
   } @else {
-    YOU: [T25n2] at least one LI has gone negative.
+    INNER_THOUGHT: [T25n2] at least one LI has gone negative.
   }
 
   NARRATOR: [T26] @if chain with comparison on ENGINE VALUE (san), not affection.
   @if (san <= 20) {
-    YOU: [T26a] san <= 20 branch.
+    INNER_THOUGHT: [T26a] san <= 20 branch.
   } @else @if (san >= 80) {
-    YOU: [T26b] san >= 80 branch.
+    INNER_THOUGHT: [T26b] san >= 80 branch.
   } @else {
-    YOU: [T26c] san middle branch.
+    INNER_THOUGHT: [T26c] san middle branch.
   }
 
   NARRATOR: [T27] @music stop — music should fade to silence.

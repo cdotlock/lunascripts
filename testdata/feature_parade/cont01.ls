@@ -15,7 +15,7 @@
   @affection easton +3
   @butterfly "Malia opened the door for Easton after EP01"
 
-  YOU: [T44] Where does this go?
+  INNER_THOUGHT: [T44] Where does this go?
 
   NARRATOR: [T45] @end to_be_continued fires — expect "next episode coming" screen.
   @gate {

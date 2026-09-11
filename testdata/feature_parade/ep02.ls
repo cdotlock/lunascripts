@@ -27,11 +27,11 @@
 
   NARRATOR: [T32] Comparison op == (strict equal).
   @if (affection.easton == 3) {
-    YOU: [T32a] affection.easton == 3 exactly.
+    INNER_THOUGHT: [T32a] affection.easton == 3 exactly.
   } @else @if (affection.easton != 0) {
-    YOU: [T32b] affection.easton != 0 fallback.
+    INNER_THOUGHT: [T32b] affection.easton != 0 fallback.
   } @else {
-    YOU: [T32c] all comparison fell through.
+    INNER_THOUGHT: [T32c] all comparison fell through.
   }
 
   NARRATOR: [T33] Comparison op > and < on engine value.
@@ -80,7 +80,7 @@
 
   @bg gym fade
   &music night
-  YOU: [T35] Final @gate { @end complete } — story wraps, credits roll.
+  INNER_THOUGHT: [T35] Final @gate { @end complete } — story wraps, credits roll.
   @signal mark EP02_DONE
 
   @gate {

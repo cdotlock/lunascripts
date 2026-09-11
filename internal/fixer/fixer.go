@@ -546,7 +546,7 @@ func fixAffectionCharCase(line string, lineNum int, r *FixResult) string {
 // leaves (@gate { @end <type> }).
 var oldFormatKeywords = map[string]string{
 	"@show":      "use @<char> <pose> (e.g. @malia worried)",
-	"@hide":      "remove — character auto-hides when another speaks or NARRATOR/YOU appears (§3.3)",
+	"@hide":      "remove — character auto-hides when another speaks or NARRATOR/INNER_THOUGHT appears (§3.3)",
 	"@expr":      "use @<char> <pose>",
 	"@look":      "use @<char> <pose>",
 	"@move":      "removed — positions are fixed (MC left, others right)",

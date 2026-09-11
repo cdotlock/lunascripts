@@ -29,7 +29,7 @@
     {
       "id": "0004_you",
       "text": "One wrong move, one closed door.",
-      "type": "you"
+      "type": "inner_thought"
     },
     {
       "character": "malia",

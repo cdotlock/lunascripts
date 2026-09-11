@@ -44,7 +44,7 @@
     {
       "id": "0005_you",
       "text": "Another year. Same mess.",
-      "type": "you"
+      "type": "inner_thought"
     },
     {
       "id": "0006_phn",
@@ -69,7 +69,7 @@
     {
       "id": "0009_you",
       "text": "Eight months and he still won't stop.",
-      "type": "you"
+      "type": "inner_thought"
     },
     {
       "character": "malia",
@@ -134,7 +134,7 @@
     {
       "id": "0019_you",
       "text": "If only it were that simple.",
-      "type": "you"
+      "type": "inner_thought"
     },
     [
       {
@@ -186,7 +186,7 @@
     {
       "id": "0027_you",
       "text": "He hasn't called me that in eight years.",
-      "type": "you"
+      "type": "inner_thought"
     },
     [
       {
@@ -397,7 +397,7 @@
             {
               "id": "0057_you",
               "text": "Thank god for Mark.",
-              "type": "you"
+              "type": "inner_thought"
             },
             {
               "description": "Had Mark create a diversion to avoid Easton",
@@ -448,7 +448,7 @@
     {
       "id": "0064_you",
       "text": "I was trying not to.",
-      "type": "you"
+      "type": "inner_thought"
     },
     {
       "character": "elias",
@@ -493,7 +493,7 @@
     {
       "id": "0071_you",
       "text": "Day one. Survived. Barely.",
-      "type": "you"
+      "type": "inner_thought"
     },
     {
       "id": "0072_phn",
@@ -518,7 +518,7 @@
     {
       "id": "0075_you",
       "text": "...How does he know which window is mine?",
-      "type": "you"
+      "type": "inner_thought"
     }
   ],
   "title": "Butterfly"

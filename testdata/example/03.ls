@@ -12,9 +12,9 @@
   MALIA [neutral_surprised]: You have more books than the school library.
   MAURICIO [neutral_flat]: The school library has seventeen copies of Lord of the Flies and none of Toni Morrison. That's not a library. That's a crime scene.
 
-  YOU: He just made a literary joke.
-  YOU: An actually funny literary joke.
-  YOU: I'm going to pretend I didn't almost smile.
+  INNER_THOUGHT: He just made a literary joke.
+  INNER_THOUGHT: An actually funny literary joke.
+  INNER_THOUGHT: I'm going to pretend I didn't almost smile.
 
   @malia sitting_edge
 
@@ -24,8 +24,8 @@
   MALIA [neutral_narrowing]: What is that supposed to mean?
   MAURICIO [neutral_calm]: It means you're stubborn, principled, and you'd rather walk into a storm than admit you need someone to hold the umbrella.
 
-  YOU: ...
-  YOU: That is both the most annoying and the most accurate thing anyone has ever said about me.
+  INNER_THOUGHT: ...
+  INNER_THOUGHT: That is both the most annoying and the most accurate thing anyone has ever said about me.
 
   MALIA [neutral_recovering]: Fine. Jane it is. But only because her chapters are better.
   MAURICIO [neutral_almost_smile]: They're not.
@@ -46,9 +46,9 @@
   MALIA [neutral_surprised]: You're... feeding me?
   MAURICIO [neutral_flat]: You can't analyze nineteenth-century feminist literature on an empty stomach. That's not generosity. That's academic standards.
 
-  YOU: He brought me food and framed it as an academic necessity.
-  YOU: I don't know whether to be annoyed or touched.
-  YOU: I'm both.
+  INNER_THOUGHT: He brought me food and framed it as an academic necessity.
+  INNER_THOUGHT: I don't know whether to be annoyed or touched.
+  INNER_THOUGHT: I'm both.
 
   // ===== The fight downstairs =====
 
@@ -61,12 +61,12 @@
 
   MAURICIO [neutral_low]: Stay here.
 
-  YOU: I know what just happened downstairs. I've been hearing it through the walls for years.
+  INNER_THOUGHT: I know what just happened downstairs. I've been hearing it through the walls for years.
 
   @mauricio standing_blank
 
-  YOU: I could pretend I didn't notice. Walk out. Say "see you next week." Keep the wall between us.
-  YOU: Or I could--
+  INNER_THOUGHT: I could pretend I didn't notice. Walk out. Say "see you next week." Keep the wall between us.
+  INNER_THOUGHT: Or I could--
 
   @choice {
     @option A safe "[Say something.]" {
@@ -82,8 +82,8 @@
 
       MAURICIO [neutral_low]: You should go home, Malia.
 
-      YOU: He used my actual name. Not "Hernandez." Not "Butterfly." My name.
-      YOU: It sounded different in his voice than it does in anyone else's.
+      INNER_THOUGHT: He used my actual name. Not "Hernandez." Not "Butterfly." My name.
+      INNER_THOUGHT: It sounded different in his voice than it does in anyone else's.
 
       MALIA: My window's always open. In case you need somewhere that's not here.
 
@@ -95,12 +95,12 @@
 
       @mauricio neutral_nod
 
-      YOU: I didn't say anything.
-      YOU: Because what would I say? "Are you okay?" He's clearly not okay.
-      YOU: "I'm sorry?" He doesn't want my sorry. He doesn't want anything from me except to finish this project and go back to ignoring each other.
-      YOU: But.
-      YOU: That butterfly on his keychain.
-      YOU: Why does he carry a butterfly?
+      INNER_THOUGHT: I didn't say anything.
+      INNER_THOUGHT: Because what would I say? "Are you okay?" He's clearly not okay.
+      INNER_THOUGHT: "I'm sorry?" He doesn't want my sorry. He doesn't want anything from me except to finish this project and go back to ignoring each other.
+      INNER_THOUGHT: But.
+      INNER_THOUGHT: That butterfly on his keychain.
+      INNER_THOUGHT: Why does he carry a butterfly?
 
       @butterfly "Left Mauricio's house without acknowledging the family situation"
     }
@@ -139,26 +139,26 @@
     @text from ELIAS: Hey. Mark gave me your number. Hope that's okay. I wanted to ask -- have you read anything by Sylvia Plath? I'm looking for a recommendation for someone.
   }
 
-  YOU: Elias Hall is texting me. About Sylvia Plath. On a Friday night.
-  YOU: "For someone." Who is "someone"?
-  YOU: Also, since when does Elias text people? He's the most antisocial person in our entire friend group.
+  INNER_THOUGHT: Elias Hall is texting me. About Sylvia Plath. On a Friday night.
+  INNER_THOUGHT: "For someone." Who is "someone"?
+  INNER_THOUGHT: Also, since when does Elias text people? He's the most antisocial person in our entire friend group.
 
   @phone {
     @text to ELIAS: The Bell Jar. start there. who's it for?
     @text from ELIAS: Myself. I just didn't want to say that and sound pretentious.
   }
 
-  YOU: He asked for a recommendation but said "for someone" instead of "for me" because he didn't want to seem pretentious.
-  YOU: That's either very endearing or very calculated.
-  YOU: I genuinely cannot tell.
+  INNER_THOUGHT: He asked for a recommendation but said "for someone" instead of "for me" because he didn't want to seem pretentious.
+  INNER_THOUGHT: That's either very endearing or very calculated.
+  INNER_THOUGHT: I genuinely cannot tell.
 
   @phone {
     @text to ELIAS: not pretentious. good taste actually.
     @text from ELIAS: Thanks. Goodnight, Malia.
   }
 
-  YOU: "Goodnight, Malia."
-  YOU: Period at the end and everything. Elias Hall is the only person under 25 who uses periods in texts sincerely.
+  INNER_THOUGHT: "Goodnight, Malia."
+  INNER_THOUGHT: Period at the end and everything. Elias Hall is the only person under 25 who uses periods in texts sincerely.
 
   NARRATOR: Three conversations open. Easton's unread text from this morning. Elias's polite sign-off. And the text from Mauricio: "nice curtains, Butterfly."
 

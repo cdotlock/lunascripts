@@ -1,6 +1,6 @@
 {
   "$schema": "./contract-manifest.schema.json",
-  "contract_version": "3.0.0",
+  "contract_version": "4.0.0",
   "change_class": "major",
   "episode_schema": "episode.schema.json",
   "source_spec": "../LS-SPEC.md",
@@ -14,12 +14,13 @@
   "compatibility": {
     "breaking": true,
     "legacy_unversioned_episode_json": "consumer migration concern; compiler output is always versioned",
-    "migration": "Adopt the grammar-only spec: @text participants are character ids; multiplayer cross-role guidance is removed; brave checks require a non-empty attr and positive integer dc; achievement ids must match ^[A-Z][A-Z0-9_]*$; @choice directly contains at least two @option entries. Author new backgrounds as @bg <name> [transition]; the compiler continues to accept legacy @bg set <name> [transition]."
+    "migration": "Author INNER_THOUGHT: and emit inner_thought nodes. The compiler still accepts legacy YOU: sources; decompilation accepts both inner_thought and you and emits INNER_THOUGHT:. Consumers must accept both v3 and v4 episodes and both node types before enabling the v4 compiler. Existing step ID tags and MC staging identifiers remain unchanged; stored content requires no rewrite."
   },
   "rollout": {
     "consumer_repositories": [
       "cdotlock/lunaverse-backend",
-      "cdotlock/lunaverse-ide"
+      "MobAI-Inc/lunaverse-ide",
+      "cdotlock/lunaverse-ide-cloud"
     ],
     "stored_content_policy": "audit_only"
   }
