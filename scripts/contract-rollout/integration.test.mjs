@@ -10,7 +10,7 @@ const report = {
   contractVersion: "2.0.0",
   consumers: {
     backend: { repository: "cdotlock/lunaverse-backend", pullRequest: "https://github.com/cdotlock/lunaverse-backend/pull/128", branch: "contract-rollout/v2.0.0-aaaaaaaa", headSha: SHA },
-    ide: { repository: "cdotlock/lunaverse-ide", pullRequest: "https://github.com/cdotlock/lunaverse-ide/pull/15", branch: "contract-rollout/v2.0.0-aaaaaaaa", headSha: SHA },
+    ide: { repository: "MobAI-Inc/lunaverse-ide", pullRequest: "https://github.com/MobAI-Inc/lunaverse-ide/pull/15", branch: "contract-rollout/v2.0.0-aaaaaaaa", headSha: SHA },
   },
   audit: { status: "pending", blockers: [], repairRecommendations: [], findings: [] },
 };
