@@ -109,7 +109,7 @@ test("bound read-only audit keeps every sanitized finding and separate manual su
     contractVersion: "2.0.0",
     consumers: {
       backend: { repository: "cdotlock/lunaverse-backend", pullRequest: "https://github.com/cdotlock/lunaverse-backend/pull/128", branch: "contract-rollout/v2.0.0-aaaaaaaa", headSha: SHA, diffEvidence: null },
-      ide: { repository: "cdotlock/lunaverse-ide", pullRequest: "https://github.com/cdotlock/lunaverse-ide/pull/15", branch: "contract-rollout/v2.0.0-aaaaaaaa", headSha: SHA, diffEvidence: null },
+      ide: { repository: "MobAI-Inc/lunaverse-ide", pullRequest: "https://github.com/MobAI-Inc/lunaverse-ide/pull/15", branch: "contract-rollout/v2.0.0-aaaaaaaa", headSha: SHA, diffEvidence: null },
     },
     audit: { status: "pending", blockers: [], repairRecommendations: [], findings: [] },
   };
@@ -143,7 +143,7 @@ test("preparation reports accept exact adopted branches but reject protected or 
     contractVersion: "2.0.0",
     consumers: {
       backend: { repository: "cdotlock/lunaverse-backend", pullRequest: "https://github.com/cdotlock/lunaverse-backend/pull/128", branch: "codex/lunascripts-authority", headSha: SHA },
-      ide: { repository: "cdotlock/lunaverse-ide", pullRequest: "https://github.com/cdotlock/lunaverse-ide/pull/15", branch: "codex/lunascripts-authority", headSha: SHA },
+      ide: { repository: "MobAI-Inc/lunaverse-ide", pullRequest: "https://github.com/MobAI-Inc/lunaverse-ide/pull/15", branch: "codex/lunascripts-authority", headSha: SHA },
     },
     audit: { status: "pending", blockers: [], repairRecommendations: [], findings: [] },
   };

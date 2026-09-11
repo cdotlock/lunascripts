@@ -15,7 +15,7 @@ import api_server
 
 CANONICAL_SOURCE = b'''@episode main:01 "API contract" {
   @bg castle_exterior_day fade
-  NARRATOR: The compiler is current.
+  INNER_THOUGHT: The compiler is current.
   @gate {
     @next main:02
   }
@@ -27,15 +27,17 @@ class ApiServerIntegrationTests(unittest.IsolatedAsyncioTestCase):
     async def test_ready_proves_the_canonical_bg_contract(self):
         response = await api_server.ready()
         self.assertEqual(response["status"], "ready")
-        self.assertEqual(response["ls_contract_version"], "3.0.0")
+        self.assertEqual(response["ls_contract_version"], "4.0.0")
 
         upload = UploadFile(file=io.BytesIO(CANONICAL_SOURCE), filename="canonical.ls")
         compiled_response = await api_server.compile_script(upload, assets=None)
         self.assertEqual(compiled_response.status_code, 200)
         result = json.loads(compiled_response.body)
-        self.assertEqual(result["ls_contract_version"], "3.0.0")
+        self.assertEqual(result["ls_contract_version"], "4.0.0")
         self.assertEqual(result["steps"][0]["name"], "castle_exterior_day")
         self.assertEqual(result["steps"][0]["transition"], "fade")
+        self.assertEqual(result["steps"][1]["type"], "inner_thought")
+        self.assertEqual(result["steps"][1]["id"], "0002_you")
 
     async def test_version_exposes_contract_and_revision_fields(self):
         response = await api_server.version()
@@ -43,7 +45,7 @@ class ApiServerIntegrationTests(unittest.IsolatedAsyncioTestCase):
             set(response),
             {"service", "api_version", "ls_contract_version", "source_revision"},
         )
-        self.assertEqual(response["ls_contract_version"], "3.0.0")
+        self.assertEqual(response["ls_contract_version"], "4.0.0")
         self.assertEqual(
             response["source_revision"],
             json.loads(Path("build-info.json").read_text(encoding="utf-8"))["source_revision"],

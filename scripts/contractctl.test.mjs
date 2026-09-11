@@ -89,7 +89,7 @@ test("status rejects a report whose adopted branch no longer matches the exact P
     contractVersion: "2.0.0",
     consumers: {
       backend: { repository: "cdotlock/lunaverse-backend", pullRequest: "https://github.com/cdotlock/lunaverse-backend/pull/128", branch: "codex/lunascripts-authority", headSha: sha, diffEvidence: { baseSha: sha, remoteFiles: [] } },
-      ide: { repository: "cdotlock/lunaverse-ide", pullRequest: "https://github.com/cdotlock/lunaverse-ide/pull/15", branch: "codex/lunascripts-authority", headSha: sha, diffEvidence: { baseSha: sha, remoteFiles: [] } },
+      ide: { repository: "MobAI-Inc/lunaverse-ide", pullRequest: "https://github.com/MobAI-Inc/lunaverse-ide/pull/15", branch: "codex/lunascripts-authority", headSha: sha, diffEvidence: { baseSha: sha, remoteFiles: [] } },
     },
     audit: { status: "pending", blockers: [], repairRecommendations: [], findings: [] },
   };

@@ -5,7 +5,7 @@
 > signal 使用纪律等——由 lunaverse-ide 里的各 skill（entity-planner、episode-writer 等）规定，
 > 不在本文件。skill 只负责创作建议，不得增删或收紧本文件定义的合法语法。
 
-> **契约版本：3.0.0（2026-08-06）。** 变更清单见附录 D。
+> **契约版本：4.0.0（2026-09-11）。** 内心独白使用 `INNER_THOUGHT:`；JSON 节点类型为 `inner_thought`。
 
 ---
 
@@ -33,7 +33,7 @@
 - **MC**（玩家扮演的角色）固定在屏幕**左侧**，**其余角色**全部固定在**右侧**，位置不可指定。
 - **同屏一人**：任意时刻最多显示一个角色。
 - `@<char> <look>` 立即显示该角色或切换其立绘；角色对白使用该角色最近一次声明的 look。每个角色在本集首次对白前必须声明 look。
-- `YOU:` 由前端自动显示 MC，使用 MC 最近一次声明的 look；MC 在本集首次 `YOU:` 前必须声明 look。
+- `INNER_THOUGHT:` 由前端自动显示 MC，使用 MC 最近一次声明的 look；MC 在本集首次 `INNER_THOUGHT:` 前必须声明 look。
 - 只有 `NARRATOR:` 会清空立绘。
 - 引擎在运行时才知道谁是 MC（由前端业务层注入）。编译产物不携带 MC 身份信息。
 
@@ -43,7 +43,7 @@
 |---|---|
 | 结构控制 | `@episode`、`@gate`、`@pause` |
 | 视觉呈现 | `@<char> <look>`、`@<char> bubble`、`@bg`、`@cg` |
-| 对话 | `CHARACTER:`、`NARRATOR:`、`YOU:`、`CHARACTER [look]:` |
+| 对话 | `CHARACTER:`、`NARRATOR:`、`INNER_THOUGHT:`、`CHARACTER [look]:` |
 | 手机/消息 | `@phone`、`@text` |
 | 音频 | `@music`、`@sfx` |
 | 交互原语 | `@trick`、`@minigame`、`@choice` / `@option` / `check` |
@@ -325,27 +325,27 @@ NARRATOR: Senior year. Day one.
 - 出现时**清空所有立绘**。
 - 旁白中指代 MC 的人称规范（大写 YOU/YOUR）属写作规范，见 episode-writer skill。
 
-#### `YOU:` —— MC 内心独白
+#### `INNER_THOUGHT:` —— MC 内心独白
 
-MC 第一人称内心独白，**显示 MC 立绘**。
+MC 第一人称、未说出口的内心独白，**显示 MC 立绘**。它不是角色对白；MC 说出口的话使用真实角色 ID。其他人物不能直接回应未被传达的内心信息。
 
 ```
 @<mc_char> <look>
-YOU: 文本
+INNER_THOUGHT: 文本
 ```
 
-与角色对白同理：`YOU:` 行本身不携带立绘信息，显示的是 MC 最近一次声明的 look，
-所以 `YOU:` 之前要用 `@<mc_char> <look>` 声明 MC 立绘（换表情同理）。
+与角色对白同理：`INNER_THOUGHT:` 行本身不携带立绘信息，显示的是 MC 最近一次声明的 look，
+所以 `INNER_THOUGHT:` 之前要用 `@<mc_char> <look>` 声明 MC 立绘（换表情同理）。
 
 **示例**
 
 ```
 @seren seren__urban_arrival__lost_in_thought
-YOU: Another year. Same mess.
+INNER_THOUGHT: Another year. Same mess.
 ```
 
 **校验**
-- 与 `NARRATOR` 的区别：`NARRATOR` 清屏、是有距离感的观察描述；`YOU` 带 MC 立绘、是此刻的内心思考。
+- 与 `NARRATOR` 的区别：`NARRATOR` 清屏、是有距离感的观察描述；`INNER_THOUGHT` 带 MC 立绘、是此刻的内心思考。
 
 ### 2.4 手机/消息
 
@@ -551,7 +551,7 @@ check {
   }
   @option B safe "Have Mark make a scene." {
     MARK: HEY EASTON! You want some of my mystery casserole?
-    YOU: Thank god for Mark.
+    INNER_THOUGHT: Thank god for Mark.
   }
 }
 ```
@@ -885,7 +885,7 @@ lsc decompile ep01.json                                 # 从 JSON 反推 .ls + 
 | `CHARACTER: text` | 对白（自动显示说话角色） |
 | `CHARACTER [look]: text` | 对白糖（= `@character look` + 对白） |
 | `NARRATOR: text` | 旁白（清空所有立绘） |
-| `YOU: text` | MC 内心独白（显示 MC 立绘） |
+| `INNER_THOUGHT: text` | MC 内心独白（显示 MC 立绘） |
 | `@phone {` ... `}` | 手机界面（必须多行；块内只许 `@text`；不配音） |
 | `@text from/to <char>: content` | 收到/发出消息 |
 | `@music <name>` / `@music stop` | 播放/停止 BGM |
@@ -922,7 +922,7 @@ lsc decompile ep01.json                                 # 从 JSON 反推 .ls + 
   NARRATOR: Three place settings. Nobody set a fourth.
 
   @seren seren__urban_arrival__guarded
-  YOU: They knew I was coming.
+  INNER_THOUGHT: They knew I was coming.
 
   @phone {
     @text from JAKE: Landed yet? Call me.
@@ -943,13 +943,13 @@ lsc decompile ep01.json                                 # 从 JSON 反推 .ls + 
         @butterfly "Met Dean's stare on the first night"
       } @else {
         @seren seren__urban_arrival__startled
-        YOU: I blinked first.
+        INNER_THOUGHT: I blinked first.
         @butterfly "Tried to stare Dean down but flinched"
       }
     }
     @option B safe "Look away and sit." {
       @seren seren__urban_arrival__downcast
-      YOU: Not tonight. Not my first hour here.
+      INNER_THOUGHT: Not tonight. Not my first hour here.
       @signal int TIMES_YIELDED +1
       @butterfly "Avoided confrontation with Dean on arrival"
     }
@@ -957,7 +957,7 @@ lsc decompile ep01.json                                 # 从 JSON 反推 .ls + 
 
   @sfx door_slam
   @seren seren__urban_arrival__hollow_stare
-  YOU: Welcome home, I guess.
+  INNER_THOUGHT: Welcome home, I guess.
 
   @gate {
     @if (A.fail): @next main/bad/001:01

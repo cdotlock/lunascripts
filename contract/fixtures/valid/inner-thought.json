@@ -1,0 +1,18 @@
+{
+  "branch_key": "main",
+  "ending": null,
+  "episode_id": "main:01",
+  "gate": {
+    "next": "main:02"
+  },
+  "ls_contract_version": "4.0.0",
+  "seq": 1,
+  "steps": [
+    {
+      "id": "0001_you",
+      "text": "No one heard that.",
+      "type": "inner_thought"
+    }
+  ],
+  "title": "Private thought"
+}

@@ -284,7 +284,7 @@ func (p *Parser) parseConcurrentDirective() (ast.Node, error) {
 	return node, nil
 }
 
-// parseDialogue handles IDENT COLON text lines (NARRATOR, YOU, or character).
+// parseDialogue handles IDENT COLON text lines (NARRATOR, INNER_THOUGHT, or character).
 //
 // When this is called, cur=IDENT and peek=COLON. The lexer's internal position
 // is right after having read the COLON token, which is exactly where
@@ -309,7 +309,7 @@ func (p *Parser) parseDialogue() (ast.Node, error) {
 	switch name {
 	case "NARRATOR":
 		return &ast.NarratorNode{Text: textTok.Literal}, nil
-	case "YOU":
+	case "INNER_THOUGHT", "YOU":
 		return &ast.YouNode{Text: textTok.Literal}, nil
 	default:
 		return &ast.DialogueNode{Character: name, Text: textTok.Literal}, nil
@@ -333,6 +333,9 @@ func (p *Parser) parseDialogue() (ast.Node, error) {
 func (p *Parser) parseDialogueWithExpr() (ast.Node, error) {
 	name := p.cur.Literal
 	charID := strings.ToLower(name)
+	if name == "INNER_THOUGHT" {
+		charID = "you"
+	}
 
 	// cur=IDENT(name), peek=LBRACKET
 	p.advance() // cur=LBRACKET, peek=IDENT(pose)
@@ -377,7 +380,7 @@ func (p *Parser) parseDialogueWithExpr() (ast.Node, error) {
 	switch name {
 	case "NARRATOR":
 		p.pending = &ast.NarratorNode{Text: textTok.Literal}
-	case "YOU":
+	case "INNER_THOUGHT", "YOU":
 		p.pending = &ast.YouNode{Text: textTok.Literal}
 	default:
 		p.pending = &ast.DialogueNode{Character: name, Text: textTok.Literal}

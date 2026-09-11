@@ -11,8 +11,8 @@
 
   @sfx phone_buzz
 
-  YOU: Easton.
-  YOU: Of course it's Easton.
+  INNER_THOUGHT: Easton.
+  INNER_THOUGHT: Of course it's Easton.
 
   @phone {
     @text from EASTON: Can we talk? I know you said you needed space but I miss you. I'll be at the park at 8.
@@ -20,9 +20,9 @@
 
   @malia neutral_stare
 
-  YOU: He misses me.
-  YOU: He missed me three months ago too. Right before he took Jianna to his dad's company gala and I watched the photos on Instagram from my bathroom floor.
-  YOU: "Can we talk" is the opening line of every conversation that has ever ruined my week.
+  INNER_THOUGHT: He misses me.
+  INNER_THOUGHT: He missed me three months ago too. Right before he took Jianna to his dad's company gala and I watched the photos on Instagram from my bathroom floor.
+  INNER_THOUGHT: "Can we talk" is the opening line of every conversation that has ever ruined my week.
 
   @malia neutral_flat
 
@@ -59,7 +59,7 @@
   MALIA [neutral_flat]: I did not check.
   JOSIE [neutral_loving]: Babe. You checked the parking lot before you checked your schedule. I saw you.
 
-  YOU: I hate having a best friend who actually pays attention.
+  INNER_THOUGHT: I hate having a best friend who actually pays attention.
 
   // ===== School hallway, morning =====
 
@@ -79,17 +79,17 @@
 
   @mauricio neutral_reading
 
-  YOU: Mauricio Reyes.
-  YOU: Soccer captain. Easton's best friend. My next-door neighbor since I was six. Reads more than anyone I know but would rather die than admit it.
-  YOU: We don't talk.
-  YOU: We used to. When we were kids. Then we didn't. Then he started hating me. I never found out why.
-  YOU: So I hated him back.
-  YOU: It's been working fine for eight years.
+  INNER_THOUGHT: Mauricio Reyes.
+  INNER_THOUGHT: Soccer captain. Easton's best friend. My next-door neighbor since I was six. Reads more than anyone I know but would rather die than admit it.
+  INNER_THOUGHT: We don't talk.
+  INNER_THOUGHT: We used to. When we were kids. Then we didn't. Then he started hating me. I never found out why.
+  INNER_THOUGHT: So I hated him back.
+  INNER_THOUGHT: It's been working fine for eight years.
 
   @mauricio neutral_glance
 
-  YOU: Fine.
-  YOU: Completely fine.
+  INNER_THOUGHT: Fine.
+  INNER_THOUGHT: Completely fine.
 
   // ===== Classroom, morning =====
 
@@ -102,13 +102,13 @@
   MRS_WILLIAMS: Welcome to AP English, seniors. This semester you'll be doing a partner literature project. I'll assign partners Friday.
   MRS_WILLIAMS: Oh, grow up. You'll survive.
 
-  YOU: Please not him. Anyone but him.
+  INNER_THOUGHT: Please not him. Anyone but him.
 
   @mauricio sitting_eyebrow
 
-  YOU: That eyebrow thing he does.
-  YOU: I don't know what it means. I don't want to know what it means.
-  YOU: I especially don't want to know why it made my stomach do something inconvenient just now.
+  INNER_THOUGHT: That eyebrow thing he does.
+  INNER_THOUGHT: I don't know what it means. I don't want to know what it means.
+  INNER_THOUGHT: I especially don't want to know why it made my stomach do something inconvenient just now.
 
   // ===== Cafeteria, noon =====
 
@@ -128,14 +128,14 @@
   MALIA [neutral_glare]: Mark.
   MARK [neutral_innocent]: What? I'm supporting local agriculture.
 
-  YOU: Mark Thomas. My best friend since middle school. YouTuber. Professional idiot. Secretly the smartest person in this building but if you told anyone that, he'd deny it so convincingly you'd apologize for the accusation.
-  YOU: He's also the only person who has never once asked me about Easton.
-  YOU: I don't know if that's because he doesn't care or because he knows exactly how much I don't want to talk about it.
-  YOU: With Mark, it could be either.
+  INNER_THOUGHT: Mark Thomas. My best friend since middle school. YouTuber. Professional idiot. Secretly the smartest person in this building but if you told anyone that, he'd deny it so convincingly you'd apologize for the accusation.
+  INNER_THOUGHT: He's also the only person who has never once asked me about Easton.
+  INNER_THOUGHT: I don't know if that's because he doesn't care or because he knows exactly how much I don't want to talk about it.
+  INNER_THOUGHT: With Mark, it could be either.
 
   @easton neutral_warm
 
-  YOU: Oh no.
+  INNER_THOUGHT: Oh no.
 
   JOSIE: Twelve o'clock. Incoming.
   MARK [neutral_quiet]: Want me to make a scene? I can absolutely make a scene.
@@ -149,7 +149,7 @@
       EASTON [neutral_sincere]: You look good. How was your summer?
       MALIA [neutral_controlled]: It was fine.
 
-      YOU: It was not fine. It was three months of pretending my chest didn't hurt every time I drove past the park where we used to sit on the hood of his car and talk about nothing until 2 AM.
+      INNER_THOUGHT: It was not fine. It was three months of pretending my chest didn't hurt every time I drove past the park where we used to sit on the hood of his car and talk about nothing until 2 AM.
 
       EASTON [neutral_careful]: Did you get my text this morning?
       MALIA [neutral_flat]: I saw it.
@@ -160,8 +160,8 @@
 
       EASTON: Okay. When you're ready.
 
-      YOU: "When you're ready."
-      YOU: He always says that. Like it's my timeline holding us back and not his father's merger.
+      INNER_THOUGHT: "When you're ready."
+      INNER_THOUGHT: He always says that. Like it's my timeline holding us back and not his father's merger.
 
       @affection easton +1
       @butterfly "Let Easton approach at the cafeteria without resistance"
@@ -178,9 +178,9 @@
 
       @malia neutral_exhale
 
-      YOU: I'll thank Mark later. With actual fries. An entire plate of them.
-      YOU: I'm not ready to see him act like everything can go back to how it was.
-      YOU: Because part of me wants it to. And that part is the part I don't trust.
+      INNER_THOUGHT: I'll thank Mark later. With actual fries. An entire plate of them.
+      INNER_THOUGHT: I'm not ready to see him act like everything can go back to how it was.
+      INNER_THOUGHT: Because part of me wants it to. And that part is the part I don't trust.
 
       @affection mark +1
       @butterfly "Had Mark create a diversion to avoid facing Easton"
@@ -203,19 +203,19 @@
 
   @elias neutral_stretching
 
-  YOU: Elias Hall.
-  YOU: I've known him for two years and I'm not sure I've heard him say more than forty words total.
-  YOU: But sometimes he looks at people in a way that makes you feel like he just read your entire search history.
+  INNER_THOUGHT: Elias Hall.
+  INNER_THOUGHT: I've known him for two years and I'm not sure I've heard him say more than forty words total.
+  INNER_THOUGHT: But sometimes he looks at people in a way that makes you feel like he just read your entire search history.
 
   @mauricio neutral_dribbling
 
-  YOU: He wasn't looking at me.
+  INNER_THOUGHT: He wasn't looking at me.
 
   JOSIE [neutral_smirk]: He was looking at you.
   MALIA [neutral_fast]: He was looking at the scoreboard.
   JOSIE [neutral_dry]: The scoreboard is behind you, Malia.
 
-  YOU: Shut up, Josie.
+  INNER_THOUGHT: Shut up, Josie.
 
   // ===== Malia's house, evening =====
 
@@ -229,9 +229,9 @@
 
   @sfx arguing_muffled
 
-  YOU: It's happening again.
-  YOU: His parents.
-  YOU: I've been hearing it through the walls since middle school. His dad. Drunk. His mom. Tired. And Mauricio somewhere in between, being whatever his family needs him to be.
+  INNER_THOUGHT: It's happening again.
+  INNER_THOUGHT: His parents.
+  INNER_THOUGHT: I've been hearing it through the walls since middle school. His dad. Drunk. His mom. Tired. And Mauricio somewhere in between, being whatever his family needs him to be.
 
   @sfx door_slam
 
@@ -239,10 +239,10 @@
 
   @sfx arguing_muffled
 
-  YOU: I should close the curtain.
-  YOU: This isn't my business.
-  YOU: Right.
-  YOU: None of my business.
+  INNER_THOUGHT: I should close the curtain.
+  INNER_THOUGHT: This isn't my business.
+  INNER_THOUGHT: Right.
+  INNER_THOUGHT: None of my business.
 
   @sfx phone_buzz
 
@@ -250,12 +250,12 @@
     @text from UNKNOWN: nice curtains, Butterfly
   }
 
-  YOU: ...
-  YOU: He hasn't called me that in eight years.
-  YOU: Butterfly.
-  YOU: I used to catch butterflies in the yard when we were kids. He'd follow me around and hold the jar. I was six. He was the only person I let help.
-  YOU: Then one day he stopped helping. And started hating. And I never found out why.
-  YOU: Until tonight I thought he'd forgotten the word entirely.
+  INNER_THOUGHT: ...
+  INNER_THOUGHT: He hasn't called me that in eight years.
+  INNER_THOUGHT: Butterfly.
+  INNER_THOUGHT: I used to catch butterflies in the yard when we were kids. He'd follow me around and hold the jar. I was six. He was the only person I let help.
+  INNER_THOUGHT: Then one day he stopped helping. And started hating. And I never found out why.
+  INNER_THOUGHT: Until tonight I thought he'd forgotten the word entirely.
 
   @malia neutral_stare
 

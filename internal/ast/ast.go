@@ -308,7 +308,7 @@ type NarratorNode struct {
 
 func (n *NarratorNode) nodeType() string { return "narrator" }
 
-// YouNode is a YOU: line (player's internal voice / thought).
+// YouNode is an INNER_THOUGHT: line (player's internal voice / thought).
 type YouNode struct {
 	Text string
 }

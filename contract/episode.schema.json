@@ -3,7 +3,7 @@
   "type": "object",
   "properties": {
     "ls_contract_version": {
-      "const": "3.0.0"
+      "const": "4.0.0"
     },
     "episode_id": {
       "type": "string",
@@ -269,7 +269,7 @@
                 },
                 "type": {
                   "type": "string",
-                  "const": "you"
+                  "const": "inner_thought"
                 },
                 "text": {
                   "type": "string"
@@ -1067,7 +1067,7 @@
                   },
                   "type": {
                     "type": "string",
-                    "const": "you"
+                    "const": "inner_thought"
                   },
                   "text": {
                     "type": "string"

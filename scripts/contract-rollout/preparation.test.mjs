@@ -107,3 +107,7 @@ test("an adopted-branch head race fails before authorization or push", () => {
   }), /changed before consumer branch publication/i);
   assert.deepEqual(calls, []);
 });
+
+test("consumer preparation targets the current IDE organization", () => {
+  assert.equal(CONSUMERS.find(c => c.key === "ide").repository, "MobAI-Inc/lunaverse-ide");
+});

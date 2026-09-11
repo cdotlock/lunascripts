@@ -12,11 +12,11 @@
   MRS_WILLIAMS: Thomas and Uhrin. Garcia and Macari. King and Davis.
   MRS_WILLIAMS: Hernandez and...
 
-  YOU: Please not him. Please not him.
+  INNER_THOUGHT: Please not him. Please not him.
 
   MRS_WILLIAMS: Reyes.
 
-  YOU: Of course.
+  INNER_THOUGHT: Of course.
 
   @mauricio sitting_reading
 
@@ -36,12 +36,12 @@
   NARRATOR: It says: "Jane Eyre. My house. Thursday 4pm."
   NARRATOR: No question mark. Not a suggestion. A decision he made for both of us.
 
-  YOU: The audacity of this man.
-  YOU: I could refuse. Find him at lunch, throw the paper back, tell him I pick the book and the location.
-  YOU: But Jane Eyre is actually a good choice.
-  YOU: And I kind of want to see what his house looks like inside.
-  YOU: For academic purposes.
-  YOU: Strictly academic.
+  INNER_THOUGHT: The audacity of this man.
+  INNER_THOUGHT: I could refuse. Find him at lunch, throw the paper back, tell him I pick the book and the location.
+  INNER_THOUGHT: But Jane Eyre is actually a good choice.
+  INNER_THOUGHT: And I kind of want to see what his house looks like inside.
+  INNER_THOUGHT: For academic purposes.
+  INNER_THOUGHT: Strictly academic.
 
   // ===== Hallway, afternoon — Easton =====
 
@@ -54,9 +54,9 @@
   EASTON [neutral_earnest]: I talked to my dad last night. About us. About Jianna.
   EASTON [neutral_vulnerable]: I told him I don't want the arrangement. He said... he said he needs time to think about it. But he didn't say no. That's new. He always says no.
 
-  YOU: He talked to his dad.
-  YOU: He actually talked to his dad.
-  YOU: Easton has never -- in two years -- brought me up to Rafferty King. Not once.
+  INNER_THOUGHT: He talked to his dad.
+  INNER_THOUGHT: He actually talked to his dad.
+  INNER_THOUGHT: Easton has never -- in two years -- brought me up to Rafferty King. Not once.
 
   EASTON [neutral_hopeful]: I know I've been--I know I haven't been brave. And I know you have no reason to trust me. But I'm trying, Mal. I'm really trying.
 
@@ -71,10 +71,10 @@
       EASTON [neutral_quiet]: You know what my dad said when I told him? He said "You'll outgrow it." Like you were a phase. Like what I feel is something I just haven't been mature enough to stop doing yet.
       EASTON [neutral_direct]: I'm not outgrowing you, Malia. That's the one thing I'm sure of.
 
-      YOU: ...
-      YOU: He's never talked about his dad like that before. Never quoted him. Never let me see the bruise.
-      YOU: That's not "I'm trying." That's "I'm bleeding and I came here anyway."
-      YOU: I don't know what to do with a version of Easton who shows me his wounds instead of promising to heal them.
+      INNER_THOUGHT: ...
+      INNER_THOUGHT: He's never talked about his dad like that before. Never quoted him. Never let me see the bruise.
+      INNER_THOUGHT: That's not "I'm trying." That's "I'm bleeding and I came here anyway."
+      INNER_THOUGHT: I don't know what to do with a version of Easton who shows me his wounds instead of promising to heal them.
 
       @affection easton +2
       @butterfly "Acknowledged Easton's effort to stand up to his father"
@@ -87,9 +87,9 @@
 
       EASTON [neutral_quiet]: Yeah. Me too.
 
-      YOU: I said "for you" and not "for us."
-      YOU: I did that on purpose.
-      YOU: I also kind of wish I hadn't.
+      INNER_THOUGHT: I said "for you" and not "for us."
+      INNER_THOUGHT: I did that on purpose.
+      INNER_THOUGHT: I also kind of wish I hadn't.
 
       @butterfly "Kept emotional distance from Easton despite his vulnerability"
     }
@@ -116,8 +116,8 @@
     @option A safe "[Take the helmet.]" {
       @malia neutral_helmet
 
-      YOU: Okay.
-      YOU: His jacket smells like detergent and something else. Something warm. I'm cataloguing this for no reason.
+      INNER_THOUGHT: Okay.
+      INNER_THOUGHT: His jacket smells like detergent and something else. Something warm. I'm cataloguing this for no reason.
 
       @sfx motorcycle_start
 
@@ -128,9 +128,9 @@
       MAURICIO: Same time Thursday.
       MALIA: Yeah.
 
-      YOU: My hands still feel warm where they were on his jacket.
-      YOU: That's just -- body heat. Basic thermodynamics. I learned that in ninth grade. It doesn't mean--
-      YOU: It doesn't mean anything.
+      INNER_THOUGHT: My hands still feel warm where they were on his jacket.
+      INNER_THOUGHT: That's just -- body heat. Basic thermodynamics. I learned that in ninth grade. It doesn't mean--
+      INNER_THOUGHT: It doesn't mean anything.
 
       @affection mauricio +1
       @butterfly "Accepted Mauricio's motorcycle ride home"
@@ -142,12 +142,12 @@
 
       MAURICIO: Your call, Butterfly.
 
-      YOU: There it is again. Butterfly.
-      YOU: He said it like it was nothing. Like it's just a word.
-      YOU: It's not just a word. It's the word a ten-year-old boy used to call me while I ran around the yard with a mason jar and he--
-      YOU: No.
-      YOU: I'm not doing this. I'm going to the bus stop. I'm going to put my earbuds in. I'm going to listen to something loud and angry and not think about the way he almost smiled when he said it.
-      YOU: I need to stop using that phrase.
+      INNER_THOUGHT: There it is again. Butterfly.
+      INNER_THOUGHT: He said it like it was nothing. Like it's just a word.
+      INNER_THOUGHT: It's not just a word. It's the word a ten-year-old boy used to call me while I ran around the yard with a mason jar and he--
+      INNER_THOUGHT: No.
+      INNER_THOUGHT: I'm not doing this. I'm going to the bus stop. I'm going to put my earbuds in. I'm going to listen to something loud and angry and not think about the way he almost smiled when he said it.
+      INNER_THOUGHT: I need to stop using that phrase.
 
       @butterfly "Refused Mauricio's ride, maintaining distance"
     }
@@ -167,8 +167,8 @@
   MALIA [neutral_alarmed]: I do NOT--
   VIKKI [neutral_casual]: Last Thursday you said "motorcycle" and then "stop it" and then something in Spanish that I'm choosing to believe was a vocabulary exercise.
 
-  YOU: I am going to die.
-  YOU: I am going to die right here on this couch and Vikki is going to put that on my tombstone.
+  INNER_THOUGHT: I am going to die.
+  INNER_THOUGHT: I am going to die right here on this couch and Vikki is going to put that on my tombstone.
 
   @samuel neutral_warm
 
@@ -182,9 +182,9 @@
     @text from MARK: yo. Elias is being weird. he asked about you today. like, specifically about you. Asked what you like to read.
   }
 
-  YOU: Elias asked about me?
-  YOU: Elias doesn't ask about anyone. He observes. He doesn't ask.
-  YOU: What does that mean?
+  INNER_THOUGHT: Elias asked about me?
+  INNER_THOUGHT: Elias doesn't ask about anyone. He observes. He doesn't ask.
+  INNER_THOUGHT: What does that mean?
 
   @phone {
     @text from MARK: idk just thought it was random. or maybe not random. with that dude you can never tell. anyway see you tomorrow

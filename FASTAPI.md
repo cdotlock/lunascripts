@@ -70,7 +70,7 @@ Lightweight liveness check: confirms that the server is alive and the `lsc` bina
 
 ```bash
 curl -s http://localhost:8080/health
-# → {"status":"ok","service":"Lunascripts API","api_version":"1.4.0","ls_contract_version":"3.0.0","source_revision":"..."}
+# → {"status":"ok","service":"Lunascripts API","api_version":"1.4.0","ls_contract_version":"4.0.0","source_revision":"..."}
 # or
 # → {"status":"unhealthy","reason":"lsc binary not found"}   (HTTP 503)
 ```
@@ -81,7 +81,7 @@ Compiles a small canonical `@bg <name> fade` probe and verifies the emitted back
 
 ```bash
 curl -s http://localhost:8080/ready
-# → {"status":"ready","service":"Lunascripts API","api_version":"1.4.0","ls_contract_version":"3.0.0","source_revision":"..."}
+# → {"status":"ready","service":"Lunascripts API","api_version":"1.4.0","ls_contract_version":"4.0.0","source_revision":"..."}
 ```
 
 ### `GET /version`
@@ -90,7 +90,7 @@ Returns the API version, LS contract version, and exact source revision recorded
 
 ```bash
 curl -s http://localhost:8080/version
-# → {"service":"Lunascripts API","api_version":"1.4.0","ls_contract_version":"3.0.0","source_revision":"..."}
+# → {"service":"Lunascripts API","api_version":"1.4.0","ls_contract_version":"4.0.0","source_revision":"..."}
 ```
 
 ### `GET /spec` and `GET /spec/{name}`
@@ -147,7 +147,7 @@ curl -s -X POST http://localhost:8080/compile \
   "steps": [
     {"id":"0001_bg","type":"bg","name":"classroom_morning","transition":"fade","url":""},
     {"id":"0002_nar","type":"narrator","text":"Hello world."},
-    {"id":"0003_you","type":"you","text":"Thinking deeply."}
+    {"id":"0003_you","type":"inner_thought","text":"Thinking deeply."}
   ],
   "gate": {"next": "main:02"},
   "ending": null

@@ -72,7 +72,7 @@ mapping.json 的 `base_url` 指向 OSS 根路径；minigame key 为下划线风�
 | # | 测试点 | 指令/特性 |
 |---|---|---|
 | T1 | 并发组：bg + music + char_show 同组 | `@bg` + `&music` + `&<char> <pose>` |
-| T2 | 内心独白 | `YOU:` |
+| T2 | 内心独白 | `INNER_THOUGHT:` |
 | T3 | 旁白 | `NARRATOR:` |
 | T4 | 角色对白 | `CHARACTER:` |
 | T5 | 收到消息 | `@text from` |
@@ -151,7 +151,7 @@ T29a 的叶子是 `@end bad_ending`（非 `@next`），其余分支是 `@next`�
 
 | # | 测试点 | 指令/特性 |
 |---|---|---|
-| T37 | 普通剧情行 | `NARRATOR:` / `YOU:` |
+| T37 | 普通剧情行 | `NARRATOR:` / `INNER_THOUGHT:` |
 | T41 | 终局铺垫 | `@<char> <pose>` + `@music stop` |
 | T42 | `@gate { @end bad_ending }` | 终态由 gate 叶子表达 |
 
@@ -162,7 +162,7 @@ T29a 的叶子是 `@end bad_ending`（非 `@next`），其余分支是 `@next`�
 | # | 测试点 | 指令/特性 |
 |---|---|---|
 | T43 | 路由入口叙述 | `NARRATOR:` |
-| T44 | 承接 | `YOU:` |
+| T44 | 承接 | `INNER_THOUGHT:` |
 | T45 | `@gate { @end to_be_continued }` | 终态由 gate 叶子表达 |
 
 ### STRESS —— 高强度逻辑（T50–T60）
@@ -262,7 +262,7 @@ Episode, GateBlock, NextLeaf, EndLeaf, EndingNode, PauseNode, BgSetNode, CharSho
 |---|---|---|
 | `dlg` | dialogue | 各剧本 CHARACTER 行 |
 | `nar` | narrator | NARRATOR 行 |
-| `you` | you | YOU 行 |
+| `you` | you | INNER_THOUGHT 行 |
 | `pau` | pause | T11 / T58a |
 | `ch` | choice | T18 / T56 |
 | `mg` | minigame | T16 / T55 / T59 |

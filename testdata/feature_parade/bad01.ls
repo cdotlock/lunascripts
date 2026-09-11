@@ -7,7 +7,7 @@
   &music night
 
   NARRATOR: [T37] The door closed. You never opened it again.
-  YOU: One wrong move, one closed door.
+  INNER_THOUGHT: One wrong move, one closed door.
 
   @malia shocked
   @music stop

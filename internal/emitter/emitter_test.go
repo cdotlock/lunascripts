@@ -1209,6 +1209,7 @@ func TestStepTypeTag(t *testing.T) {
 		{"dialogue", "dlg"},
 		{"narrator", "nar"},
 		{"you", "you"},
+		{"inner_thought", "you"},
 		{"pause", "pau"},
 		{"choice", "ch"},
 		{"minigame", "mg"},

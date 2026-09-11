@@ -7,14 +7,14 @@
   &malia neutral_phone
 
   NARRATOR: Senior year. Day one. Status: already complicated.
-  YOU: Another year. Same mess.
+  INNER_THOUGHT: Another year. Same mess.
 
   @phone {
     @text from EASTON: Can we talk? I miss you.
     @text from EASTON: I know I messed up.
   }
 
-  YOU: Eight months and he still won't stop.
+  INNER_THOUGHT: Eight months and he still won't stop.
   @malia worried
 
   // ===== Scene 2: School entrance =====
@@ -28,7 +28,7 @@
   @josie bubble heart
   MALIA: Hey, Jo.
   JOSIE: New year, new Malia. That's the plan, right?
-  YOU: If only it were that simple.
+  INNER_THOUGHT: If only it were that simple.
 
   // ===== Scene 3: Hallway =====
 
@@ -41,7 +41,7 @@
   MAURICIO: Hey, Butterfly.
   @josie bubble sweat
   @trick hold "Hold your breath until he walks past."
-  YOU: He hasn't called me that in eight years.
+  INNER_THOUGHT: He hasn't called me that in eight years.
 
   // ===== Scene 4: Classroom + minigame =====
 
@@ -96,7 +96,7 @@
       @mark grin_mischief
       MARK: HEY EASTON! You want some of my mystery casserole?
       @mark bubble music
-      YOU: Thank god for Mark.
+      INNER_THOUGHT: Thank god for Mark.
       @butterfly "Had Mark create a diversion to avoid Easton"
     }
   }
@@ -109,7 +109,7 @@
   &josie excited
 
   JOSIE: Did you see Elias in practice today?
-  YOU: I was trying not to.
+  INNER_THOUGHT: I was trying not to.
 
   @elias neutral_calm
 
@@ -122,14 +122,14 @@
   &music night_piano
   &malia neutral_phone
 
-  YOU: Day one. Survived. Barely.
+  INNER_THOUGHT: Day one. Survived. Barely.
 
   @phone {
     @text from UNKNOWN: nice curtains, Butterfly
   }
 
   @malia shocked
-  YOU: ...How does he know which window is mine?
+  INNER_THOUGHT: ...How does he know which window is mine?
 
 
   // ===== Routing =====

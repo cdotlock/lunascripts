@@ -149,10 +149,10 @@
     }
     @option B safe "[T56-safe] Walk away — contains nested @if." {
       @if (affection.easton >= 2) {
-        YOU: [T56b] safe body nested @if true.
+        INNER_THOUGHT: [T56b] safe body nested @if true.
         @butterfly "Walked away but hesitated"
       } @else {
-        YOU: [T56c] safe body nested @else.
+        INNER_THOUGHT: [T56c] safe body nested @else.
       }
     }
   }

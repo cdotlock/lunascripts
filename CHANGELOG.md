@@ -11,6 +11,17 @@ behavior fixtures. A release whose declaration understates that bound is
 rejected. Stored production content is always audited read-only; repairs and
 all integration or production actions remain explicit human workflows.
 
+## 4.0.0
+
+- Author inner monologue as `INNER_THOUGHT:`; compiled nodes use `inner_thought`.
+- The compiler accepts legacy `YOU:` input and emits the new node type for both
+  spellings. Decompilation reads either JSON type and writes `INNER_THOUGHT:`.
+- Preserve the `you` step ID tag and MC staging alias so existing cursors and
+  staging semantics do not change. Stored episodes are not rewritten.
+- Deploy dual-read compatibility in Backend, IDE Cloud and IDE players before
+  enabling this compiler and switching production writing Skills.
+- Production authoring references teach only the canonical syntax.
+
 ## 3.0.0
 
 - LS-SPEC rewritten as the grammar-only reference: per-directive cards

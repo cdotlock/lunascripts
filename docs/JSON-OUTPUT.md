@@ -8,7 +8,7 @@
 
 ```json
 {
-  "ls_contract_version": "3.0.0",
+  "ls_contract_version": "4.0.0",
   "episode_id": "main:01",
   "branch_key": "main",
   "seq": 1,
@@ -21,7 +21,7 @@
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| `ls_contract_version` | string | 生成该 JSON 的 Lunaverse Script 契约版本；当前固定为 `"3.0.0"` |
+| `ls_contract_version` | string | 生成该 JSON 的 Lunaverse Script 契约版本；当前固定为 `"4.0.0"` |
 | `episode_id` | string | 集的完整标识，格式 `<branch_key>:<seq>`，如 `"main:01"` |
 | `branch_key` | string | 分支路径，如 `"main"`、`"main/bad/001"`、`"remix/abc123"` |
 | `seq` | number | 集序号（从 1 开始） |
@@ -98,7 +98,7 @@ steps: [
 
 - `@` 指令开启新的步骤组
 - `&` 指令加入前一个步骤组
-- 对话行（dialogue / narrator / you）始终独立
+- 对话行（dialogue / narrator / inner_thought）始终独立
 - 只有一条指令的组自动展平为对象，不包裹数组
 
 | LS 脚本 | JSON 输出 |
@@ -144,7 +144,7 @@ steps: [
 |-----------|-----|
 | `dialogue` | `dlg` |
 | `narrator` | `nar` |
-| `you` | `you` |
+| `inner_thought` | `you` |
 | `pause` | `pau` |
 | `choice` | `ch` |
 | `minigame` | `mg` |
@@ -314,11 +314,11 @@ CG 步骤携带素材语义名、解析后 URL 与生成所需的叙事 prose。
 |------|------|------|------|
 | `text` | string | 是 | 旁白内容 |
 
-#### `you` — 内心独白
+#### `inner_thought` — 内心独白
 
 ```json
 {
-  "type": "you",
+  "type": "inner_thought",
   "text": "Another year. Same mess."
 }
 ```
@@ -908,7 +908,7 @@ Gate 中的条件使用与 body `@if` 相同的结构化 AST 格式（见 §4.8 
       "text": "Senior year. Day one. Status: already complicated."
     },
     {
-      "type": "you",
+      "type": "inner_thought",
       "text": "Another year. Same mess."
     },
     {
@@ -919,7 +919,7 @@ Gate 中的条件使用与 body `@if` 相同的结构化 AST 格式（见 §4.8 
       ]
     },
     {
-      "type": "you",
+      "type": "inner_thought",
       "text": "Eight months and he still won't stop."
     },
     {
@@ -986,7 +986,7 @@ Gate 中的条件使用与 body `@if` 相同的结构化 AST 格式（见 §4.8 
             },
             {"type": "dialogue", "character": "mark", "text": "HEY EASTON! You want some of my mystery casserole?"},
             {"type": "bubble", "character": "mark", "bubble_type": "music"},
-            {"type": "you", "text": "Thank god for Mark."},
+            {"type": "inner_thought", "text": "Thank god for Mark."},
             {"type": "butterfly", "description": "Had Mark create a diversion to avoid Easton"}
           ]
         }

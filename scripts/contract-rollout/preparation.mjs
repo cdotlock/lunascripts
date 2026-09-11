@@ -7,6 +7,8 @@ import { UPSTREAM_REPOSITORY, assertSha, contentDigest, validatePreparationRepor
 import { parsePullRequestUrl } from "./github.mjs";
 import { cleanupRolloutWorkspace, createRolloutWorkspace } from "./workspace.mjs";
 
+const INNER_THOUGHT_PATHS = JSON.parse(readFileSync(new URL("./inner-thought-consumer-paths.json", import.meta.url), "utf8"));
+
 const SHA_RE = /^[0-9a-f]{40}$/;
 
 export const CONSUMERS = Object.freeze([
@@ -17,10 +19,11 @@ export const CONSUMERS = Object.freeze([
     update: (sha) => ["node", ["scripts/update-lunascripts-contract.mjs", "--ref", sha, "--json"]],
     verify: [
       ["node", ["--test", "scripts/update-lunascripts-contract.test.mjs"]],
-      ["pnpm", ["vitest", "run", "scripts/lunascripts-contract-audit.test.ts", "scripts/check-lunascripts-authority.test.ts", "__tests__/core/schema-signal-int.test.ts"]],
+      ["pnpm", ["vitest", "run", "scripts/lunascripts-contract-audit.test.ts", "scripts/check-lunascripts-authority.test.ts", "__tests__/core/schema-signal-int.test.ts", "app/services/release-content-health-service.test.ts"]],
     ],
-    owned: ["contracts/lunascripts", "contracts/lunascripts.lock.json"],
+    owned: ["contracts/lunascripts", "contracts/lunascripts.lock.json", "docs/ls-refactor/LS-SPEC.md", "docs/ls-refactor/JSON-OUTPUT.md", "ide-assets/skills/adaptation-episode-writer/ls-spec.md"],
     allowed: [
+      ...INNER_THOUGHT_PATHS.backend,
       ".github/workflows/lunascripts-authority.yml", ".github/workflows/lunascripts-contract-audit.yml", "CLAUDE.md",
       "__tests__/core/schema-signal-int.test.ts", "app/core/lunascripts-contract.ts", "app/core/schema.ts", "app/core/types.ts",
       "app/services/release-content-health-policy.ts", "app/services/release-content-health-service.test.ts", "app/services/release-content-health-service.ts",
@@ -32,7 +35,7 @@ export const CONSUMERS = Object.freeze([
   },
   {
     key: "ide",
-    repository: "cdotlock/lunaverse-ide",
+    repository: "MobAI-Inc/lunaverse-ide",
     update: (sha) => ["node", ["scripts/update-vendor.mjs", "lunascripts", "--ref", sha, "--json"]],
     verify: [
       ["node", ["--test", "test/lunascripts-authority.test.mjs", "test/agent-guidance-contract.test.mjs", "test/update-vendor.test.mjs"]],
@@ -40,6 +43,7 @@ export const CONSUMERS = Object.freeze([
     ],
     owned: ["vendor/lunascripts", "vendor/README.md", "agents/adaptation/skills/episode-writer/ls-spec.md", "agents/_shared/knowledge/LS-SPEC.md"],
     allowed: [
+      ...INNER_THOUGHT_PATHS.ide,
       ".github/workflows/lunascripts-authority.yml", "AGENTS.md", "agents/_shared/knowledge/LS-SPEC.md",
       "agents/adaptation/skills/entity-planner/SKILL.md", "agents/adaptation/skills/episode-writer/ls-spec.md",
       "agents/adaptation/skills/planner-reviewer/SKILL.md", "package.json", "scripts/check-lunascripts-authority.mjs",

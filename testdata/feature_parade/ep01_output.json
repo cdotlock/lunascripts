@@ -88,7 +88,7 @@
       "type": "comparison"
     }
   },
-  "ls_contract_version": "3.0.0",
+  "ls_contract_version": "4.0.0",
   "seq": 1,
   "steps": [
     [
@@ -120,7 +120,7 @@
     {
       "id": "0005_you",
       "text": "[T2] YOU internal monologue renders here.",
-      "type": "you"
+      "type": "inner_thought"
     },
     {
       "id": "0006_nar",
@@ -691,7 +691,7 @@
           {
             "id": "0093_you",
             "text": "[T23c] fallback @else.",
-            "type": "you"
+            "type": "inner_thought"
           },
           {
             "bubble_type": "ellipsis",
@@ -704,7 +704,7 @@
           {
             "id": "0091_you",
             "text": "[T23b] compound (comparison || flag) true.",
-            "type": "you"
+            "type": "inner_thought"
           },
           {
             "bubble_type": "doom",
@@ -720,7 +720,7 @@
         {
           "id": "0089_you",
           "text": "[T23a] compound (comparison \u0026\u0026 flag) true.",
-          "type": "you"
+          "type": "inner_thought"
         },
         {
           "bubble_type": "heart",
@@ -744,7 +744,7 @@
     {
       "id": "0097_you",
       "text": "[T24b] YOU line BEFORE the CG leaf (formerly nested inside body).",
-      "type": "you"
+      "type": "inner_thought"
     },
     {
       "content": "Wide shot pushes in as Malia stands at the gym window, late sunlight cutting through dust. The camera holds long enough to catch the slow tilt of her head, then dissolves to the silhouette of the empty court behind her.",
@@ -797,7 +797,7 @@
         {
           "id": "0107_you",
           "text": "[T25b] mauricio-leading or tied branch — no phone message.",
-          "type": "you"
+          "type": "inner_thought"
         }
       ],
       "id": "0103_ctrl",
@@ -859,7 +859,7 @@
         {
           "id": "0113_you",
           "text": "[T25m2] no LI has crossed affection 5 yet.",
-          "type": "you"
+          "type": "inner_thought"
         }
       ],
       "id": "0109_ctrl",
@@ -920,7 +920,7 @@
         {
           "id": "0117_you",
           "text": "[T25n2] at least one LI has gone negative.",
-          "type": "you"
+          "type": "inner_thought"
         }
       ],
       "id": "0115_ctrl",
@@ -928,7 +928,7 @@
         {
           "id": "0116_you",
           "text": "[T25n1] MIN(...) \u003e= 0 — all LIs non-negative.",
-          "type": "you"
+          "type": "inner_thought"
         }
       ],
       "type": "if"
@@ -968,14 +968,14 @@
           {
             "id": "0122_you",
             "text": "[T26c] san middle branch.",
-            "type": "you"
+            "type": "inner_thought"
           }
         ],
         "then": [
           {
             "id": "0121_you",
             "text": "[T26b] san \u003e= 80 branch.",
-            "type": "you"
+            "type": "inner_thought"
           }
         ],
         "type": "if"
@@ -985,7 +985,7 @@
         {
           "id": "0120_you",
           "text": "[T26a] san \u003c= 20 branch.",
-          "type": "you"
+          "type": "inner_thought"
         }
       ],
       "type": "if"

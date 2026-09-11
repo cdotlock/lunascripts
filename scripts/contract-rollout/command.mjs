@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 
 export const TEST_COMMAND_TIMEOUT_MS = 10 * 60_000;
 
-const CONSUMER_REPOSITORIES = new Set(["cdotlock/lunaverse-backend", "cdotlock/lunaverse-ide"]);
+const CONSUMER_REPOSITORIES = new Set(["cdotlock/lunaverse-backend", "MobAI-Inc/lunaverse-ide"]);
 
 function denied(message) {
   throw new Error(`preparation-only command denied: ${message}`);
@@ -30,7 +30,7 @@ export function assertCommandAllowed(command, args = [], context = {}) {
     const method = String(optionValue(args, "--method") ?? optionValue(args, "-X") ?? "GET").toUpperCase();
     if (method !== "GET") {
       const endpoint = args.find((arg) => /^repos\//.test(String(arg))) ?? "";
-      const repository = "(?:cdotlock/lunascripts|cdotlock/lunaverse-backend|cdotlock/lunaverse-ide)";
+      const repository = "(?:cdotlock/lunascripts|cdotlock/lunaverse-backend|MobAI-Inc/lunaverse-ide)";
       const createComment = method === "POST" && new RegExp(`^repos/${repository}/issues/\\d+/comments$`).test(endpoint);
       const updateComment = method === "PATCH" && new RegExp(`^repos/${repository}/issues/comments/\\d+$`).test(endpoint);
       if (!createComment && !updateComment) denied("GitHub API writes are limited to preparation report comments");

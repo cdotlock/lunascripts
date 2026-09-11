@@ -68,3 +68,22 @@ manifest, pointer, or Episode JSON is modified.
 5. Review and merge IDE manually.
 
 Preparation reports are evidence only and confer no permission for these steps.
+
+## Contract 4.0.0 inner-thought rollout
+
+The IDE consumer now lives at `MobAI-Inc/lunaverse-ide`. Backend remains
+`cdotlock/lunaverse-backend`; IDE Cloud is an additional publication consumer,
+not a Backend replacement. Its compatibility change is reviewed separately
+because Cloud does not use either existing contract updater.
+
+For this output discriminator migration, prepare/adopt the Backend and IDE
+implementation PRs, including their exact reviewed paths, instead of creating
+duplicate pin PRs. `inner-thought-consumer-paths.json` lists those additional
+paths; updater-owned write/delete scopes are unchanged.
+
+Before enabling v4 compiler output and publishing new content, deploy dual-read
+compatibility in Backend and IDE Cloud and deliver compatible player clients.
+The external Cocos client reads CDN JSON directly, so server-side compatibility
+is insufficient. See [the Cocos handoff](handoffs/2026-09-11-cocos-inner-thought.md).
+Main changes still require the exact-revision Compiler release and semantic
+verification; an open source PR or consumer preparation alone is not a release.

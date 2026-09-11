@@ -89,14 +89,14 @@
           {
             "id": "0012_you",
             "text": "[T32c] all comparison fell through.",
-            "type": "you"
+            "type": "inner_thought"
           }
         ],
         "then": [
           {
             "id": "0011_you",
             "text": "[T32b] affection.easton != 0 fallback.",
-            "type": "you"
+            "type": "inner_thought"
           }
         ],
         "type": "if"
@@ -106,7 +106,7 @@
         {
           "id": "0010_you",
           "text": "[T32a] affection.easton == 3 exactly.",
-          "type": "you"
+          "type": "inner_thought"
         }
       ],
       "type": "if"
@@ -295,7 +295,7 @@
     {
       "id": "0029_you",
       "text": "[T35] Final @gate { @end complete } — story wraps, credits roll.",
-      "type": "you"
+      "type": "inner_thought"
     },
     {
       "event": "EP02_DONE",

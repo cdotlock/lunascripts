@@ -12,7 +12,7 @@ import (
 
 // ContractVersion identifies the LS source/JSON contract emitted by this
 // compiler. Consumers must negotiate this version before activating content.
-const ContractVersion = "3.0.0"
+const ContractVersion = "4.0.0"
 
 // AssetResolver maps semantic asset names to full URLs.
 type AssetResolver interface {
@@ -116,7 +116,7 @@ func stepTypeTag(stepType string) string {
 		return "dlg"
 	case "narrator":
 		return "nar"
-	case "you":
+	case "inner_thought", "you":
 		return "you"
 	case "pause":
 		return "pau"
@@ -363,7 +363,7 @@ func (e *Emitter) emitNarrator(n *ast.NarratorNode) map[string]interface{} {
 
 func (e *Emitter) emitYou(n *ast.YouNode) map[string]interface{} {
 	return map[string]interface{}{
-		"type": "you",
+		"type": "inner_thought",
 		"text": n.Text,
 	}
 }

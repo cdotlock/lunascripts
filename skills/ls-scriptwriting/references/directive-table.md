@@ -24,7 +24,7 @@
 | `@<char> bubble <type>` | `@josie bubble heart` — emotion bubble over the current speaker |
 | `@cg <name> "<content>"` | `@cg window_stare "The camera opens on Malia's silhouette…"` — **leaf** directive, no `{ }` body. `<content>` is a continuous English prose paragraph consumed by the video-generation pipeline |
 
-**Positions:** none. The frontend derives placement from MC identity. `@<char> <pose>` immediately shows or switches that character; dialogue uses the most recently declared pose. `YOU` displays the MC. Only `NARRATOR` clears the stage.
+**Positions:** none. The frontend derives placement from MC identity. `@<char> <pose>` immediately shows or switches that character; dialogue uses the most recently declared pose. `INNER_THOUGHT` displays the MC. Only `NARRATOR` clears the stage.
 
 **Transitions:** `dissolve` · `fade` · `cut` · `slow`. Applies to `@bg` and the optional slot on `@<char> <pose>`.
 
@@ -38,7 +38,7 @@
 |--------|---------|
 | `CHARACTER: text` | `MAURICIO: Hey, Butterfly.` |
 | `NARRATOR: text` | `NARRATOR: Senior year. Day one.` — clears stage |
-| `YOU: text` | `YOU: He hasn't called me that in eight years.` — MC inner monologue; displays MC |
+| `INNER_THOUGHT: text` | `INNER_THOUGHT: He hasn't called me that in eight years.` — MC inner monologue; displays MC |
 | `CHARACTER [pose]: text` | `MAURICIO [arms_crossed_angry]: Your call, Butterfly.` — sugar for `@mauricio arms_crossed_angry` + dialogue |
 
 JSON normalizes `character` to lowercase (`MAURICIO:` → `"mauricio"`).
