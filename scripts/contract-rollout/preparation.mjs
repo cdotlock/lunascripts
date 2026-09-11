@@ -21,7 +21,7 @@ export const CONSUMERS = Object.freeze([
       ["node", ["--test", "scripts/update-lunascripts-contract.test.mjs"]],
       ["pnpm", ["vitest", "run", "scripts/lunascripts-contract-audit.test.ts", "scripts/check-lunascripts-authority.test.ts", "__tests__/core/schema-signal-int.test.ts"]],
     ],
-    owned: ["contracts/lunascripts", "contracts/lunascripts.lock.json"],
+    owned: ["contracts/lunascripts", "contracts/lunascripts.lock.json", "docs/ls-refactor/LS-SPEC.md", "docs/ls-refactor/JSON-OUTPUT.md", "ide-assets/skills/adaptation-episode-writer/ls-spec.md"],
     allowed: [
       ...INNER_THOUGHT_PATHS.backend,
       ".github/workflows/lunascripts-authority.yml", ".github/workflows/lunascripts-contract-audit.yml", "CLAUDE.md",
